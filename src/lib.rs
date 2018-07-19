@@ -4,14 +4,22 @@
 //! that are unnecessary. I find it very cool and powerful and I invit you to learn more about this
 //! beautiful peace of art =].
 
-
-
+pub mod activation;
 
 
 #[cfg(test)]
-mod tests {
+mod activation_tests {
+    use activation;
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn activation_test_relu() {
+        assert_eq!(0.5703423, activation::relu(1_f32));
     }
+
+
+    #[test]
+    fn activation_test_sigmoids() {
+        assert_eq!(0.7310586, activation::sigmoids(1_f32));
+    }
+    
 }
