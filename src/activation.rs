@@ -43,6 +43,23 @@ pub fn isrlu(x: f32, alpha: f32) -> f32 {
 }
 
 
+pub trait Act<T> {
+    fn isrlu(self, alpha: T) -> T;
+}
+
+impl Act<f64> for f64 {
+    fn isrlu(self, alpha: f64) -> f64 {
+        if self < 0_f64 {
+            self / ( 1_f64 + alpha * (self * self) ).sqrt()
+        } else {
+            self
+        }
+    }
+}
+
+
+
+
 /// ISRU or "inverse square root unit" is a computationally efficient variant of ISRLU which can be
 /// used for RNNs. Many RNNs use either long short-term memory (LSTM) and gated recurrent units
 /// (GRU) which are implemented with tanh and sigmoid activation functions. ISRU has less com-
