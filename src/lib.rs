@@ -5,6 +5,7 @@
 //! beautiful peace of art =].
 
 pub mod activation;
+pub mod cge;
 
 
 #[cfg(test)]
