@@ -4,7 +4,7 @@
 
 /// Advantage of ReLu:
 /// * No gradient vanishing problem, as Relu’s gradient is constant = 1
-/// * Sparsity. When W*x<0, Relu gives 0, which means sparsity.
+/// * Sparsity. When W*x < 0, Relu gives 0, which means sparsity.
 /// * Less calculation load. This may be least important.
 pub fn relu(x: f32) -> f32 {
     if x < 0_f32 { 0_f32 }
