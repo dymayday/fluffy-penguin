@@ -34,7 +34,7 @@ mod network {
 
     #[test]
     fn partial_eq() {
-        assert_eq!(Network::new(16_i32, 9_i32), Network::new(16_i32, 9_i32));
+        assert_eq!(Network::new(&vec![1.0, 1.0], 1), Network::new(&vec![1.0, 1.0], 1));
     }
 }
 
@@ -45,6 +45,6 @@ mod node_tests {
 
     #[test]
     fn neuron() {
-        node::Neuron::new(0 as usize, 0.3_f32, 1_i32);
+        node::Node::new(node::Allele::Neuron, 0 as usize, 0.3_f32, 1_i32);
     }
 }
