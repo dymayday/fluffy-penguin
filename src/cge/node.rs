@@ -1,16 +1,20 @@
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
 use activation::TransferFunctionTrait;
-// This value is used to check the completeness of the linear genome and sub-linear genomes
-// (sub-Networks).
+
+/// This value is used to check the completeness of the linear genome and sub-linear genomes
+/// (sub-Networks).
 pub const IOTA_INPUT_VALUE: i32 = 1;
 
 
 /// The forms that can be taken by a gene can either be a neuron, or an input to the neural network, or
 /// a jumper connecting two neurons.
 /// The jumper genes are introduced by structural mutation along the evolution path.
+/// This enum is used during the 'evaluation' process when we compute the output of the artificial
+/// neural network without decoding it.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Allele {
+    // A Neuron is the basic unit process of an artificial neural network.
     Neuron,
     // An Input gene (Node) encodes an input to the network (for example, a sensory signal).
     // Each Input corresponds to the inputs fed to our artificial neural network.
@@ -27,6 +31,11 @@ pub enum Allele {
     JumpRecurrent,
 }
 
+/// A flexible encoding method enables one to design an efficient evolutionary method that can evolve both
+/// the structures and weights of neural networks. The genome in EANT is designed by taking this fact 
+/// into consideration.
+/// A genome in EANT is a linear genome consisting of genes (nodes) that can take different forms (alleles), 
+/// symbolized by the [`Allele`] enum.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Node<T> {
     // This is the specific form a gene can take. Possible values are contained in 
