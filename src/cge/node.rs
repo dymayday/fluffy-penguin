@@ -67,13 +67,23 @@ impl Node<f32> {
 
 
 impl TransferFunctionTrait<f32> for Node<f32> {
-    fn isrlu(self, alpha: f32) -> f32 {
+    fn isrlu(&self, alpha: f32) -> f32 {
         if self.value < 0_f32 {
             self.value / (1_f32 + alpha * (self.value * self.value)).sqrt()
         } else {
             self.value
         }
     }
+
+    fn isru(&self, alpha: f32) -> f32 {
+        self.value / (1.0 + alpha * (self.value * self.value)).sqrt()
+    }
+
+    fn relu(&self) -> f32 {
+        if self.value < 0.0 { 0.0 }
+        else { self.value }
+    }
+
 }
 
 
