@@ -2,24 +2,39 @@
 //! namely: ReLu, Sigmoid, Softmax, Tanh.
 //! See https://en.wikipedia.org/wiki/Activation_function for more.
 
+// /// Represents all our available transfert function.
+// enum TransferFunction {
+//     relu,
+//     softplus,
+//     isru,
+//     isrlu,
+//     sigmoids,
+// }
+
 /// Advantage of ReLu:
 /// * No gradient vanishing problem, as Relu’s gradient is constant = 1
 /// * Sparsity. When W*x < 0, Relu gives 0, which means sparsity.
 /// * Less calculation load. This may be least important.
 pub fn relu(x: f32) -> f32 {
-    if x < 0_f32 { 0_f32 }
-    else { x }
+    if x < 0_f32 {
+        0_f32
+    } else {
+        x
+    }
 }
 
 pub fn relu_f64(x: f64) -> f64 {
-    if x < 0_f64 { 0_f64 }
-    else { x }
+    if x < 0_f64 {
+        0_f64
+    } else {
+        x
+    }
 }
 
 
 /// A smooth approximation to ReLu.
 pub fn softplus(x: f32) -> f32 {
-    ( 1_f32 + (x).exp() ).ln()
+    (1_f32 + (x).exp()).ln()
 }
 
 
@@ -27,36 +42,25 @@ pub fn softplus(x: f32) -> f32 {
 ///
 /// ISRLU or "inverse square root linear unit" as better performance than ELU
 /// but has many of the same benefits. ISRLU and ELU have similar curves
-/// and characteristics. Both have negative values, allowing them to push mean unit 
-/// activation closer to zero, and bring the normal gradient closer to the unit 
-/// natural gradient, ensuring a noise-robust deactivation state, 
+/// and characteristics. Both have negative values, allowing them to push mean unit
+/// activation closer to zero, and bring the normal gradient closer to the unit
+/// natural gradient, ensuring a noise-robust deactivation state,
 /// lessening the over fitting risk.
 ///
-/// The ISRLU hyperparameter 'α' controls the value to which an ISRLU saturates 
+/// The ISRLU hyperparameter 'α' controls the value to which an ISRLU saturates
 /// for negative inputs.
 pub fn isrlu(x: f32, alpha: f32) -> f32 {
     if x < 0_f32 {
-        x / ( 1_f32 + alpha * (x * x) ).sqrt()
+        x / (1_f32 + alpha * (x * x)).sqrt()
     } else {
         x
     }
 }
 
 
-pub trait Act<T> {
+pub trait TransferFunctionTrait<T> {
     fn isrlu(self, alpha: T) -> T;
 }
-
-impl Act<f64> for f64 {
-    fn isrlu(self, alpha: f64) -> f64 {
-        if self < 0_f64 {
-            self / ( 1_f64 + alpha * (self * self) ).sqrt()
-        } else {
-            self
-        }
-    }
-}
-
 
 
 
@@ -68,7 +72,7 @@ impl Act<f64> for f64 {
 /// The ISRU hyperparameter 'α' controls the value to which an ISRLU saturates for negative
 /// inputs.
 pub fn isru(x: f32, alpha: f32) -> f32 {
-    x / ( 1_f32 + alpha * (x * x) ).sqrt()
+    x / (1_f32 + alpha * (x * x)).sqrt()
 }
 
 
@@ -80,5 +84,5 @@ pub fn isru(x: f32, alpha: f32) -> f32 {
 /// In practice, the sigmoid non-linearity has recently fallen out of favor and it is rarely ever
 /// used.
 pub fn sigmoids(x: f32) -> f32 {
-    1_f32 / ( 1_f32 + (-x).exp() )
+    1_f32 / (1_f32 + (-x).exp())
 }
