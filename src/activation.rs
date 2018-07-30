@@ -2,15 +2,6 @@
 //! namely: ReLu, Sigmoid, Softmax, Tanh.
 //! See https://en.wikipedia.org/wiki/Activation_function for more.
 
-// /// Represents all our available transfert function.
-// enum TransferFunction {
-//     relu,
-//     softplus,
-//     isru,
-//     isrlu,
-//     sigmoids,
-// }
-
 /// Advantage of ReLu:
 /// * No gradient vanishing problem, as Relu’s gradient is constant = 1
 /// * Sparsity. When W*x < 0, Relu gives 0, which means sparsity.
@@ -38,8 +29,6 @@ pub fn softplus(x: f32) -> f32 {
 }
 
 
-/// https://arxiv.org/pdf/1710.09967.pdf
-///
 /// ISRLU or "inverse square root linear unit" as better performance than ELU
 /// but has many of the same benefits. ISRLU and ELU have similar curves
 /// and characteristics. Both have negative values, allowing them to push mean unit
@@ -49,6 +38,8 @@ pub fn softplus(x: f32) -> f32 {
 ///
 /// The ISRLU hyperparameter 'α' controls the value to which an ISRLU saturates
 /// for negative inputs.
+///
+/// https://arxiv.org/pdf/1710.09967.pdf
 pub fn isrlu(x: f32, alpha: f32) -> f32 {
     if x < 0_f32 {
         x / (1_f32 + alpha * (x * x)).sqrt()
@@ -59,7 +50,51 @@ pub fn isrlu(x: f32, alpha: f32) -> f32 {
 
 
 pub trait TransferFunctionTrait<T> {
-    fn isrlu(self, alpha: T) -> T;
+    fn isrlu(&self, alpha: T) -> T;
+    fn isru(&self, alpha: T) -> T;
+    fn relu(&self) -> T;
+}
+
+impl TransferFunctionTrait<f32> for f32 {
+
+    /// ISRLU or "inverse square root linear unit" as better performance than ELU
+    /// but has many of the same benefits. ISRLU and ELU have similar curves
+    /// and characteristics. Both have negative values, allowing them to push mean unit
+    /// activation closer to zero, and bring the normal gradient closer to the unit
+    /// natural gradient, ensuring a noise-robust deactivation state,
+    /// lessening the over fitting risk.
+    ///
+    /// The ISRLU hyperparameter `α` (alpha) controls the value to which an ISRLU saturates
+    /// for negative inputs.
+    ///
+    /// https://arxiv.org/pdf/1710.09967.pdf
+    fn isrlu(&self, alpha: f32) -> f32 {
+        if *self < 0.0 {
+            *self / (1.0 + alpha * (*self * *self)).sqrt()
+        } else {
+            *self
+        }
+    }
+
+    /// ISRU or "inverse square root unit" is a computationally efficient variant of ISRLU which can be
+    /// used for RNNs. Many RNNs use either long short-term memory (LSTM) and gated recurrent units
+    /// (GRU) which are implemented with tanh and sigmoid activation functions. ISRU has less com-
+    /// putational complexity but still has a similar curve to tanh and sigmoid.
+    ///
+    /// The ISRU hyperparameter `α` (alpha) controls the value to which an ISRLU saturates for negative
+    /// inputs.
+    fn isru(&self, alpha: f32) -> f32 {
+        *self / (1.0 + alpha * (*self * *self)).sqrt()
+    }
+
+    /// Advantage of ReLu:
+    /// * No gradient vanishing problem, as Relu’s gradient is constant = 1
+    /// * Sparsity. When W*x < 0, Relu gives 0, which means sparsity.
+    /// * Less calculation load. This may be least important.
+    fn relu(&self) -> f32 {
+        if *self < 0.0 { 0.0 }
+        else { *self }
+    }
 }
 
 
@@ -69,7 +104,7 @@ pub trait TransferFunctionTrait<T> {
 /// (GRU) which are implemented with tanh and sigmoid activation functions. ISRU has less com-
 /// putational complexity but still has a similar curve to tanh and sigmoid.
 ///
-/// The ISRU hyperparameter 'α' controls the value to which an ISRLU saturates for negative
+/// The ISRU hyperparameter `α` (alpha) controls the value to which an ISRLU saturates for negative
 /// inputs.
 pub fn isru(x: f32, alpha: f32) -> f32 {
     x / (1_f32 + alpha * (x * x)).sqrt()
