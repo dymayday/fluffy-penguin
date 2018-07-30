@@ -26,6 +26,9 @@ pub struct Network<T> {
 }
 
 impl Network<f32> {
+    pub fn new(input_vec: &Vec<f32>, omega_number: i32) -> Self {
+        Network::new_full(input_vec, omega_number)
+    }
 
     /// Builds and returns a Network from a list of input value using the `grow` method.
     /// For a given maximum depth, the grow method produces linear genomes encoding neural networks
