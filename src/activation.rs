@@ -2,53 +2,6 @@
 //! namely: ReLu, Sigmoid, Softmax, Tanh.
 //! See https://en.wikipedia.org/wiki/Activation_function for more.
 
-/// Advantage of ReLu:
-/// * No gradient vanishing problem, as Relu’s gradient is constant = 1
-/// * Sparsity. When W*x < 0, Relu gives 0, which means sparsity.
-/// * Less calculation load. This may be least important.
-pub fn relu(x: f32) -> f32 {
-    if x < 0_f32 {
-        0_f32
-    } else {
-        x
-    }
-}
-
-pub fn relu_f64(x: f64) -> f64 {
-    if x < 0_f64 {
-        0_f64
-    } else {
-        x
-    }
-}
-
-
-/// A smooth approximation to ReLu.
-pub fn softplus(x: f32) -> f32 {
-    (1_f32 + (x).exp()).ln()
-}
-
-
-/// ISRLU or "inverse square root linear unit" as better performance than ELU
-/// but has many of the same benefits. ISRLU and ELU have similar curves
-/// and characteristics. Both have negative values, allowing them to push mean unit
-/// activation closer to zero, and bring the normal gradient closer to the unit
-/// natural gradient, ensuring a noise-robust deactivation state,
-/// lessening the over fitting risk.
-///
-/// The ISRLU hyperparameter 'α' controls the value to which an ISRLU saturates
-/// for negative inputs.
-///
-/// https://arxiv.org/pdf/1710.09967.pdf
-pub fn isrlu(x: f32, alpha: f32) -> f32 {
-    if x < 0_f32 {
-        x / (1_f32 + alpha * (x * x)).sqrt()
-    } else {
-        x
-    }
-}
-
-
 pub trait TransferFunctionTrait<T> {
     fn isrlu(&self, alpha: T) -> T;
     fn isru(&self, alpha: T) -> T;
@@ -97,6 +50,53 @@ impl TransferFunctionTrait<f32> for f32 {
     }
 }
 
+
+/// Advantage of ReLu:
+/// * No gradient vanishing problem, as Relu’s gradient is constant = 1
+/// * Sparsity. When W*x < 0, Relu gives 0, which means sparsity.
+/// * Less calculation load. This may be least important.
+pub fn relu(x: f32) -> f32 {
+    if x < 0_f32 {
+        0_f32
+    } else {
+        x
+    }
+}
+
+
+pub fn relu_f64(x: f64) -> f64 {
+    if x < 0_f64 {
+        0_f64
+    } else {
+        x
+    }
+}
+
+
+/// A smooth approximation to ReLu.
+pub fn softplus(x: f32) -> f32 {
+    (1_f32 + (x).exp()).ln()
+}
+
+
+/// ISRLU or "inverse square root linear unit" as better performance than ELU
+/// but has many of the same benefits. ISRLU and ELU have similar curves
+/// and characteristics. Both have negative values, allowing them to push mean unit
+/// activation closer to zero, and bring the normal gradient closer to the unit
+/// natural gradient, ensuring a noise-robust deactivation state,
+/// lessening the over fitting risk.
+///
+/// The ISRLU hyperparameter 'α' controls the value to which an ISRLU saturates
+/// for negative inputs.
+///
+/// https://arxiv.org/pdf/1710.09967.pdf
+pub fn isrlu(x: f32, alpha: f32) -> f32 {
+    if x < 0_f32 {
+        x / (1_f32 + alpha * (x * x)).sqrt()
+    } else {
+        x
+    }
+}
 
 
 /// ISRU or "inverse square root unit" is a computationally efficient variant of ISRLU which can be
