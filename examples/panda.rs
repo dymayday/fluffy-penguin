@@ -2,8 +2,8 @@
 
 extern crate fluffy_penguin;
 
-use fluffy_penguin::cge;
-use fluffy_penguin::cge::node::Allele;
+use fluffy_penguin::cge::network::Network;
+// use fluffy_penguin::cge::node::Allele;
 
 fn main() {
     // for i in 0..5 {
@@ -27,14 +27,8 @@ fn main() {
     // println!("Neuron = {:#?}", n);
 
 
-    let network = cge::network::Network::build_from_example();
+    let mut network: Network<f32> = Network::build_from_example();
     println!("Example Node network :");
-
-    for node in network.genome.iter() {
-        match node.allele {
-            Allele::Neuron => println!("{:#?}", node),
-            _ => println!("Not a Neuron !")
-        }
-    }
+    println!("Evaluated output = {:?}", network.evaluate());
 
 }
