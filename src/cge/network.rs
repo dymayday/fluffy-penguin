@@ -5,8 +5,8 @@
 //!
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use rand::{thread_rng, Rng};
 use cge::node::{Allele, Node, IOTA_INPUT_VALUE};
+use activation::TransferFunctionTrait;
 
 /// A Network.
 #[derive(Clone, Debug, PartialEq)]
@@ -49,8 +49,6 @@ impl Network<f32> {
         let neuron_map: Vec<f32> = vec![];
 
 
-        let _w = thread_rng().gen_range(0.0_f32, 1.0_f32);
-
         
         Network {
             genome,
@@ -83,8 +81,6 @@ impl Network<f32> {
         let neuron_map: Vec<f32> = vec![];
 
 
-        let _w = thread_rng().gen_range(0.0_f32, 1.0_f32);
-
         Network {
             genome,
             input_map,
@@ -99,7 +95,7 @@ impl Network<f32> {
     /// Builds and returns the genome from the research papers we use to implement EANT2.
     pub fn build_from_example() -> Self {
         let input_map = vec![1_f32, 1_f32, ];
-        let neuron_map: Vec<f32> = vec![0.0; 3];
+        let neuron_map: Vec<f32> = vec![0.0; 4];
         let genome: Vec<Node<f32>> = vec![
             Node::new(Allele::Neuron, 0, 0.6, -1),
             Node::new(Allele::Neuron, 1, 0.8, -1),
@@ -122,5 +118,60 @@ impl Network<f32> {
             iota_number: 2,
             omega_number: 1,
         }
+    }
+
+    /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
+    pub fn evaluate(&mut self) -> Vec<f32> {
+        let mut stack: Vec<f32> = Vec::with_capacity((self.iota_number * self.omega_number) as usize);
+        // let stack = &mut self.stack;
+        
+        let genome_len: usize = self.genome.len();
+        println!("genome_len = {}", genome_len);
+        for i in 0..genome_len {
+            let mut node: &mut Node<f32> = &mut self.genome[genome_len - i - 1];
+            println!("\n{:#?}", node);
+
+            match node.allele {
+                Allele::Input => stack.push(self.input_map[node.id].relu() * node.w),
+                Allele::Neuron => {
+                    let neuron_input_number: usize = (1-node.iota) as usize;
+                    // println!("# of input {}", neuron_input_number);
+                    let mut neuron_output: f32 = 0.0;
+                    for _ in 0..neuron_input_number {
+                        // println!("Neuron - Stack: [{:>2}] = {:?} ", i, stack);
+                        // neuron_input_number += stack.pop().unwrap_or(0.0_f32);
+                        // [TODO]: Remove this expect for an unwrap_or maybe ?
+                        neuron_output += stack.pop().expect("The evaluate stack is empty.");
+                    }
+                    node.value = neuron_output;
+                    let activated_neuron_value: f32 = node.isrlu(0.1);
+                    // Update the neuron value in the neuron_map with its activated value from its
+                    // transfert function to be used by jumper connection nodes.
+                    self.neuron_map[node.id] = activated_neuron_value;
+
+                    stack.push(activated_neuron_value * node.w);
+                },
+                Allele::JumpForward | Allele::JumpRecurrent => {
+                    let recurrent_neuron_value: f32 = self.neuron_map[node.id];
+                    // let recurrent_node_value: f32 = recurrent_node.isrlu() * recurrent_node.w;
+                    stack.push(recurrent_neuron_value * node.w);
+                },
+                // _ => println!("Unknown Allele encountered: {:#?}", node)
+            }
+            println!("Stack: [{:>2}] = {:?} ", i, stack);
+        }
+
+        assert_eq!(
+            stack.len(), self.omega_number as usize,
+            "Evaluated genome output length differt from expected output length: {} != {}",
+            stack.len(), self.omega_number
+            );
+        // self.stack = stack.clone();
+        stack
+    }
+
+    fn _evaluate_slice(input: &[Node<f32>]) {
+        let _stack: Vec<f32> = Vec::with_capacity(input.len());
+
     }
 }
