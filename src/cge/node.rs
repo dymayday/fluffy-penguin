@@ -1,5 +1,6 @@
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
+use rand::{thread_rng, Rng};
 use activation::TransferFunctionTrait;
 
 /// This value is used to check the completeness of the linear genome and sub-linear genomes
@@ -62,6 +63,13 @@ impl Node<f32> {
             iota,
             value: 0_f32,
         }
+    }
+
+
+    /// Returns a proper random weight between 0.0 and 1.0, with one decimal value.
+    pub fn random_weight() -> f32 {
+        // thread_rng().gen_range(0_i32, 11_i32) as f32 / 10.0_f32
+        thread_rng().gen_range(0_f32, 1_f32)
     }
 }
 
