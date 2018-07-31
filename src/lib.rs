@@ -36,6 +36,11 @@ mod network {
     fn partial_eq() {
         assert_eq!(Network::new(&vec![1.0, 1.0], 1), Network::new(&vec![1.0, 1.0], 1));
     }
+
+    #[test]
+    fn evaluation() {
+        assert_eq!(Network::build_from_example().evaluate(), [0.69_f32]);
+    }
 }
 
 

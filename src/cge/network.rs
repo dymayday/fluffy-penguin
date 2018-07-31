@@ -150,9 +150,8 @@ impl Network<f32> {
 
     /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
     pub fn evaluate(&mut self) -> Vec<f32> {
-        println!("neuron_map: {:?}", self.neuron_map);
-        println!("neuron_indices_map: {:#?}", self.neuron_indices_map);
-
+        // println!("neuron_map: {:?}", self.neuron_map);
+        // println!("neuron_indices_map: {:#?}", self.neuron_indices_map);
         let g = self.genome.clone();
         self.evaluate_slice(&g)
     }
