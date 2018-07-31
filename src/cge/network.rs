@@ -32,13 +32,20 @@ pub struct Network<T> {
 
 impl Network<f32> {
     pub fn new(input_vec: &Vec<f32>, omega_number: i32) -> Self {
-        Network::new_full(input_vec, omega_number)
+        Network::new_grow(input_vec, omega_number)
     }
 
     /// Builds and returns a Network from a list of input value using the `grow` method.
     /// For a given maximum depth, the grow method produces linear genomes encoding neural networks
     /// of irregular shape because a node is assigned to a randomly generated neuron node having a
     /// random number of inputs or to a randomly selected input node.
+    ///
+    /// The grow method, adds more stochastic variation such that the depth of
+    /// some (or all) branches may be smaller. Initial structures can also be chosen to be minimal,
+    /// which is done in our experiments. This means that an initial network has no hidden layers
+    /// or jumper connections, only 1 neuron per output with each of these connected to all inputs.
+    /// Starting from simple initial structures is the way it is done by nature and most of the
+    /// other evolutionary methods 
     ///
     /// There is two important thing to notice here:
     /// * The order of the inputs is particularly important.
