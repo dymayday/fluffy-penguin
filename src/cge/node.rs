@@ -92,6 +92,11 @@ impl TransferFunctionTrait<f32> for Node<f32> {
         else { self.value }
     }
 
+    fn sigmoids(&self) -> f32 {
+        1.0 / (1.0 + (- self.value).exp())
+    }
+
+
 }
 
 
