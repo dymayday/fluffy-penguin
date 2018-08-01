@@ -6,6 +6,7 @@ pub trait TransferFunctionTrait<T> {
     fn isrlu(&self, alpha: T) -> T;
     fn isru(&self, alpha: T) -> T;
     fn relu(&self) -> T;
+    fn sigmoids(&self) -> T;
 }
 
 impl TransferFunctionTrait<f32> for f32 {
@@ -47,6 +48,17 @@ impl TransferFunctionTrait<f32> for f32 {
     fn relu(&self) -> f32 {
         if *self < 0.0 { 0.0 }
         else { *self }
+    }
+
+    /// Sigmoids activation function.
+    /// it takes a real-valued number and “squashes” it into range between 0 and 1. In particular,
+    /// large negative numbers become 0 and large positive numbers become 1. The sigmoid function has
+    /// seen frequent use historically since it has a nice interpretation as the firing rate of a
+    /// neuron: from not firing at all (0) to fully-saturated firing at an assumed maximum frequency (1).
+    /// In practice, the sigmoid non-linearity has recently fallen out of favor and it is rarely ever
+    /// used.
+    fn sigmoids(&self) -> f32 {
+        1.0 / (1.0 + (- *self).exp())
     }
 }
 

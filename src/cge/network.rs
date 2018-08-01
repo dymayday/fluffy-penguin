@@ -257,6 +257,7 @@ impl Network<f32> {
                         );
                     self.genome[neuron_index].value = neuron_output;
                     let activated_neuron_value: f32 = node.isrlu(0.1);
+                    // let activated_neuron_value: f32 = node.sigmoids();
                     // Update the neuron value in the neuron_map with its activated value from its
                     // transfert function to be used by jumper connection nodes.
                     self.neuron_map[node.id] = activated_neuron_value;
@@ -287,17 +288,16 @@ impl Network<f32> {
                             );
                     }
 
-                    // println!("\n\nEval slice: {:#?}", sub_genome_slice);
                     stack.append(&mut self.evaluate_slice(&sub_genome_slice));
                 }
                 // _ => println!("Unknown Allele encountered: {:#?}", node)
             }
+
             // println!("Stack: [{:>2}] = {:?} ", i, stack);
-            
             // let mut input = String::new();
             // ::std::io::stdin().read_line(&mut input)
             //     .ok()
-            //     .expect("Couldn't read line");    
+            //     .expect("Couldn't read line");
                 
         }
 
