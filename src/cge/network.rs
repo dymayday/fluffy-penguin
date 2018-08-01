@@ -1,4 +1,3 @@
-//! Copy-Pasta some info about our Artificial Neural Network here buddy.
 //! A flexible encoding method enables one to design an efficient evolutionary
 //! method that can evolve both the structures and weights of neural networks. 
 //! The genome in EANT2 is designed by taking this fact into consideration.
@@ -25,14 +24,59 @@ pub struct Network<T> {
     // Neuron index lookup table.
     neuron_indices_map: HashMap<usize, usize>,
     // Number of Input in this Network. It has to be a constant value.
-    iota_number: i32,
+    iota_number: usize,
     // The number of Output in this Network. It's a constant value as well.
-    omega_number: i32,
+    omega_number: usize,
 }
 
 impl Network<f32> {
-    pub fn new(input_vec: &Vec<f32>, omega_number: i32) -> Self {
-        Network::new_grow(input_vec, omega_number)
+    /// Generating the initial linear genome use the grow method by default.
+    pub fn new(input_vec: &Vec<f32>, omega_number: usize) -> Self {
+        Network::new_simple(input_vec, omega_number)
+    }
+
+
+    /// Starting from simple initial structures is the way it is done by nature and most of the
+    /// other evolutionary methods.
+    pub fn new_simple(input_vec: &Vec<f32>, omega_number: usize) -> Self {
+        // We gather the number of input from the size of the input vector.
+        let iota_number: usize = input_vec.len();
+        // And determine the approximate size of the vectors the network will use.
+        let max_vector_size: usize = iota_number * omega_number;
+
+        let mut genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
+        
+        {
+            let iota_for_each_neuron: i32 = 1 - iota_number as i32;
+            for omega in 0..(omega_number as usize) {
+                let neuron: Node<f32> = Node::new(
+                    Allele::Neuron,
+                    omega,
+                    Node::random_weight(), 
+                    iota_for_each_neuron
+                    );
+                genome.push(neuron);
+
+                let mut input_node_vector: Vec<Node<f32>> = Network::gen_input_node_vector(input_vec);
+                genome.append(&mut input_node_vector);
+            }
+        }
+        
+        let shadow_genome = genome.clone();
+        let input_map: Vec<f32> = input_vec.clone();
+        let neuron_map: Vec<f32> = vec![0.0_f32; omega_number as usize];
+        let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
+
+        
+        Network {
+            genome,
+            shadow_genome,
+            input_map,
+            neuron_map,
+            neuron_indices_map,
+            iota_number,
+            omega_number,
+        }
     }
 
     /// Builds and returns a Network from a list of input value using the `grow` method.
@@ -50,9 +94,9 @@ impl Network<f32> {
     /// There is two important thing to notice here:
     /// * The order of the inputs is particularly important.
     /// * The weights of each input are randomly attributed.
-    pub fn new_grow(input_vec: &Vec<f32>, omega_number: i32) -> Self {
+    pub fn new_grow(input_vec: &Vec<f32>, omega_number: usize) -> Self {
         // We gather the number of input from the size of the input vector.
-        let iota_number: i32 = input_vec.len() as i32;
+        let iota_number: usize = input_vec.len();
         // And determine the approximate size of the vectors the network will use.
         let max_vector_size: usize = (iota_number * omega_number) as usize;
 
@@ -84,11 +128,11 @@ impl Network<f32> {
     /// There is two important thing to notice here:
     /// * The order of the inputs is particularly important.
     /// * The weights of each input are randomly attributed.
-    pub fn new_full(input_vec: &Vec<f32>, omega_number: i32) -> Self {
+    pub fn new_full(input_vec: &Vec<f32>, omega_number: usize) -> Self {
         // We gather the number of input from the size of the input vector.
-        let iota_number: i32 = input_vec.len() as i32;
+        let iota_number: usize = input_vec.len();
         // And determine the approximate size of the vectors the network will use.
-        let max_vector_size: usize = (iota_number * omega_number) as usize;
+        let max_vector_size: usize = iota_number * omega_number;
 
         let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
         let shadow_genome = genome.clone();
@@ -140,6 +184,19 @@ impl Network<f32> {
     }
 
 
+    /// Returns a vector or Input Node generated from a vector of value.
+    fn gen_input_node_vector(input_vec: &[f32]) -> Vec<Node<f32>> {
+        let mut input_node_vector: Vec<Node<f32>> = Vec::with_capacity(input_vec.len());
+        for (i, v) in input_vec.iter().enumerate() {
+            let mut input_node: Node<f32> = Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
+            input_node.value = *v;
+
+            input_node_vector.push(input_node);
+        }
+        input_node_vector
+    }
+
+
     /// Compute the indexes of the Neuron in the linear genome so we can find them easily during
     /// the evaluation process. This function is meant to be call only once at init time.
     fn compute_neuron_indices(genome: &Vec<Node<f32>>) -> HashMap<usize, usize> {
@@ -153,6 +210,12 @@ impl Network<f32> {
         neuron_indices_hashmap
     }
 
+
+    /// Update the input vector.
+    pub fn update_input(&mut self, input: &[f32]) {
+        assert_eq!(self.input_map.len(), input.len());
+        self.input_map = input.to_vec();
+    }
 
 
     /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
@@ -239,7 +302,7 @@ impl Network<f32> {
         }
 
         assert_eq!(
-            stack.len(), self.omega_number as usize,
+            stack.len(), self.omega_number,
             "Evaluated genome output length differt from expected output length: {} != {}",
             stack.len(), self.omega_number
             );
