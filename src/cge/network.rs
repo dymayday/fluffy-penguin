@@ -121,6 +121,7 @@ impl Network<f32> {
         }
     }
 
+
     /// Builds and returns a Network from a list of input value using the `full` method.
     /// This method adds to the linear genome randomly generated neurons connected to all inputs
     /// until a node is at the maximum depth and then adds only random input nodes. This results in
@@ -153,6 +154,7 @@ impl Network<f32> {
             omega_number,
         }
     }
+
 
     /// Builds and returns the genome from the research papers we use to implement EANT2.
     pub fn build_from_example() -> Self {
@@ -227,7 +229,9 @@ impl Network<f32> {
         // println!("neuron_map: {:?}", self.neuron_map);
         // println!("neuron_indices_map: {:#?}", self.neuron_indices_map);
         let g = self.genome.clone();
-        self.evaluate_slice(&g)
+        let output: Vec<f32> = self.evaluate_slice(&g);
+        assert_eq!(self.omega_number, output.len());
+        output
     }
 
 
@@ -252,7 +256,7 @@ impl Network<f32> {
                     for _ in 0..neuron_input_number {
                         // neuron_input_number += stack.pop().unwrap_or(0.0_f32);
                         // [TODO]: Remove this expect for an unwrap_or maybe ?
-                        neuron_output += stack.pop().expect("The evaluate stack is empty.");
+                        neuron_output += stack.pop().expect("The evaluated stack is empty.");
                     }
 
                     node.value = neuron_output;
