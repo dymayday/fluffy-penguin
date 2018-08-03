@@ -33,11 +33,6 @@ mod network {
     use cge::network::Network;
 
     #[test]
-    fn partial_eq() {
-        assert_eq!(Network::new(&vec![1.0, 1.0], 1), Network::new(&vec![1.0, 1.0], 1));
-    }
-
-    #[test]
     fn evaluation() {
         assert_eq!(Network::build_from_example().evaluate(), [0.69_f32]);
     }
@@ -51,5 +46,20 @@ mod node_tests {
     #[test]
     fn neuron() {
         node::Node::new(node::Allele::Neuron, 0 as usize, 0.3_f32, 1_i32);
+    }
+
+    #[test]
+    fn input() {
+        node::Node::new(node::Allele::Input, 0 as usize, 0.3_f32, 1_i32);
+    }
+
+    #[test]
+    fn forward_jumper_connection() {
+        node::Node::new(node::Allele::JumpForward, 0 as usize, 0.3_f32, 1_i32);
+    }
+
+    #[test]
+    fn recurrent_jumper_connection() {
+        node::Node::new(node::Allele::JumpRecurrent, 0 as usize, 0.3_f32, 1_i32);
     }
 }
