@@ -10,7 +10,6 @@ pub trait TransferFunctionTrait<T> {
 }
 
 impl TransferFunctionTrait<f32> for f32 {
-
     /// ISRLU or "inverse square root linear unit" as better performance than ELU
     /// but has many of the same benefits. ISRLU and ELU have similar curves
     /// and characteristics. Both have negative values, allowing them to push mean unit
@@ -46,8 +45,11 @@ impl TransferFunctionTrait<f32> for f32 {
     /// * Sparsity. When W*x < 0, Relu gives 0, which means sparsity.
     /// * Less calculation load. This may be least important.
     fn relu(&self) -> f32 {
-        if *self < 0.0 { 0.0 }
-        else { *self }
+        if *self < 0.0 {
+            0.0
+        } else {
+            *self
+        }
     }
 
     /// Sigmoids activation function.
@@ -58,7 +60,7 @@ impl TransferFunctionTrait<f32> for f32 {
     /// In practice, the sigmoid non-linearity has recently fallen out of favor and it is rarely ever
     /// used.
     fn sigmoids(&self) -> f32 {
-        1.0 / (1.0 + (- *self).exp())
+        1.0 / (1.0 + (-*self).exp())
     }
 }
 

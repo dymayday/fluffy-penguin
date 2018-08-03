@@ -1,7 +1,7 @@
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use rand::{thread_rng, Rng};
 use activation::TransferFunctionTrait;
+use rand::{thread_rng, Rng};
 
 /// This value is used to check the completeness of the linear genome and sub-linear genomes
 /// (sub-Networks).
@@ -33,13 +33,13 @@ pub enum Allele {
 }
 
 /// A flexible encoding method enables one to design an efficient evolutionary method that can evolve both
-/// the structures and weights of neural networks. The genome in EANT is designed by taking this fact 
+/// the structures and weights of neural networks. The genome in EANT is designed by taking this fact
 /// into consideration.
-/// A genome in EANT is a linear genome consisting of genes (nodes) that can take different forms (alleles), 
+/// A genome in EANT is a linear genome consisting of genes (nodes) that can take different forms (alleles),
 /// symbolized by the [`Allele`] enum.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Node<T> {
-    // This is the specific form a gene can take. Possible values are contained in 
+    // This is the specific form a gene can take. Possible values are contained in
     // the 'Allele' enum: Neuron, Input, JumpForward, JumpRecurrent.
     pub allele: Allele,
     // Unique global identification number. This is used especially by jumper connections.
@@ -88,39 +88,17 @@ impl TransferFunctionTrait<f32> for Node<f32> {
     }
 
     fn relu(&self) -> f32 {
-        if self.value < 0.0 { 0.0 }
-        else { self.value }
+        if self.value < 0.0 {
+            0.0
+        } else {
+            self.value
+        }
     }
 
     fn sigmoids(&self) -> f32 {
-        1.0 / (1.0 + (- self.value).exp())
+        1.0 / (1.0 + (-self.value).exp())
     }
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //
@@ -138,7 +116,7 @@ impl TransferFunctionTrait<f32> for Node<f32> {
 // }
 //
 //
-// /// 
+// ///
 // #[derive(Clone, Debug, PartialEq)]
 // pub struct Neuron {
 //     // Unique global identification number. This is used especially by jumper connections.

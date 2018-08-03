@@ -11,5 +11,4 @@ fn main() {
 
     let mut panda_net: Network<f32> = Network::new_simple(&vec![1_f32; 16], 9);
     println!("Evaluated panda_net output = {:?}", panda_net.evaluate());
-
 }
