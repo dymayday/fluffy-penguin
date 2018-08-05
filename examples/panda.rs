@@ -12,7 +12,7 @@ use fluffy_penguin::cge::network::Network;
 /// Dev purpose: this function test the different implementation of the available variation operators:
 /// * Structural Mutation
 /// * parametric Mutation
-fn dev_variation_operator() {
+fn _dev_variation_operator() {
     let rnd_vec: Vec<f32> = vec![1_f32; 16].iter().map(|_| thread_rng().gen_range(-999_f32, 100_f32)).collect();
     println!("Random input vector = {:?}", rnd_vec);
     let mut panda_net: Network<f32> = Network::new_simple(rnd_vec.len(), 9);
@@ -24,7 +24,7 @@ fn dev_variation_operator() {
 
 
 /// Test learning rate and weight mutation.
-fn exploitation() {
+fn _exploitation() {
     use fluffy_penguin::cge::node::Node;
     use rand::distributions::StandardNormal;
 
@@ -63,7 +63,7 @@ fn exploitation() {
 }
 
 
-fn test_exploitation() {
+fn _test_exploitation() {
     use fluffy_penguin::genetic_algorithm::individual::Specimen;
 
     println!("Test Exploitation phase.");
@@ -75,8 +75,8 @@ fn test_exploitation() {
     // let mut specimen_origin: Specimen<f32> = Specimen::new(16, 9);
     // let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
 
-    for i in 0..100 {
-        specimen_mutated.exploitation();
+    for i in 0..10 {
+        specimen_mutated.parametric_mutation();
         let mutated_genome = &specimen_mutated.ann.genome;
 
         println!("Generation {:>3}         ####################################################################", i+1);
@@ -90,13 +90,42 @@ fn test_exploitation() {
     }
 }
 
+
+fn _test_subnetwork_generation() {
+    use fluffy_penguin::genetic_algorithm::individual::Specimen;
+
+    println!("Test subnetwork generation.");
+
+    // let specimen_origin: Specimen<f32> = Specimen::new_from_example();
+    // let mut specimen_mutated: Specimen<f32> = Specimen::new_from_example();
+    let specimen_origin: Specimen<f32> = Specimen::new(16, 9);
+    let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
+
+    for i in 0..1 {
+        println!("Generation {:>3}         ####################################################################", i+1);
+
+        specimen_mutated.structural_mutation(10.0);
+
+        println!("Origin:                    ####################################################################");
+        println!("{:#?}", specimen_origin.ann.genome);
+        println!("Mutated:                   ####################################################################");
+        // println!("{:#?}", specimen_mutated.ann.genome);
+        
+        
+        println!("                       ####################################################################\n");
+    }
+    
+    
+}
+
 fn main() {
     let mut network: Network<f32> = Network::build_from_example();
     println!("Evaluated example output = {:?}", network.evaluate());
 
-    dev_variation_operator();
+    _dev_variation_operator();
 
     // exploitation();
-    test_exploitation();
+    // test_exploitation();
+    _test_subnetwork_generation();
 
 }
