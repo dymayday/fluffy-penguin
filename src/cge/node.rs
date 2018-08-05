@@ -50,7 +50,8 @@ pub struct Node<T> {
     pub w: T,
     // Step size of a parametric mutation or learning rate.
     pub sigma: T,
-    // Number of inputs of the Neuron.
+    // Integer symbolizing the number of inputs of the Neuron and defined by the following 
+    // equation: 1 - n, where n is the actual number of input of the Neuron.
     pub iota: i32,
     // Stores the result of its current computation. This is useful since the results of signals
     // at recurrent links are available at the next time step.
