@@ -7,6 +7,7 @@
 extern crate rand;
 pub mod activation;
 pub mod cge;
+pub mod genetic_algorithm;
 
 
 #[cfg(test)]
