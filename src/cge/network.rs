@@ -4,6 +4,7 @@
 //!
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
+use rand::{thread_rng, Rng};
 use activation::TransferFunctionTrait;
 use cge::node::{Allele, Node, IOTA_INPUT_VALUE};
 use std::collections::HashMap;
@@ -16,12 +17,12 @@ pub struct Network<T> {
     pub genome: Vec<Node<T>>,
     // Shadowing the genome is the only workaround to fix some immutable with mutable borrow issue.
     // The sizes of the networks should not be an issue though.
-    shadow_genome: Vec<Node<T>>,
+    pub shadow_genome: Vec<Node<T>>,
     // This let us map the values of all Input Node. Used during the evaluation phase.
     // Those values are processed by the ReLu transfert function during evaluation time.
-    input_map: Vec<T>,
+    pub input_map: Vec<T>,
     // Neuron value processed by a `Transfer Function`.
-    neuron_map: Vec<T>,
+    pub neuron_map: Vec<T>,
     // Neuron index lookup table.
     neuron_indices_map: HashMap<usize, usize>,
     // Number of Input in this Network. It has to be a constant value.
@@ -107,7 +108,8 @@ impl Network<f32> {
         // And determine the approximate size of the vectors the network will use.
         let max_vector_size: usize = (iota_size * omega_size) as usize;
 
-        let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
+        let mut genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
+
         let shadow_genome = genome.clone();
         let input_map: Vec<f32> = input_vec.clone();
         let neuron_map: Vec<f32> = vec![];
@@ -192,6 +194,49 @@ impl Network<f32> {
     }
 
 
+    /// Returns a sub-network composed of one Neuron Node followed by randomly selected 
+    /// input Node from a vector of input.
+    pub fn gen_random_subnetwork(neuron_id: usize, input_map: &Vec<f32>) -> Vec<Node<f32>> {
+        let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
+
+        // Here we clone the input vector to shuffle its values to pick the computed number of Input
+        // Node in the new sub-network.
+        // let input_vec: Vec<f32> = input_map.clone();
+        // thread_rng().shuffle(&mut input_vec);
+
+        let mut input_node_vec: Vec<Node<f32>> = Vec::with_capacity(input_map.len());
+
+        for i in 0..input_map.len() {
+            if thread_rng().gen::<bool>() {
+                let mut input_node: Node<f32> = 
+                    Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
+                input_node.value = input_map[i];
+
+                input_node_vec.push(input_node);
+
+            }
+        }
+        input_node_vec.shrink_to_fit();
+
+        // We compute the number of Input Node this sub-network will have.
+        let input_size: usize = input_node_vec.len();
+        // And compute the iota value of the Neuron.
+        let iota: i32 = 1 - input_size as i32;
+
+        // The initial weight of the first node of a newly added sub-network is set to zero
+	// so as not to disturb the performance or behavior of the neural network.
+        let neuron: Node<f32> = Node::new(Allele::Neuron, neuron_id, 0.0, iota);
+        subgenome.push(neuron);
+
+        // Append all the inputs of our newly created Neuron.
+        subgenome.append(&mut input_node_vec);
+
+        // Shrink the sub-network to fit its actual size in memory.
+        subgenome.shrink_to_fit();
+        subgenome
+    }
+
+
     /// Returns a vector of Input Node generated from a vector of value.
     fn gen_input_node_vector(input_vec: &[f32]) -> Vec<Node<f32>> {
         let mut input_node_vector: Vec<Node<f32>> = Vec::with_capacity(input_vec.len());
@@ -221,11 +266,29 @@ impl Network<f32> {
     }
 
 
+    /// Update the attributes of the network.
+    pub fn update_network_attributes(&mut self) {
+        self.shadow_genome = self.genome.clone();
+        self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
+
+        self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
+    }
+
+
     /// Update the input vector.
     pub fn update_input(&mut self, input: &[f32]) {
         assert_eq!(self.input_map.len(), input.len());
         self.input_map = input.to_vec();
     }
+
+
+    // /// Update the neuron map attribute of the network if needed.
+    // /// This is specifically use after a structural mutation.
+    // fn update_neuron_map(&mut self) {
+    //     // let genome: &Vec<Node<f32>> = &self.genome;
+    //     // self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
+    //
+    // }
 
 
     /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
@@ -239,7 +302,8 @@ impl Network<f32> {
     }
 
 
-    /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network without decoding it.
+    /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network 
+    /// without decoding it.
     fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Vec<f32> {
         let mut stack: Vec<f32> = Vec::with_capacity(input.len());
 
