@@ -392,8 +392,8 @@ impl Network<f32> {
 
     /// Render an articial neural network to a dot file for a better visualization purpose.
     pub fn render_to_dot(&self, file_name: &str, graph_name: &str) -> ::std::io::Result<()> {
-        use std::io::BufWriter;
         use std::fs::File;
+        use std::io::BufWriter;
 
         let f = File::create(file_name)?;
         {
@@ -402,13 +402,40 @@ impl Network<f32> {
             // Write header.
             writer.write(format!("digraph {} {{\n", graph_name).as_bytes())?;
 
+            // Pretty printing setup.
+            {
+                let msg: String = format!("\trankdir=BT\n\tsplines=spline\n\tnode [fixedsize=true];\n");
+                writer.write(msg.as_bytes())?;
+
+                let msg: String =
+                    format!("\tsubgraph cluster_0 {{\n\tcolor=white;\n\tnode [style=solid, color=violet, shape=circle];\n\t");
+                writer.write(msg.as_bytes())?;
+
+                for i in 0..self.input_map.len() {
+                    let msg: String = format!("I{} ", i);
+                    writer.write(msg.as_bytes())?;
+                }
+                writer.write(";\n\t}\n".as_bytes())?;
+
+                let msg: String =
+                    format!("\tsubgraph cluster_1 {{\n\tcolor=white;\n\tnode [style=solid, color=red, shape=circle];\n\t");
+                writer.write(msg.as_bytes())?;
+
+                for i in 0..self.omega_size {
+                    let msg: String = format!("N{} ", i);
+                    writer.write(msg.as_bytes())?;
+                }
+                writer.write(";\n\t}\n".as_bytes())?;
+            }
+
+
             for ni in 0..self.neuron_map.len() {
-                let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t="N", i=ni);
+                let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "N", i = ni);
                 writer.write(msg.as_bytes())?;
             }
 
             for ii in 0..self.input_map.len() {
-                let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t="I", i=ii);
+                let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "I", i = ii);
                 writer.write(msg.as_bytes())?;
             }
 
@@ -422,43 +449,42 @@ impl Network<f32> {
 
                 match node.allele {
                     Allele::Input => {
-                        stack.push(format!("I{id}", id=node.id));
-                        stack.push(format!("[label=\"{w}\"]", w=node.w));
+                        stack.push(format!("I{id}", id = node.id));
+                        stack.push(format!("[label=\"{w}\"]", w = node.w));
                     }
                     Allele::JumpForward => {
-                        let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t="JF", i=i);
+                        let msg: String =
+                            format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "JF", i = i);
                         writer.write(msg.as_bytes())?;
 
-                        stack.push(format!("JF{id}", id=node.id));
-                        stack.push(format!("[label=\"{w}\"]", w=node.w));
+                        stack.push(format!("JF{id}", id = node.id));
+                        stack.push(format!("[label=\"{w}\"]", w = node.w));
                     }
                     Allele::JumpRecurrent => {
-                        let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t="JR", i=i);
+                        let msg: String =
+                            format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "JR", i = i);
                         writer.write(msg.as_bytes())?;
 
-                        stack.push(format!("JR{id}", id=node.id));
-                        stack.push(format!("[label=\"{w}\"]", w=node.w));
+                        stack.push(format!("JR{id}", id = node.id));
+                        stack.push(format!("[label=\"{w}\"]", w = node.w));
                     }
                     Allele::Neuron => {
                         let neuron_input_number: usize = (1 - node.iota) as usize;
                         for _ in 0..neuron_input_number {
                             let msg: String = format!(
                                 "    {x} -> N{id}{label};\n",
-                                id=node.id,
-                                label=stack.pop().expect("No more label in stack."),
-                                x=stack.pop().expect("Empty stack."),
-                                );
+                                id = node.id,
+                                label = stack.pop().expect("No more label in stack."),
+                                x = stack.pop().expect("Empty stack."),
+                            );
 
                             writer.write(msg.as_bytes())?;
                         }
 
-                        stack.push(format!("N{id}", id=node.id));
-                        stack.push(format!("[label=\"{w}\"]", w=node.w));
-                    }
-                    // _ => {}
-
+                        stack.push(format!("N{id}", id = node.id));
+                        stack.push(format!("[label=\"{w}\"]", w = node.w));
+                    } // _ => {}
                 }
-
             }
 
             // Close the graph repsentation.
