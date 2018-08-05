@@ -8,6 +8,7 @@ use activation::TransferFunctionTrait;
 use cge::node::{Allele, Node, IOTA_INPUT_VALUE};
 use rand::{thread_rng, Rng};
 use std::collections::HashMap;
+use std::io::Write;
 
 /// The representation of an Artificial Neural Network (ANN) using the Common Genetic Encoding
 /// (CGE) (http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.70.8729).
@@ -386,5 +387,84 @@ impl Network<f32> {
             self.omega_size
         );
         stack
+    }
+
+
+    /// Render an articial neural network to a dot file for a better visualization purpose.
+    pub fn render_to_dot(&self, file_name: &str, graph_name: &str) -> ::std::io::Result<()> {
+        use std::io::BufWriter;
+        use std::fs::File;
+
+        let f = File::create(file_name)?;
+        {
+            let mut writer = BufWriter::new(f);
+
+            // Write header.
+            writer.write(format!("digraph {} {{\n", graph_name).as_bytes())?;
+
+            for ni in 0..self.neuron_map.len() {
+                let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t="N", i=ni);
+                writer.write(msg.as_bytes())?;
+            }
+
+            for ii in 0..self.input_map.len() {
+                let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t="I", i=ii);
+                writer.write(msg.as_bytes())?;
+            }
+
+            let input_len: usize = self.genome.len();
+            let input: &Vec<Node<f32>> = &self.genome;
+
+            let mut stack: Vec<String> = Vec::with_capacity(input_len);
+
+            for i in 0..input_len {
+                let node: &Node<f32> = &input[input_len - i - 1];
+
+                match node.allele {
+                    Allele::Input => {
+                        stack.push(format!("I{id}", id=node.id));
+                        stack.push(format!("[label=\"{w}\"]", w=node.w));
+                    }
+                    Allele::JumpForward => {
+                        let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t="JF", i=i);
+                        writer.write(msg.as_bytes())?;
+
+                        stack.push(format!("JF{id}", id=node.id));
+                        stack.push(format!("[label=\"{w}\"]", w=node.w));
+                    }
+                    Allele::JumpRecurrent => {
+                        let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t="JR", i=i);
+                        writer.write(msg.as_bytes())?;
+
+                        stack.push(format!("JR{id}", id=node.id));
+                        stack.push(format!("[label=\"{w}\"]", w=node.w));
+                    }
+                    Allele::Neuron => {
+                        let neuron_input_number: usize = (1 - node.iota) as usize;
+                        for _ in 0..neuron_input_number {
+                            let msg: String = format!(
+                                "    {x} -> N{id}{label};\n",
+                                id=node.id,
+                                label=stack.pop().expect("No more label in stack."),
+                                x=stack.pop().expect("Empty stack."),
+                                );
+
+                            writer.write(msg.as_bytes())?;
+                        }
+
+                        stack.push(format!("N{id}", id=node.id));
+                        stack.push(format!("[label=\"{w}\"]", w=node.w));
+                    }
+                    // _ => {}
+
+                }
+
+            }
+
+            // Close the graph repsentation.
+            writer.write("}".as_bytes())?;
+        } // the buffer is flushed once writer goes out of scope
+
+        Ok(())
     }
 }

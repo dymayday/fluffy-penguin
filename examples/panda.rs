@@ -5,6 +5,7 @@ extern crate rand;
 
 use fluffy_penguin::cge::network::Network;
 use rand::{thread_rng, Rng};
+use std::fs::File;
 // use fluffy_penguin::cge::node::Allele;
 
 
@@ -115,23 +116,29 @@ fn _test_subnetwork_generation() {
 
     println!("Test subnetwork generation.");
 
-    // let specimen_origin: Specimen<f32> = Specimen::new_from_example();
-    // let mut specimen_mutated: Specimen<f32> = Specimen::new_from_example();
-    let specimen_origin: Specimen<f32> = Specimen::new(16, 9);
-    let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
+    let specimen_origin: Specimen<f32> = Specimen::new_from_example();
+    let mut specimen_mutated: Specimen<f32> = Specimen::new_from_example();
+    // let specimen_origin: Specimen<f32> = Specimen::new(16, 9);
+    // let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
+
+    {
+        let file_name: &str = "examples/origin.dot";
+        let graph_name: &str = "origin";
+        specimen_origin.ann.render_to_dot(file_name, graph_name);
+    }
 
     for i in 0..1 {
-        println!("Generation {:>3}         ####################################################################", i+1);
+        // println!("Generation {:>3}         ####################################################################", i+1);
 
         specimen_mutated.structural_mutation(10.0);
 
-        println!("Origin:                    ####################################################################");
-        println!("{:#?}", specimen_origin.ann.genome);
-        println!("Mutated:                   ####################################################################");
-        // println!("{:#?}", specimen_mutated.ann.genome);
-
-
-        println!("                       ####################################################################\n");
+        // println!("Origin:                    ####################################################################");
+        // println!("{:#?}", specimen_origin.ann.genome);
+        // println!("Mutated:                   ####################################################################");
+        // // println!("{:#?}", specimen_mutated.ann.genome);
+        //
+        //
+        // println!("                       ####################################################################\n");
     }
 }
 

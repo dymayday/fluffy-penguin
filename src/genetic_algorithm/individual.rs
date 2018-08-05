@@ -93,7 +93,7 @@ impl Specimen<f32> {
         use cge::node::Allele;
 
         // Find the unique ID of a potential new Neuron added by the special mutation:
-        // 'sub-network add'.
+        // 'sub-network addition'.
         let mut new_neuron_id: usize = self.ann.neuron_map.len();
 
         let mut mutated_genome: Vec<Node<f32>> = Vec::with_capacity(self.ann.genome.len());
