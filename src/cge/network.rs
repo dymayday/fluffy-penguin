@@ -4,9 +4,9 @@
 //!
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use rand::{thread_rng, Rng};
 use activation::TransferFunctionTrait;
 use cge::node::{Allele, Node, IOTA_INPUT_VALUE};
+use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 
 /// The representation of an Artificial Neural Network (ANN) using the Common Genetic Encoding
@@ -194,7 +194,7 @@ impl Network<f32> {
     }
 
 
-    /// Returns a sub-network composed of one Neuron Node followed by randomly selected 
+    /// Returns a sub-network composed of one Neuron Node followed by randomly selected
     /// input Node from a vector of input.
     pub fn gen_random_subnetwork(neuron_id: usize, input_map: &Vec<f32>) -> Vec<Node<f32>> {
         let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
@@ -208,12 +208,11 @@ impl Network<f32> {
 
         for i in 0..input_map.len() {
             if thread_rng().gen::<bool>() {
-                let mut input_node: Node<f32> = 
+                let mut input_node: Node<f32> =
                     Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
                 input_node.value = input_map[i];
 
                 input_node_vec.push(input_node);
-
             }
         }
         input_node_vec.shrink_to_fit();
@@ -224,7 +223,7 @@ impl Network<f32> {
         let iota: i32 = 1 - input_size as i32;
 
         // The initial weight of the first node of a newly added sub-network is set to zero
-	// so as not to disturb the performance or behavior of the neural network.
+        // so as not to disturb the performance or behavior of the neural network.
         let neuron: Node<f32> = Node::new(Allele::Neuron, neuron_id, 0.0, iota);
         subgenome.push(neuron);
 
@@ -302,7 +301,7 @@ impl Network<f32> {
     }
 
 
-    /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network 
+    /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network
     /// without decoding it.
     fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Vec<f32> {
         let mut stack: Vec<f32> = Vec::with_capacity(input.len());

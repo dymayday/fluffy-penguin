@@ -1,4 +1,3 @@
-
 use genetic_algorithm::individual::Specimen;
 
 pub struct Population<T> {
@@ -9,14 +8,19 @@ pub struct Population<T> {
 }
 
 impl Population<f32> {
-    fn new(population_size: usize, input_size: usize, output_size: usize, mutation_probability: f32) -> Self {
+    fn new(
+        population_size: usize,
+        input_size: usize,
+        output_size: usize,
+        mutation_probability: f32,
+    ) -> Self {
         let mut species: Vec<Specimen<f32>> = Vec::with_capacity(population_size);
 
         for _ in 0..population_size {
             species.push(Specimen::new(input_size, output_size));
         }
 
-        Population { 
+        Population {
             species,
             current_generation: 0,
             pm: mutation_probability,
