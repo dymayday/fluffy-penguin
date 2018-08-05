@@ -47,6 +47,8 @@ pub struct Node<T> {
     // The weight encodes the synaptic strength of the connection between the Node
     // coded by the gene and the Neuron to which it is connected.
     pub w: T,
+    // Step size of a mutation.
+    pub learning_rate: T,
     // Number of inputs of the Neuron.
     pub iota: i32,
     // Stores the result of its current computation. This is useful since the results of signals
@@ -60,6 +62,7 @@ impl Node<f32> {
             allele,
             id,
             w,
+            learning_rate: 0.01_f32,
             iota,
             value: 0_f32,
         }
