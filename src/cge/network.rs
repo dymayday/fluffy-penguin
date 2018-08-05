@@ -8,7 +8,8 @@ use activation::TransferFunctionTrait;
 use cge::node::{Allele, Node, IOTA_INPUT_VALUE};
 use std::collections::HashMap;
 
-/// A Network.
+/// The representation of an Artificial Neural Network (ANN) using the Common Genetic Encoding
+/// (CGE) (http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.70.8729).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Network<T> {
     // The linear genome is represented by a vector of Node.
