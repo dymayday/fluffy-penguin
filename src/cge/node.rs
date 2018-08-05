@@ -46,9 +46,10 @@ pub struct Node<T> {
     pub id: usize,
     // The weight encodes the synaptic strength of the connection between the Node
     // coded by the gene and the Neuron to which it is connected.
+    // w ∈ R.
     pub w: T,
-    // Step size of a mutation.
-    pub learning_rate: T,
+    // Step size of a parametric mutation or learning rate.
+    pub sigma: T,
     // Number of inputs of the Neuron.
     pub iota: i32,
     // Stores the result of its current computation. This is useful since the results of signals
@@ -58,11 +59,12 @@ pub struct Node<T> {
 
 impl Node<f32> {
     pub fn new(allele: Allele, id: usize, w: f32, iota: i32) -> Self {
+        use genetic_algorithm::individual::LEARNING_RATE_THRESHOLD;
         Node {
             allele,
             id,
             w,
-            learning_rate: 0.01_f32,
+            sigma: LEARNING_RATE_THRESHOLD as f32,
             iota,
             value: 0_f32,
         }
@@ -71,8 +73,8 @@ impl Node<f32> {
 
     /// Returns a proper random weight in the space: [0.0, 1.0], with one decimal value.
     pub fn random_weight() -> f32 {
-        thread_rng().gen_range(0_i32, 11_i32) as f32 / 10.0_f32
-        // thread_rng().gen_range(0_f32, 1_f32)
+        // thread_rng().gen_range(0_i32, 11_i32) as f32 / 10.0_f32
+        thread_rng().gen_range(0_f32, 1_f32)
     }
 }
 
