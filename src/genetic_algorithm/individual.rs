@@ -7,6 +7,8 @@ use cge::node::Node;
 
 pub const LEARNING_RATE_THRESHOLD: f32 = 0.01;
 
+
+/// A Specimen regroups all the attributes needed by the genetic algorithm of an individual.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Specimen<T> {
     input_size: usize,
