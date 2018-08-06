@@ -116,9 +116,13 @@ fn _test_subnetwork_generation(export: bool) {
 
     println!("Test subnetwork generation.");
 
+    let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
-    // let specimen_origin: Specimen<f32> = Specimen::new(16, 9);
+    // let nbi: usize = 16;
+    // let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
     let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
+
+    let input_vector: Vec<f32> = vec![1_f32; nbi];
 
     {
         let file_name: &str = "examples/0rigin.dot";
@@ -146,7 +150,7 @@ fn _test_subnetwork_generation(export: bool) {
         //     .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
 
             println!("");
-            specimen_origin.ann.update_input(&vec![1_f32; 2]);
+            specimen_origin.ann.update_input(&input_vector);
             println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
     }
 
@@ -192,8 +196,8 @@ fn _test_subnetwork_generation(export: bool) {
         // println!("ann len = {}", specimen_mutated.ann.genome.len());
         // println!("{:#?}", specimen_mutated.ann.genome);
         // println!("");
-        specimen_mutated.ann.update_input(&vec![1_f32; 2]);
-        println!("gen {:>3}: out = {:?}", i, specimen_mutated.ann.evaluate());
+        specimen_mutated.ann.update_input(&input_vector);
+        println!("Gen {:>3}: out = {:?}", i, specimen_mutated.ann.evaluate());
         //
         //
         // println!("                       ####################################################################\n");
@@ -208,5 +212,5 @@ fn main() {
 
     // exploitation();
     // test_exploitation();
-    _test_subnetwork_generation(false);
+    _test_subnetwork_generation(true);
 }
