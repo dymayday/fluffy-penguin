@@ -28,6 +28,29 @@ mod activation_tests {
 
 }
 
+#[cfg(test)]
+mod specimen {
+    use genetic_algorithm::individual::Specimen;
+
+    #[test]
+    fn structural_mutation() {
+        let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
+        let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
+        let input_vector: Vec<f32> = vec![1_f32; 2];
+
+        specimen_origin.ann.update_input(&input_vector);
+        let specimen_origin_output: Vec<f32> = specimen_origin.evaluate();
+
+        specimen_mutated.ann.update_input(&input_vector);
+        for _ in 0..10 {
+            specimen_mutated.structural_mutation(0.1);
+            specimen_mutated.ann.update_input(&input_vector);
+
+            assert_eq!(specimen_origin_output, specimen_mutated.evaluate());
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod network {
