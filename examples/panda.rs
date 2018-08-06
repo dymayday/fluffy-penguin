@@ -272,7 +272,7 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
 
         specimen_mutated.ann.update_input(&input_vector);
         // println!("Gen {:>3}: out = {:?}", i+1, specimen_mutated.ann.evaluate());
-        println!("Gen {:>3}: creation", i + 1);
+        println!("Gen {:>3}: creation", i);
         // println!("{:#?}", specimen_mutated.ann.genome);
 
         spec_vec.push(specimen_mutated.clone());
@@ -282,7 +282,7 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
 
     for i in 0..spec_vec.len() {
         let spec = &mut spec_vec[i];
-        println!("Gen {:>3}: out = {:?}", i + 1, spec.evaluate());
+        println!("Gen {:>3}: out = {:?}", i, spec.evaluate());
     }
 }
 
