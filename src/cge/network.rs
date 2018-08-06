@@ -203,10 +203,11 @@ impl Network<f32> {
         let mut input_node_vec: Vec<Node<f32>> = Network::gen_input_node_vector(&input_map);
         thread_rng().shuffle(&mut input_node_vec);
 
-        // New hidden neurons are connected to approximately 50 % of the inputs, which makes the search for new structures stochastic.
-        // let input_len_to_pick: usize = input_node_vec.len() / 2 as usize;
-        // Or randomly pick inputs from the range of input available.
-        let input_len_to_pick: usize = thread_rng().gen_range(1_usize, input_node_vec.len() + 1);
+        // New hidden neurons are only connected to a subset of inputs, approximately 50%,
+        // which makes the search for new structures "more stochastic".
+        let input_len_to_pick: usize = input_node_vec.len() / 2 as usize;
+        // Or we can randomly pick inputs from the range of input available.
+        // let input_len_to_pick: usize = thread_rng().gen_range(1_usize, input_node_vec.len() + 1);
 
         assert!(input_len_to_pick <= input_node_vec.len());
         input_node_vec = input_node_vec[..input_len_to_pick].to_vec();
@@ -241,6 +242,24 @@ impl Network<f32> {
             input_node_vector.push(input_node);
         }
         input_node_vector
+    }
+
+
+    /// ...
+    pub fn gen_random_jumper_connection(&self) -> Node<f32> {
+        let jumper_kind: Allele = match thread_rng().gen_range(0_usize, 2_usize) {
+            0 => Allele::JumpForward,
+            _ => Allele::JumpRecurrent,
+        };
+        // let jumper_kind: Allele = Allele::JumpRecurrent;
+
+        let values: Vec<usize> = self.neuron_indices_map.values().map(|x| *x).collect();
+        let jumper_id: usize = *thread_rng()
+            .choose(&values)
+            .expect("Fail to draw a jumper connection id to link to an existing Neuron.");
+
+        let jumper: Node<f32> = Node::new(jumper_kind, jumper_id, 0.0, IOTA_INPUT_VALUE);
+        jumper
     }
 
 
@@ -333,7 +352,7 @@ impl Network<f32> {
                     let activated_neuron_value: f32 = node.isrlu(0.1);
                     // let activated_neuron_value: f32 = node.relu();
                     // let activated_neuron_value: f32 = node.sigmoids();
-                    
+
                     // Update the neuron value in the neuron_map with its activated value from its
                     // transfert function to be used by jumper connection nodes.
                     self.neuron_map[node.id] = activated_neuron_value;
@@ -351,8 +370,11 @@ impl Network<f32> {
                         .get(&node.id)
                         .expect(&format!("Fail to lookup the node id = {}", node.id));
 
-                    let sub_genome_slice: Vec<Node<f32>> = self.shadow_genome[forwarded_node_index..self.shadow_genome.len()-1].to_vec();
-                    let jf_slice: Vec<Node<f32>> = Network::build_jf_slice(forwarded_node_index, &sub_genome_slice);
+                    let sub_genome_slice: Vec<Node<f32>> = self.shadow_genome
+                        [forwarded_node_index..self.shadow_genome.len() - 1]
+                        .to_vec();
+                    let jf_slice: Vec<Node<f32>> =
+                        Network::build_jf_slice(forwarded_node_index, &sub_genome_slice);
                     stack.append(&mut self.evaluate_slice(&jf_slice));
                     // stack.append(&mut vec![0_f32]);
                 }
@@ -392,19 +414,22 @@ impl Network<f32> {
             let node: Node<f32> = input_vec[i].clone();
 
             match node.allele {
-                 Allele::Neuron => {
+                Allele::Neuron => {
                     iota += node.iota;
-                 }
-                 _ => {
+                }
+                _ => {
                     iota += 1;
-                 }
+                }
             }
 
             output_vec.push(node);
 
             i += 1;
             if i >= input_len {
-                println!("Genome end reached for Neuron id = {} : {}", neuron_index, i);
+                println!(
+                    "Genome end reached for Neuron id = {} : {}",
+                    neuron_index, i
+                );
                 break;
             }
         }
@@ -451,6 +476,33 @@ impl Network<f32> {
                     writer.write(msg.as_bytes())?;
                 }
                 writer.write(";\n\t}\n\n".as_bytes())?;
+
+                // Paint JF.
+                let msg: String =
+                    format!("\tsubgraph cluster_2 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=blue, shape=circle];\n\t");
+                writer.write(msg.as_bytes())?;
+
+                for node in &self.genome {
+                    if node.allele == Allele::JumpForward {
+                            let msg: String = format!("JF{} ", node.id);
+                            writer.write(msg.as_bytes())?;
+                        }
+                    }
+                writer.write(";\n\t}\n\n".as_bytes())?;
+
+                // Paint JR.
+                let msg: String =
+                    format!("\tsubgraph cluster_3 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=green, shape=circle];\n\t");
+                writer.write(msg.as_bytes())?;
+
+                for node in &self.genome {
+                    if node.allele == Allele::JumpForward {
+                            let msg: String = format!("JR{} ", node.id);
+                            writer.write(msg.as_bytes())?;
+                        }
+                    }
+                writer.write(";\n\t}\n\n".as_bytes())?;
+
             }
 
             // for ni in 0..self.neuron_map.len() {
