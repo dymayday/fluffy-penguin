@@ -408,7 +408,7 @@ impl Network<f32> {
                 writer.write(msg.as_bytes())?;
 
                 let msg: String =
-                    format!("\tsubgraph cluster_0 {{\n\tcolor=white;\n\tnode [style=solid, color=violet, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_0 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=violet, shape=circle];\n\t");
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.input_map.len() {
@@ -418,39 +418,41 @@ impl Network<f32> {
                 writer.write(";\n\t}\n".as_bytes())?;
 
                 let msg: String =
-                    format!("\tsubgraph cluster_1 {{\n\tcolor=white;\n\tnode [style=solid, color=red, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_1 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=red, shape=circle];\n\t");
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.omega_size {
                     let msg: String = format!("N{} ", i);
                     writer.write(msg.as_bytes())?;
                 }
-                writer.write(";\n\t}\n".as_bytes())?;
+                writer.write(";\n\t}\n\n".as_bytes())?;
             }
 
 
-            for ni in 0..self.neuron_map.len() {
-                let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "N", i = ni);
-                writer.write(msg.as_bytes())?;
-            }
-
-            for ii in 0..self.input_map.len() {
-                let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "I", i = ii);
-                writer.write(msg.as_bytes())?;
-            }
+            // for ni in 0..self.neuron_map.len() {
+            //     let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "N", i = ni);
+            //     writer.write(msg.as_bytes())?;
+            // }
+            //
+            // for ii in 0..self.input_map.len() {
+            //     let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "I", i = ii);
+            //     writer.write(msg.as_bytes())?;
+            // }
 
             let input_len: usize = self.genome.len();
             let input: &Vec<Node<f32>> = &self.genome;
 
             let mut stack: Vec<String> = Vec::with_capacity(input_len);
 
+            println!("input len = {}", input_len);
             for i in 0..input_len {
                 let node: &Node<f32> = &input[input_len - i - 1];
 
                 match node.allele {
                     Allele::Input => {
                         stack.push(format!("I{id}", id = node.id));
-                        stack.push(format!("[label=\"{w}\"]", w = node.w));
+                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
+                        stack.push(format!("[label=\"\"]"));
                     }
                     Allele::JumpForward => {
                         let msg: String =
@@ -458,7 +460,8 @@ impl Network<f32> {
                         writer.write(msg.as_bytes())?;
 
                         stack.push(format!("JF{id}", id = node.id));
-                        stack.push(format!("[label=\"{w}\"]", w = node.w));
+                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
+                        stack.push(format!("[label=\"\"]"));
                     }
                     Allele::JumpRecurrent => {
                         let msg: String =
@@ -466,7 +469,8 @@ impl Network<f32> {
                         writer.write(msg.as_bytes())?;
 
                         stack.push(format!("JR{id}", id = node.id));
-                        stack.push(format!("[label=\"{w}\"]", w = node.w));
+                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
+                        stack.push(format!("[label=\"\"]"));
                     }
                     Allele::Neuron => {
                         let neuron_input_number: usize = (1 - node.iota) as usize;
@@ -482,11 +486,26 @@ impl Network<f32> {
                         }
 
                         stack.push(format!("N{id}", id = node.id));
-                        stack.push(format!("[label=\"{w}\"]", w = node.w));
+                        // stack.push(format!("[label=\"{w:.3}\"]", w = node.w));
+                        stack.push(format!("[label=\"\"]"));
                     } // _ => {}
                 }
             }
 
+
+            // for _ in 0..stack.len() {
+            //     let msg: String = format!(
+            //                     "    {x} -> N{id}{label};\n",
+            //                     id = node.id,
+            //                     label = stack.pop().expect("No more label in stack."),
+            //                     x = stack.pop().expect("Empty stack."),
+            //                 );
+            //
+            //                 writer.write(msg.as_bytes())?;
+            //
+            // }
+
+            println!("Stack = {:#?}", stack);
             // Close the graph repsentation.
             writer.write("}".as_bytes())?;
         } // the buffer is flushed once writer goes out of scope

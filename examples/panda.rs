@@ -124,18 +124,25 @@ fn _test_subnetwork_generation() {
     {
         let file_name: &str = "examples/origin.dot";
         let graph_name: &str = "origin";
-        specimen_origin.ann.render_to_dot(file_name, graph_name);
+        specimen_origin.ann.render_to_dot(file_name, graph_name).expect("Fail to render ANN to dot file.");
     }
 
     for i in 0..1 {
         // println!("Generation {:>3}         ####################################################################", i+1);
 
-        specimen_mutated.structural_mutation(10.0);
+        specimen_mutated.structural_mutation(0.5);
+        {
+            let file_name: &str = &format!("examples/mutated_{}.dot", i);
+            let graph_name: &str = "mutated";
+
+            specimen_mutated.ann.render_to_dot(file_name, graph_name).expect("Fail to render ANN to dot file.");
+        }
 
         // println!("Origin:                    ####################################################################");
         // println!("{:#?}", specimen_origin.ann.genome);
         // println!("Mutated:                   ####################################################################");
-        // // println!("{:#?}", specimen_mutated.ann.genome);
+        // println!("ann len = {}", specimen_mutated.ann.genome.len());
+        // println!("{:#?}", specimen_mutated.ann.genome);
         //
         //
         // println!("                       ####################################################################\n");

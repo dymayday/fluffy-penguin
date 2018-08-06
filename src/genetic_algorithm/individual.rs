@@ -114,7 +114,7 @@ impl Specimen<f32> {
 
                             let mut subnetwork: Vec<Node<f32>> =
                                 Network::gen_random_subnetwork(new_neuron_id, &self.ann.input_map);
-                            println!("New subnetwork: \n{:#?}\n", subnetwork);
+                            // println!("New subnetwork: \n{:#?}\n", subnetwork);
                             mutated_genome.append(&mut subnetwork);
 
                             new_neuron_id += 1;
