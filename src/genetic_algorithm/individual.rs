@@ -97,13 +97,24 @@ impl Specimen<f32> {
         let mut new_neuron_id: usize = self.ann.neuron_map.len();
 
         let mut mutated_genome: Vec<Node<f32>> = Vec::with_capacity(self.ann.genome.len());
-
-        for node in &self.ann.genome {
+        
+        let mut i: usize = 0;
+        while i < self.ann.genome.len() {
+            let mut node = &self.ann.genome[i].clone();
+        
+        // for node in &self.ann.genome {
             match node.allele {
                 Allele::Neuron => {
                     if Specimen::to_mutate(pm) {
-                        println!("Structural Mutation occuring !");
                         // [TODO]: Add more structural mutation here.
+                        println!("Structural Mutation occuring !");
+
+                        // for j in 0..(1 - node.iota) as usize {
+                        //     let node = &self.ann.genome[i].clone();
+                        //     mutated_genome.push(node);
+                        // }
+
+
                         {
                             let mut node = node.clone();
                             // N.B.: to add an input connection to the current Neuron
@@ -114,7 +125,8 @@ impl Specimen<f32> {
 
                             let mut subnetwork: Vec<Node<f32>> =
                                 Network::gen_random_subnetwork(new_neuron_id, &self.ann.input_map);
-                            // println!("New subnetwork: \n{:#?}\n", subnetwork);
+
+                            println!("New subnetwork: \n{:#?}\n", subnetwork);
                             mutated_genome.append(&mut subnetwork);
 
                             new_neuron_id += 1;
@@ -125,6 +137,7 @@ impl Specimen<f32> {
                     mutated_genome.push(node.clone());
                 }
             }
+            i += 1;
         }
 
         self.ann.genome = mutated_genome;

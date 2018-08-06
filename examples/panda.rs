@@ -136,6 +136,8 @@ fn _test_subnetwork_generation() {
             let graph_name: &str = "mutated";
 
             specimen_mutated.ann.render_to_dot(file_name, graph_name).expect("Fail to render ANN to dot file.");
+            specimen_mutated.ann.update_input(&vec![1_f32; 2]);
+            println!("gen {}: out = {:?}", i, specimen_mutated.ann.evaluate());
         }
 
         // println!("Origin:                    ####################################################################");
