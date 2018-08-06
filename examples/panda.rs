@@ -118,8 +118,8 @@ fn _test_subnetwork_generation(export: bool) {
 
     let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
-    // let nbi: usize = 16;
-    // let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
+    let nbi: usize = 16;
+    let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
     let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
 
     let input_vector: Vec<f32> = vec![1_f32; nbi];
@@ -154,10 +154,10 @@ fn _test_subnetwork_generation(export: bool) {
             println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
     }
 
-    for i in 0..10 {
+    for i in 0..50 {
         // println!("Generation {:>3}         ####################################################################", i+1);
 
-        specimen_mutated.structural_mutation(0.1);
+        specimen_mutated.structural_mutation(0.05);
         {
             let file_name: &str = &format!("examples/mutated_{}.dot", i);
             let file_name_svg: &str = &format!("examples/mutated_{}.svg", i);
