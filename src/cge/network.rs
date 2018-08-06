@@ -200,27 +200,16 @@ impl Network<f32> {
     pub fn gen_random_subnetwork(neuron_id: usize, input_map: &Vec<f32>) -> Vec<Node<f32>> {
         let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
 
-
-        // let mut input_node_vec: Vec<Node<f32>> = Vec::with_capacity(input_map.len());
-
-        // Let's make sure the new Neuron has at least one Input Node at its service.
-        // while input_node_vec.len() == 0 {
-        //     for i in 0..input_map.len() {
-        //         if thread_rng().gen::<bool>() {
-        //             let mut input_node: Node<f32> =
-        //                 Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
-        //             input_node.value = input_map[i];
-        //
-        //             input_node_vec.push(input_node);
-        //         }
-        //     }
-        // }
-        // input_node_vec.shrink_to_fit();
-
-        // New hidden neurons are connected to approximately 50 % of the inputs, which makes the search for new structures stochastic.
         let mut input_node_vec: Vec<Node<f32>> = Network::gen_input_node_vector(&input_map);
         thread_rng().shuffle(&mut input_node_vec);
-        input_node_vec = input_node_vec[..input_node_vec.len() / 2 as usize].to_vec();
+
+        // New hidden neurons are connected to approximately 50 % of the inputs, which makes the search for new structures stochastic.
+        // let input_len_to_pick: usize = input_node_vec.len() / 2 as usize;
+        // Or randomly pick inputs from the range of input available.
+        let input_len_to_pick: usize = thread_rng().gen_range(1_usize, input_node_vec.len() + 1);
+
+        assert!(input_len_to_pick <= input_node_vec.len());
+        input_node_vec = input_node_vec[..input_len_to_pick].to_vec();
 
         // We compute the number of Input Node this sub-network will have.
         let input_size: usize = input_node_vec.len();
