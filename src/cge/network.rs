@@ -251,8 +251,8 @@ impl Network<f32> {
         //     0 => Allele::JumpForward,
         //     _ => Allele::JumpRecurrent,
         // };
-        // let jumper_kind: Allele = Allele::JumpForward;
-        let jumper_kind: Allele = Allele::JumpRecurrent;
+        let jumper_kind: Allele = Allele::JumpForward;
+        // let jumper_kind: Allele = Allele::JumpRecurrent;
 
         let values: Vec<usize> = self.neuron_indices_map.keys().map(|x| *x).collect();
         let jumper_id: usize = *thread_rng()
@@ -371,6 +371,7 @@ impl Network<f32> {
                         .neuron_indices_map
                         .get(&node.id)
                         .expect(&format!("Fail to lookup the node id = {}", node.id));
+                        // .unwrap_or();
 
                     let sub_genome_slice: Vec<Node<f32>> = self.shadow_genome
                         [forwarded_node_index..self.shadow_genome.len() - 1]
@@ -432,7 +433,8 @@ impl Network<f32> {
                     "Genome end reached for Neuron id = {} : {}",
                     neuron_index, i
                 );
-                break;
+                i = 0;
+                // break;
             }
         }
 
