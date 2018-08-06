@@ -123,7 +123,7 @@ fn _test_subnetwork_generation(export: bool) {
 
     let input_vector: Vec<f32> = vec![1_f32; nbi];
 
-   {
+    {
         let file_name: &str = "examples/0rigin.dot";
         let file_name_svg: &str = "examples/0rigin.svg";
         let graph_name: &str = "origin";
@@ -148,9 +148,9 @@ fn _test_subnetwork_generation(export: bool) {
         //     .spawn()
         //     .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
 
-            println!("");
-            specimen_origin.ann.update_input(&input_vector);
-            println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
+        println!("");
+        specimen_origin.ann.update_input(&input_vector);
+        println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
     }
 
     for i in 0..200 {
@@ -163,12 +163,11 @@ fn _test_subnetwork_generation(export: bool) {
             let graph_name: &str = "mutated";
 
 
-
             if export {
                 specimen_mutated
-                .ann
-                .render_to_dot(file_name, graph_name)
-                .expect("Fail to render ANN to dot file.");
+                    .ann
+                    .render_to_dot(file_name, graph_name)
+                    .expect("Fail to render ANN to dot file.");
 
                 Command::new("dot")
                     .arg(file_name)
@@ -197,7 +196,7 @@ fn _test_subnetwork_generation(export: bool) {
         // println!("");
         specimen_mutated.ann.update_input(&input_vector);
         // println!("Gen {:>3}: out = {:?}", i+1, specimen_mutated.ann.evaluate());
-        println!("Gen {:>3}: out = {:?}", i+1, 0.0);
+        println!("Gen {:>3}: out = {:?}", i + 1, 0.0);
         //
         //
         // println!("                       ####################################################################\n");
@@ -236,17 +235,16 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
                 .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
         }
 
-            println!("");
-            specimen_origin.ann.update_input(&input_vector);
-            println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
+        println!("");
+        specimen_origin.ann.update_input(&input_vector);
+        println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
     }
 
-    let mi: usize = 130;
+    let mi: usize = 50;
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(mi);
     specimen_mutated.structural_mutation(0.1);
 
     for i in 0..mi {
-
         specimen_mutated.structural_mutation(0.1);
         let mut specimen_mutated = specimen_mutated.clone();
 
@@ -257,12 +255,11 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
             let graph_name: &str = "mutated";
 
 
-
             if export {
                 specimen_mutated
-                .ann
-                .render_to_dot(file_name, graph_name)
-                .expect("Fail to render ANN to dot file.");
+                    .ann
+                    .render_to_dot(file_name, graph_name)
+                    .expect("Fail to render ANN to dot file.");
 
                 Command::new("dot")
                     .arg(file_name)
@@ -272,21 +269,19 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
                     .output()
                     .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
             }
-
         }
 
         specimen_mutated.ann.update_input(&input_vector);
         // println!("Gen {:>3}: out = {:?}", i+1, specimen_mutated.ann.evaluate());
-        println!("Gen {:>3}: creation", i+1);
+        println!("Gen {:>3}: creation", i + 1);
         spec_vec.push(specimen_mutated);
     }
 
 
     for i in 0..spec_vec.len() {
         let spec = &mut spec_vec[i];
-        println!("Gen {:>3}: out = {:?}", i+1, spec.evaluate());
+        println!("Gen {:>3}: out = {:?}", i + 1, spec.evaluate());
     }
-
 }
 
 fn main() {
@@ -298,5 +293,5 @@ fn main() {
     // exploitation();
     // test_exploitation();
     // _test_subnetwork_generation(false);
-    _bench_eval_on_mutated_specimen(false);
+    _bench_eval_on_mutated_specimen(true);
 }
