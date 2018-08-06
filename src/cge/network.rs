@@ -355,28 +355,7 @@ impl Network<f32> {
                     let jf_slice: Vec<Node<f32>> = Network::build_jf_slice(forwarded_node_index, &sub_genome_slice);
                     stack.append(&mut self.evaluate_slice(&jf_slice));
                     // stack.append(&mut vec![0_f32]);
-
-                    // let forwarded_node: Node<f32> =
-                        // self.shadow_genome[forwarded_node_index].clone();
-                    //
-                    // let sub_genome_slice_length: usize = (1 - forwarded_node.iota) as usize;
-                    // let sub_genome_slice_length: usize = self.shadow_genome[forwarded_node_index..self.shadow_genome.len()-1].len();
-                    //
-                    // let mut sub_genome_slice: Vec<Node<f32>> =
-                    //     Vec::with_capacity(sub_genome_slice_length);
-                    //
-                    // // sub_genome_slice.push(forwarded_node);
-                    //
-                    // for sub_genome_index in 0..sub_genome_slice_length {
-                    //     sub_genome_slice.push(
-                    //         // self.shadow_genome[forwarded_node_index + sub_genome_index + 1].clone(),
-                    //         self.shadow_genome[forwarded_node_index + sub_genome_index].clone(),
-                    //     );
-                    // }
-                    //
-                    // let sub_genome_slice_length: usize = (1 - forwarded_node.iota) as usize;
-                    // stack.append(&mut self.evaluate_slice(&sub_genome_slice)[..sub_genome_slice_length].to_vec());
-                } // _ => println!("Unknown Allele encountered: {:#?}", node)
+                }
             }
             // println!("Stack = {:#?}", stack);
 
