@@ -240,13 +240,12 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
         println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
     }
 
-    let mi: usize = 50;
-    let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(mi);
+    let generation_size: usize = 10;
+    let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
     specimen_mutated.structural_mutation(0.1);
 
-    for i in 0..mi {
+    for i in 0..generation_size {
         specimen_mutated.structural_mutation(0.1);
-        let mut specimen_mutated = specimen_mutated.clone();
 
 
         {
@@ -274,7 +273,10 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
         specimen_mutated.ann.update_input(&input_vector);
         // println!("Gen {:>3}: out = {:?}", i+1, specimen_mutated.ann.evaluate());
         println!("Gen {:>3}: creation", i + 1);
-        spec_vec.push(specimen_mutated);
+        // println!("{:#?}", specimen_mutated.ann.genome);
+
+        spec_vec.push(specimen_mutated.clone());
+        specimen_mutated = specimen_mutated.clone();
     }
 
 
@@ -283,6 +285,9 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
         println!("Gen {:>3}: out = {:?}", i + 1, spec.evaluate());
     }
 }
+
+
+
 
 fn main() {
     let mut network: Network<f32> = Network::build_from_example();

@@ -24,7 +24,7 @@ pub struct Network<T> {
     pub input_map: Vec<T>,
     // Neuron value processed by a `Transfer Function`.
     pub neuron_map: Vec<T>,
-    // Neuron index lookup table.
+    // Neuron index lookup table: <genome[i].id, index_location>
     neuron_indices_map: HashMap<usize, usize>,
     // Number of Input in this Network. It has to be a constant value.
     iota_size: usize,
@@ -247,18 +247,20 @@ impl Network<f32> {
 
     /// ...
     pub fn gen_random_jumper_connection(&self) -> Node<f32> {
-        let jumper_kind: Allele = match thread_rng().gen_range(0_usize, 2_usize) {
-            0 => Allele::JumpForward,
-            _ => Allele::JumpRecurrent,
-        };
-        // let jumper_kind: Allele = Allele::JumpRecurrent;
+        // let jumper_kind: Allele = match thread_rng().gen_range(0_usize, 2_usize) {
+        //     0 => Allele::JumpForward,
+        //     _ => Allele::JumpRecurrent,
+        // };
+        // let jumper_kind: Allele = Allele::JumpForward;
+        let jumper_kind: Allele = Allele::JumpRecurrent;
 
-        let values: Vec<usize> = self.neuron_indices_map.values().map(|x| *x).collect();
+        let values: Vec<usize> = self.neuron_indices_map.keys().map(|x| *x).collect();
         let jumper_id: usize = *thread_rng()
             .choose(&values)
             .expect("Fail to draw a jumper connection id to link to an existing Neuron.");
 
         let jumper: Node<f32> = Node::new(jumper_kind, jumper_id, 0.0, IOTA_INPUT_VALUE);
+        // println!("JR {:<3} \n{:#?} \nfrom values: {:?}", jumper_id, jumper, values);
         jumper
     }
 
@@ -267,7 +269,7 @@ impl Network<f32> {
     /// the evaluation process. This function is meant to be call only once at init time.
     fn compute_neuron_indices(genome: &Vec<Node<f32>>) -> HashMap<usize, usize> {
         let mut neuron_indices_hashmap: HashMap<usize, usize> =
-            HashMap::with_capacity(genome.len());
+            HashMap::with_capacity(genome.len() / 2 as usize);
         for i in 0..genome.len() {
             if genome[i].allele == Allele::Neuron {
                 neuron_indices_hashmap.insert(genome[i].id, i);
@@ -283,9 +285,9 @@ impl Network<f32> {
         self.shadow_genome = self.genome.clone();
         self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
 
-        // println!("neuron_indices_map = {:#?}", self.neuron_indices_map);
 
         self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
+        // println!("neuron_indices_map = {:#?}", self.neuron_indices_map);
     }
 
 
@@ -458,7 +460,7 @@ impl Network<f32> {
                 writer.write(msg.as_bytes())?;
 
                 let msg: String =
-                    format!("\tsubgraph cluster_0 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=violet, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_0 {{\n\t\tcolor=white;\n\t\tnode [style=bold, color=orchid, shape=circle];\n\t");
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.input_map.len() {
@@ -468,7 +470,7 @@ impl Network<f32> {
                 writer.write(";\n\t}\n".as_bytes())?;
 
                 let msg: String =
-                    format!("\tsubgraph cluster_1 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=red, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_1 {{\n\t\tcolor=white;\n\t\tnode [style=bold, color=tomato, shape=circle];\n\t");
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.omega_size {
@@ -479,7 +481,7 @@ impl Network<f32> {
 
                 // Paint JF.
                 let msg: String =
-                    format!("\tsubgraph cluster_2 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=blue, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_2 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=cornflowerblue, shape=circle];\n\t");
                 writer.write(msg.as_bytes())?;
 
                 for node in &self.genome {
@@ -492,11 +494,11 @@ impl Network<f32> {
 
                 // Paint JR.
                 let msg: String =
-                    format!("\tsubgraph cluster_3 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=green, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_3 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=yellowgreen, shape=circle];\n\t");
                 writer.write(msg.as_bytes())?;
 
                 for node in &self.genome {
-                    if node.allele == Allele::JumpForward {
+                    if node.allele == Allele::JumpRecurrent {
                             let msg: String = format!("JR{} ", node.id);
                             writer.write(msg.as_bytes())?;
                         }
@@ -532,8 +534,8 @@ impl Network<f32> {
                     }
                     Allele::JumpForward => {
                         let msg: String =
-                            format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "JF", i = i);
-                        writer.write(msg.as_bytes())?;
+                            format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "JF", i = node.id);
+                        // writer.write(msg.as_bytes())?;
 
                         stack.push(format!("JF{id}", id = node.id));
                         // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
@@ -541,8 +543,8 @@ impl Network<f32> {
                     }
                     Allele::JumpRecurrent => {
                         let msg: String =
-                            format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "JR", i = i);
-                        writer.write(msg.as_bytes())?;
+                            format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "JR", i = node.id);
+                        // writer.write(msg.as_bytes())?;
 
                         stack.push(format!("JR{id}", id = node.id));
                         // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));

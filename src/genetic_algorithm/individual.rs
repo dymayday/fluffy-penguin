@@ -111,7 +111,8 @@ impl Specimen<f32> {
                         // [TODO]: Add more structural mutation here.
                         // println!("Structural Mutation occuring !");
 
-                        match thread_rng().gen_range(0_usize, 3_usize) {
+                        // match thread_rng().gen_range(0_usize, 3_usize) {
+                        match thread_rng().gen_range(1_usize, 2_usize) {
                             0 => {
                                 // Sub-network addition mutation.
 
