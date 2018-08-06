@@ -111,24 +111,46 @@ impl Specimen<f32> {
                         // [TODO]: Add more structural mutation here.
                         // println!("Structural Mutation occuring !");
 
-                        {
-                            // Add the mutated neuron to the mutated genome.
-                            // let mut node = node.clone();
-                            // N.B.: to add an input connection to the current Neuron
-                            // we need to add -1 to the iota value.
-                            node.iota -= 1;
-                            mutated_genome.push(node);
+                        match thread_rng().gen_range(0_usize, 3_usize) {
+                            0 => {
+                                // Sub-network addition mutation.
 
-                            // Add a new sub-network to the genome.
-                            let mut subnetwork: Vec<Node<f32>> =
-                                Network::gen_random_subnetwork(new_neuron_id, &self.ann.input_map);
-                            // println!("New subnetwork: \n{:#?}\n", subnetwork);
-                            mutated_genome.append(&mut subnetwork);
+                                // Add the mutated neuron to the mutated genome.
+                                // let mut node = node.clone();
+                                // N.B.: to add an input connection to the current Neuron
+                                // we need to add -1 to the iota value.
+                                node.iota -= 1;
+                                mutated_genome.push(node);
 
-                            // self.ann.neuron_map.push(0.0_f32);
-                            new_neuron_id += 1;
+                                // Add a new sub-network to the genome.
+                                let mut subnetwork: Vec<Node<f32>> = Network::gen_random_subnetwork(
+                                    new_neuron_id,
+                                    &self.ann.input_map,
+                                );
+                                // println!("New subnetwork: \n{:#?}\n", subnetwork);
+                                mutated_genome.append(&mut subnetwork);
+
+                                // self.ann.neuron_map.push(0.0_f32);
+                                new_neuron_id += 1;
+                            }
+                            1 => {
+                                // Connection addition mutation.
+
+                                // Increase the number of input the current Neuron has.
+                                // node.iota -= 1;
+                                mutated_genome.push(node);
+
+                                // mutated_genome.push(self.ann.gen_random_jumper_connection());
+                            }
+                            2 => {
+                                // Connection removal mutation
+                                mutated_genome.push(node);
+                            }
+                            _ => {
+                                // Unknown structural mutation.
+                                println!("Unknown structural mutation behavior draw.");
+                            }
                         }
-
                     } else {
                         // If we don't mutate this Neuron, we simply push it back to genome,
                         // unharmed ^^'.
