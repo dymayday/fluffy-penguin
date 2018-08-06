@@ -442,6 +442,7 @@ impl Network<f32> {
 
 
     /// Render an articial neural network to a dot file for a better visualization purpose.
+    /// cf.: https://www.graphviz.org/documentation/.
     pub fn render_to_dot(&self, file_name: &str, graph_name: &str) -> ::std::io::Result<()> {
         use std::fs::File;
         use std::io::BufWriter;
