@@ -403,7 +403,7 @@ impl Network<f32> {
     fn build_jf_slice(neuron_index: usize, input_vec: &[Node<f32>]) -> Vec<Node<f32>> {
         let input_len: usize = input_vec.len();
 
-        let mut output_vec: Vec<Node<f32>> = Vec::with_capacity(input_len);
+        let mut output_vec: Vec<Node<f32>> = Vec::with_capacity(input_len + 1);
 
         let mut i: usize = 0;
         let mut iota: i32 = 0;
