@@ -97,47 +97,46 @@ impl Specimen<f32> {
         let mut new_neuron_id: usize = self.ann.neuron_map.len();
 
         let mut mutated_genome: Vec<Node<f32>> = Vec::with_capacity(self.ann.genome.len());
-        
-        let mut i: usize = 0;
-        while i < self.ann.genome.len() {
-            let mut node = &self.ann.genome[i].clone();
-        
-        // for node in &self.ann.genome {
+
+        for node in &self.ann.genome {
+            let mut node = node.clone();
+
             match node.allele {
                 Allele::Neuron => {
                     if Specimen::to_mutate(pm) {
                         // [TODO]: Add more structural mutation here.
-                        println!("Structural Mutation occuring !");
-
-                        // for j in 0..(1 - node.iota) as usize {
-                        //     let node = &self.ann.genome[i].clone();
-                        //     mutated_genome.push(node);
-                        // }
-
+                        // println!("Structural Mutation occuring !");
 
                         {
-                            let mut node = node.clone();
+                            // Add the mutated neuron to the mutated genome.
+                            // let mut node = node.clone();
                             // N.B.: to add an input connection to the current Neuron
                             // we need to add -1 to the iota value.
                             node.iota -= 1;
-
                             mutated_genome.push(node);
 
+                            // Add a new sub-network to the genome.
                             let mut subnetwork: Vec<Node<f32>> =
                                 Network::gen_random_subnetwork(new_neuron_id, &self.ann.input_map);
-
-                            println!("New subnetwork: \n{:#?}\n", subnetwork);
+                            // println!("New subnetwork: \n{:#?}\n", subnetwork);
                             mutated_genome.append(&mut subnetwork);
 
+                            // self.ann.neuron_map.push(0.0_f32);
                             new_neuron_id += 1;
                         }
+
+                    } else {
+                        // If we don't mutate this Neuron, we simply push it back to genome,
+                        // unharmed ^^'.
+                        mutated_genome.push(node);
                     }
                 }
                 _ => {
-                    mutated_genome.push(node.clone());
+                    // Structural mutation only aply on Neuron Node, so we simply push a,ything that's
+                    // not a Neuron back to the genome.
+                    mutated_genome.push(node);
                 }
             }
-            i += 1;
         }
 
         self.ann.genome = mutated_genome;

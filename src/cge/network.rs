@@ -271,7 +271,7 @@ impl Network<f32> {
         self.shadow_genome = self.genome.clone();
         self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
 
-        println!("neuron_indices_map = {:#?}", self.neuron_indices_map);
+        // println!("neuron_indices_map = {:#?}", self.neuron_indices_map);
 
         self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
     }
@@ -406,7 +406,8 @@ impl Network<f32> {
 
             // Pretty printing setup.
             {
-                let msg: String = format!("\trankdir=BT\n\tsplines=spline\n\tnode [fixedsize=true];\n");
+                let msg: String =
+                    format!("\trankdir=BT\n\tsplines=spline\n\tnode [fixedsize=true];\n");
                 writer.write(msg.as_bytes())?;
 
                 let msg: String =
@@ -430,7 +431,6 @@ impl Network<f32> {
                 writer.write(";\n\t}\n\n".as_bytes())?;
             }
 
-
             // for ni in 0..self.neuron_map.len() {
             //     let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "N", i = ni);
             //     writer.write(msg.as_bytes())?;
@@ -446,15 +446,15 @@ impl Network<f32> {
 
             let mut stack: Vec<String> = Vec::with_capacity(input_len);
 
-            println!("input len = {}", input_len);
+            // println!("input len = {}", input_len);
             for i in 0..input_len {
                 let node: &Node<f32> = &input[input_len - i - 1];
 
                 match node.allele {
                     Allele::Input => {
                         stack.push(format!("I{id}", id = node.id));
-                        stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
-                        // stack.push(format!("[label=\"\"]"));
+                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
+                        stack.push(format!("[label=\"\"]"));
                     }
                     Allele::JumpForward => {
                         let msg: String =
@@ -462,8 +462,8 @@ impl Network<f32> {
                         writer.write(msg.as_bytes())?;
 
                         stack.push(format!("JF{id}", id = node.id));
-                        stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
-                        // stack.push(format!("[label=\"\"]"));
+                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
+                        stack.push(format!("[label=\"\"]"));
                     }
                     Allele::JumpRecurrent => {
                         let msg: String =
@@ -471,12 +471,12 @@ impl Network<f32> {
                         writer.write(msg.as_bytes())?;
 
                         stack.push(format!("JR{id}", id = node.id));
-                        stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
-                        // stack.push(format!("[label=\"\"]"));
+                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
+                        stack.push(format!("[label=\"\"]"));
                     }
                     Allele::Neuron => {
                         let neuron_input_number: usize = (1 - node.iota) as usize;
-                        println!("Dot {} {:#?}", neuron_input_number, node);
+                        // println!("Dot {} {:#?}", neuron_input_number, node);
 
                         for _ in 0..neuron_input_number {
                             let msg: String = format!(
@@ -490,8 +490,8 @@ impl Network<f32> {
                         }
 
                         stack.push(format!("N{id}", id = node.id));
-                        stack.push(format!("[label=\"{w:.3}\"]", w = node.w));
-                        // stack.push(format!("[label=\"\"]"));
+                        // stack.push(format!("[label=\"{w:.3}\"]", w = node.w));
+                        stack.push(format!("[label=\"\"]"));
                     } // _ => {}
                 }
             }
