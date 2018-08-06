@@ -137,10 +137,10 @@ impl Specimen<f32> {
                                 // Connection addition mutation.
 
                                 // Increase the number of input the current Neuron has.
-                                // node.iota -= 1;
+                                node.iota -= 1;
                                 mutated_genome.push(node);
 
-                                // mutated_genome.push(self.ann.gen_random_jumper_connection());
+                                mutated_genome.push(self.ann.gen_random_jumper_connection());
                             }
                             2 => {
                                 // Connection removal mutation
