@@ -199,21 +199,18 @@ impl Network<f32> {
     /// input Node from a vector of input.
     pub fn gen_random_subnetwork(neuron_id: usize, input_map: &Vec<f32>) -> Vec<Node<f32>> {
         let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
-
-        // Here we clone the input vector to shuffle its values to pick the computed number of Input
-        // Node in the new sub-network.
-        // let input_vec: Vec<f32> = input_map.clone();
-        // thread_rng().shuffle(&mut input_vec);
-
         let mut input_node_vec: Vec<Node<f32>> = Vec::with_capacity(input_map.len());
 
-        for i in 0..input_map.len() {
-            if thread_rng().gen::<bool>() {
-                let mut input_node: Node<f32> =
-                    Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
-                input_node.value = input_map[i];
+        // Let's make sure the new Neuron has at least one Input Node at its service.
+        while input_node_vec.len() == 0 {
+            for i in 0..input_map.len() {
+                if thread_rng().gen::<bool>() {
+                    let mut input_node: Node<f32> =
+                        Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
+                    input_node.value = input_map[i];
 
-                input_node_vec.push(input_node);
+                    input_node_vec.push(input_node);
+                }
             }
         }
         input_node_vec.shrink_to_fit();
@@ -315,6 +312,7 @@ impl Network<f32> {
         for i in 0..input_len {
             let mut node: Node<f32> = input[input_len - i - 1].clone();
             // println!("\n{:#?}", node);
+            // println!("Stack = {:#?}", stack);
 
             match node.allele {
                 Allele::Input => {
@@ -324,9 +322,9 @@ impl Network<f32> {
                     let neuron_input_number: usize = (1 - node.iota) as usize;
                     let mut neuron_output: f32 = 0.0;
                     for _ in 0..neuron_input_number {
-                        // neuron_input_number += stack.pop().unwrap_or(0.0_f32);
                         // [TODO]: Remove this expect for an unwrap_or maybe ?
                         neuron_output += stack.pop().expect("The evaluated stack is empty.");
+                        // neuron_output += stack.pop().unwrap_or(0.0_f32);
                     }
 
                     node.value = neuron_output;
@@ -354,26 +352,35 @@ impl Network<f32> {
                         .get(&node.id)
                         .expect(&format!("Fail to lookup the node id = {}", node.id));
 
+                    let sub_genome_slice: Vec<Node<f32>> = self.shadow_genome[forwarded_node_index..self.shadow_genome.len()-1].to_vec();
+                    let jf_slice: Vec<Node<f32>> = Network::build_jf_slice(forwarded_node_index, &sub_genome_slice);
+                    stack.append(&mut self.evaluate_slice(&jf_slice));
 
-                    let forwarded_node: Node<f32> =
-                        self.shadow_genome[forwarded_node_index].clone();
-
-                    let sub_genome_slice_length: usize = (1 - forwarded_node.iota) as usize;
-                    let mut sub_genome_slice: Vec<Node<f32>> =
-                        Vec::with_capacity(sub_genome_slice_length);
-
-                    sub_genome_slice.push(forwarded_node);
-
-                    for sub_genome_index in 0..sub_genome_slice_length {
-                        sub_genome_slice.push(
-                            self.shadow_genome[forwarded_node_index + sub_genome_index + 1].clone(),
-                        );
-                    }
-
-                    stack.append(&mut self.evaluate_slice(&sub_genome_slice));
+                    // let forwarded_node: Node<f32> =
+                        // self.shadow_genome[forwarded_node_index].clone();
+                    //
+                    // let sub_genome_slice_length: usize = (1 - forwarded_node.iota) as usize;
+                    // let sub_genome_slice_length: usize = self.shadow_genome[forwarded_node_index..self.shadow_genome.len()-1].len();
+                    //
+                    // let mut sub_genome_slice: Vec<Node<f32>> =
+                    //     Vec::with_capacity(sub_genome_slice_length);
+                    //
+                    // // sub_genome_slice.push(forwarded_node);
+                    //
+                    // for sub_genome_index in 0..sub_genome_slice_length {
+                    //     sub_genome_slice.push(
+                    //         // self.shadow_genome[forwarded_node_index + sub_genome_index + 1].clone(),
+                    //         self.shadow_genome[forwarded_node_index + sub_genome_index].clone(),
+                    //     );
+                    // }
+                    //
+                    // let sub_genome_slice_length: usize = (1 - forwarded_node.iota) as usize;
+                    // stack.append(&mut self.evaluate_slice(&sub_genome_slice)[..sub_genome_slice_length].to_vec());
                 } // _ => println!("Unknown Allele encountered: {:#?}", node)
             }
+            // println!("Stack = {:#?}", stack);
 
+            // println!("\n\n####################################################################\n");
             // println!("Stack: [{:>2}] = {:?} ", i, stack);
             // let mut input = String::new();
             // ::std::io::stdin().read_line(&mut input)
@@ -389,6 +396,41 @@ impl Network<f32> {
             self.omega_size
         );
         stack
+    }
+
+
+    /// Returns the sub-network of a jumper forward Node as a slice.
+    fn build_jf_slice(neuron_index: usize, input_vec: &[Node<f32>]) -> Vec<Node<f32>> {
+        let input_len: usize = input_vec.len();
+
+        let mut output_vec: Vec<Node<f32>> = Vec::with_capacity(input_len);
+
+        let mut i: usize = 0;
+        let mut iota: i32 = 0;
+
+        while iota != 1 {
+            let node: Node<f32> = input_vec[i].clone();
+
+            match node.allele {
+                 Allele::Neuron => {
+                    iota += node.iota;
+                 }
+                 _ => {
+                    iota += 1;
+                 }
+            }
+
+            output_vec.push(node);
+
+            i += 1;
+            if i >= input_len {
+                println!("Genome end reached for Neuron id = {} : {}", neuron_index, i);
+                break;
+            }
+        }
+
+        output_vec.shrink_to_fit();
+        output_vec
     }
 
 
@@ -496,7 +538,7 @@ impl Network<f32> {
                 }
             }
 
-            println!("Stack = {:#?}", stack);
+            // println!("Stack = {:#?}", stack);
             // Close the graph repsentation.
             writer.write("}".as_bytes())?;
         } // the buffer is flushed once writer goes out of scope
