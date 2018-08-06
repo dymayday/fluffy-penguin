@@ -39,6 +39,10 @@ impl Specimen<f32> {
         }
     }
 
+    /// Directly link to the ANN evaluation method.
+    pub fn evaluate(&mut self) -> Vec<f32> {
+        self.ann.evaluate()
+    }
 
     /// The exploitation phase researches the optimal weight of each Node in the current artificial
     /// neural network.
