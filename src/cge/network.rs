@@ -109,7 +109,7 @@ impl Network<f32> {
         // And determine the approximate size of the vectors the network will use.
         let max_vector_size: usize = (iota_size * omega_size) as usize;
 
-        let mut genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
+        let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
 
         let shadow_genome = genome.clone();
         let input_map: Vec<f32> = input_vec.clone();
@@ -199,21 +199,28 @@ impl Network<f32> {
     /// input Node from a vector of input.
     pub fn gen_random_subnetwork(neuron_id: usize, input_map: &Vec<f32>) -> Vec<Node<f32>> {
         let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
-        let mut input_node_vec: Vec<Node<f32>> = Vec::with_capacity(input_map.len());
+
+
+        // let mut input_node_vec: Vec<Node<f32>> = Vec::with_capacity(input_map.len());
 
         // Let's make sure the new Neuron has at least one Input Node at its service.
-        while input_node_vec.len() == 0 {
-            for i in 0..input_map.len() {
-                if thread_rng().gen::<bool>() {
-                    let mut input_node: Node<f32> =
-                        Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
-                    input_node.value = input_map[i];
+        // while input_node_vec.len() == 0 {
+        //     for i in 0..input_map.len() {
+        //         if thread_rng().gen::<bool>() {
+        //             let mut input_node: Node<f32> =
+        //                 Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
+        //             input_node.value = input_map[i];
+        //
+        //             input_node_vec.push(input_node);
+        //         }
+        //     }
+        // }
+        // input_node_vec.shrink_to_fit();
 
-                    input_node_vec.push(input_node);
-                }
-            }
-        }
-        input_node_vec.shrink_to_fit();
+        // New hidden neurons are connected to approximately 50 % of the inputs, which makes the search for new structures stochastic.
+        let mut input_node_vec: Vec<Node<f32>> = Network::gen_input_node_vector(&input_map);
+        thread_rng().shuffle(&mut input_node_vec);
+        input_node_vec = input_node_vec[..input_node_vec.len() / 2 as usize].to_vec();
 
         // We compute the number of Input Node this sub-network will have.
         let input_size: usize = input_node_vec.len();
@@ -319,9 +326,9 @@ impl Network<f32> {
                     stack.push(self.input_map[node.id].relu() * node.w);
                 }
                 Allele::Neuron => {
-                    let neuron_input_number: usize = (1 - node.iota) as usize;
+                    let neuron_input_len: usize = (1 - node.iota) as usize;
                     let mut neuron_output: f32 = 0.0;
-                    for _ in 0..neuron_input_number {
+                    for _ in 0..neuron_input_len {
                         // [TODO]: Remove this expect for an unwrap_or maybe ?
                         neuron_output += stack.pop().expect("The evaluated stack is empty.");
                         // neuron_output += stack.pop().unwrap_or(0.0_f32);
@@ -333,8 +340,11 @@ impl Network<f32> {
                         .get(&node.id)
                         .expect(&format!("Fail to lookup the node id = {}", node.id));
                     self.genome[neuron_index].value = neuron_output;
+
                     let activated_neuron_value: f32 = node.isrlu(0.1);
+                    // let activated_neuron_value: f32 = node.relu();
                     // let activated_neuron_value: f32 = node.sigmoids();
+                    
                     // Update the neuron value in the neuron_map with its activated value from its
                     // transfert function to be used by jumper connection nodes.
                     self.neuron_map[node.id] = activated_neuron_value;
@@ -355,6 +365,7 @@ impl Network<f32> {
                     let sub_genome_slice: Vec<Node<f32>> = self.shadow_genome[forwarded_node_index..self.shadow_genome.len()-1].to_vec();
                     let jf_slice: Vec<Node<f32>> = Network::build_jf_slice(forwarded_node_index, &sub_genome_slice);
                     stack.append(&mut self.evaluate_slice(&jf_slice));
+                    // stack.append(&mut vec![0_f32]);
 
                     // let forwarded_node: Node<f32> =
                         // self.shadow_genome[forwarded_node_index].clone();
@@ -399,7 +410,8 @@ impl Network<f32> {
     }
 
 
-    /// Returns the sub-network of a jumper forward Node as a slice.
+    /// Returns the sub-network corresponding to JumpForward Node to be evaluated as slice of a
+    /// Network.
     fn build_jf_slice(neuron_index: usize, input_vec: &[Node<f32>]) -> Vec<Node<f32>> {
         let input_len: usize = input_vec.len();
 
