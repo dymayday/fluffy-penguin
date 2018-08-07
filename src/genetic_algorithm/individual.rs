@@ -96,7 +96,6 @@ impl Specimen<f32> {
     pub fn structural_mutation(&mut self, pm: f32) {
         use cge::node::Allele;
         use genetic_algorithm::mutation::StructuralMutation;
-        // use rand::random;
 
         let available_structural_mutation: [StructuralMutation; 3] = [
             StructuralMutation::SubNetworkAddition,
@@ -119,19 +118,18 @@ impl Specimen<f32> {
                         // [TODO]: Add more structural mutation here.
                         // println!("Structural Mutation occuring !");
 
-                        // match thread_rng().gen_range(0_usize, 3_usize) {
                         #[allow(unreachable_patterns)]
                         match thread_rng().choose(&available_structural_mutation).expect("Fail to pick a random structural mutation.") {
-                        // match random::<StructuralMutation>() {
                             StructuralMutation::SubNetworkAddition => {
                                 // Sub-network addition mutation.
 
-                                // Add the mutated neuron to the mutated genome.
                                 // let mut node = node.clone();
                                 // N.B.: to add an input connection to the current Neuron
                                 // we need to add -1 to the iota value.
                                 node.iota -= 1;
                                 let depth: u8 = node.depth;
+
+                                // Add the mutated neuron to the mutated genome.
                                 mutated_genome.push(node);
 
                                 // Add a new sub-network to the genome.
@@ -140,7 +138,6 @@ impl Specimen<f32> {
                                     depth,
                                     &self.ann.input_map,
                                 );
-                                // println!("New subnetwork: \n{:#?}\n", subnetwork);
                                 mutated_genome.append(&mut subnetwork);
 
                                 // self.ann.neuron_map.push(0.0_f32);
@@ -153,13 +150,19 @@ impl Specimen<f32> {
                                 let depth: u8 = node.depth;
                                 match self.ann.gen_random_jumper_connection(source_id, depth) {
                                     Some(jumper) => {
-                                        // Increase the number of input the current Neuron has.
+                                        // Increase the number of input the current new mutated Neuron has.
                                         node.iota -= 1;
+                                        // Add the mutated neuron to the mutated genome.
                                         mutated_genome.push(node);
 
+                                        // Add the mutated a new jumper connection to the genome
+                                        // connecting the current mutated Neuron.
                                         mutated_genome.push(jumper);
                                     },
                                     None => {
+                                        // If there is no possibility to add a new jumper
+                                        // connection without breaking everything, we simply push back the current neuron
+                                        // unharmed and unmutated.
                                         mutated_genome.push(node);
                                     }
                                 }
