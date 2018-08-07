@@ -6,6 +6,8 @@ use rand::{thread_rng, Rng};
 /// This value is used to check the completeness of the linear genome and sub-linear genomes
 /// (sub-Networks).
 pub const IOTA_INPUT_VALUE: i32 = 1;
+/// Default value of an Input Node.
+pub const INPUT_NODE_DEPTH_VALUE: u8 = 99;
 
 
 /// The forms that can be taken by a gene can either be a neuron, or an input to the neural network, or
@@ -56,10 +58,13 @@ pub struct Node<T> {
     // Stores the result of its current computation. This is useful since the results of signals
     // at recurrent links are available at the next time step.
     pub value: T,
+    // The depth of a Node. Needed for JF and JR connections addition mutation.
+    pub depth: u8,
 }
 
+
 impl Node<f32> {
-    pub fn new(allele: Allele, id: usize, w: f32, iota: i32) -> Self {
+    pub fn new(allele: Allele, id: usize, w: f32, iota: i32, depth: u8) -> Self {
         use genetic_algorithm::individual::LEARNING_RATE_THRESHOLD;
         Node {
             allele,
@@ -68,6 +73,7 @@ impl Node<f32> {
             sigma: LEARNING_RATE_THRESHOLD as f32,
             iota,
             value: 0_f32,
+            depth,
         }
     }
 
