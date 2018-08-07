@@ -119,7 +119,10 @@ impl Specimen<f32> {
                         // println!("Structural Mutation occuring !");
 
                         #[allow(unreachable_patterns)]
-                        match thread_rng().choose(&available_structural_mutation).expect("Fail to pick a random structural mutation.") {
+                        match thread_rng()
+                            .choose(&available_structural_mutation)
+                            .expect("Fail to pick a random structural mutation.")
+                        {
                             StructuralMutation::SubNetworkAddition => {
                                 // Sub-network addition mutation.
 
@@ -158,7 +161,7 @@ impl Specimen<f32> {
                                         // Add the mutated a new jumper connection to the genome
                                         // connecting the current mutated Neuron.
                                         mutated_genome.push(jumper);
-                                    },
+                                    }
                                     None => {
                                         // If there is no possibility to add a new jumper
                                         // connection without breaking everything, we simply push back the current neuron

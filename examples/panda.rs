@@ -293,8 +293,6 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
 }
 
 
-
-
 fn main() {
     let mut network: Network<f32> = Network::build_from_example();
     println!("Evaluated example output = {:?}", network.evaluate());
