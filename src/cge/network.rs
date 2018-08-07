@@ -596,7 +596,7 @@ impl Network<f32> {
 
     /// Render an articial neural network to a dot file for a better visualization purpose.
     /// cf.: https://www.graphviz.org/documentation/.
-    pub fn render_to_dot(&self, file_name: &str, graph_name: &str) -> ::std::io::Result<()> {
+    pub fn render_to_dot(&self, file_name: &str, graph_name: &str, print_weight: bool) -> ::std::io::Result<()> {
         use std::fs::File;
         use std::io::BufWriter;
 
@@ -700,8 +700,11 @@ impl Network<f32> {
                 match node.allele {
                     Allele::Input => {
                         stack.push(format!("I{id}", id = node.id));
-                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
-                        stack.push(format!("[label=\"\"]"));
+                        if print_weight {
+                            stack.push(format!("[label=\"{w:.3}\"]", w = node.w));
+                        } else {
+                            stack.push(format!("[label=\"\"]"));
+                        }
                     }
                     Allele::JumpForward => {
                         let _msg: String =
@@ -709,8 +712,11 @@ impl Network<f32> {
                         // writer.write(_msg.as_bytes())?;
 
                         stack.push(format!("JF{id}", id = node.id));
-                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
-                        stack.push(format!("[label=\"\"]"));
+                        if print_weight {
+                            stack.push(format!("[label=\"{w:.3}\"]", w = node.w));
+                        } else {
+                            stack.push(format!("[label=\"\"]"));
+                        }
                     }
                     Allele::JumpRecurrent => {
                         let _msg: String =
@@ -718,8 +724,11 @@ impl Network<f32> {
                         // writer.write(_msg.as_bytes())?;
 
                         stack.push(format!("JR{id}", id = node.id));
-                        // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
-                        stack.push(format!("[label=\"\"]"));
+                        if print_weight {
+                            stack.push(format!("[label=\"{w:.3}\"]", w = node.w));
+                        } else {
+                            stack.push(format!("[label=\"\"]"));
+                        }
                     }
                     Allele::Neuron => {
                         let neuron_input_number: usize = (1 - node.iota) as usize;
@@ -737,9 +746,12 @@ impl Network<f32> {
                         }
 
                         stack.push(format!("N{id}", id = node.id));
-                        // stack.push(format!("[label=\"{w:.3}\"]", w = node.w));
-                        stack.push(format!("[label=\"\"]"));
-                    } // _ => {}
+                        if print_weight {
+                            stack.push(format!("[label=\"{w:.3}\"]", w = node.w));
+                        } else {
+                            stack.push(format!("[label=\"\"]"));
+                        }
+                    }
                 }
             }
 
