@@ -345,6 +345,7 @@ impl Network<f32> {
             let jumper: Node<f32> = Node::new(
                 jumper_kind,
                 jumper_id,
+                // Set weight to zero in order to not disturb the performance or behavior of the neural network
                 0.0,
                 IOTA_INPUT_VALUE,
                 depth_source + 1,
@@ -479,20 +480,13 @@ impl Network<f32> {
             }
         }
 
-        // assert_eq!(
-        //     stack.len(),
-        //     self.omega_size,
-        //     "Evaluated genome output length differ from expected output length: {} != {}",
-        //     stack.len(),
-        //     self.omega_size
-        // );
         stack
     }
 
 
     /// Returns the sub-network corresponding to JumpForward Node to be evaluated as slice of a
     /// Network.
-    fn build_jf_slice(
+    pub fn build_jf_slice(
         neuron_id: usize,
         neuron_index: usize,
         input_vec: &[Node<f32>],
@@ -549,7 +543,12 @@ impl Network<f32> {
             // Pretty printing setup.
             {
                 let msg: String =
-                    format!("\trankdir=BT\n\tsplines=spline\n\tnode [fixedsize=true];\n");
+                    format!("\trankdir=BT;\n\
+                            \tsplines=spline;\n\
+                            \tratio=1.0;\n\
+                            \tremincross=true;\n\
+                            \tnode [fixedsize=false, remincross=true];\
+                            \n\n");
                 writer.write(msg.as_bytes())?;
 
                 // Print Inputs.
@@ -686,17 +685,17 @@ impl Network<f32> {
 
 
     /// Pretty print the liear genome on a line.
-    pub fn pretty_print(&self) {
+    pub fn pretty_print(genome: &[Node<f32>]) {
         // Print indices.
         print!("|");
-        for i in 0..self.genome.len() {
+        for i in 0..genome.len() {
             print!("{:^9}|", format!("[{:^4}]", i));
         }
         println!("");
 
         // Print Allele and ID.
         print!("|");
-        for node in &self.genome {
+        for node in genome.iter() {
             match node.allele {
                 Allele::Input => print!("{:^9}|", format!(" I{:<3}", node.id)),
                 Allele::Neuron => print!("{:^9}|", format!(" N{:<3}", node.id)),
@@ -708,21 +707,21 @@ impl Network<f32> {
 
         // Print depths.
         print!("|");
-        for node in &self.genome {
+        for node in genome.iter() {
             print!("{:^9}|", format!("d{:<2}", node.depth));
         }
         println!("");
 
         // Print weights.
         print!("|");
-        for node in &self.genome {
+        for node in genome.iter() {
             print!("{:^9}|", format!("w{:.3}", node.w));
         }
         println!("");
 
         // Print iotas.
         print!("|");
-        for node in &self.genome {
+        for node in genome.iter() {
             print!("{:^9}|", format!("{:^3}", node.iota));
         }
         println!("");
