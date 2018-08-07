@@ -293,6 +293,7 @@ impl Network<f32> {
         depth_source: u8,
     ) -> Vec<usize> {
         let mut indices_v: Vec<usize> = Vec::with_capacity(self.neuron_map.len());
+
         for i in 0..self.genome.len() {
             let node: &Node<f32> = &self.genome[i];
             match node.allele {
@@ -315,6 +316,7 @@ impl Network<f32> {
         source_id: usize,
         depth_source: u8,
     ) -> Option<Node<f32>> {
+
         let mut jumper_kind: Allele;
         let mut potential_target_neuron_indices: Vec<usize>;
         match thread_rng().gen_range(0_usize, 2_usize) {
@@ -459,10 +461,9 @@ impl Network<f32> {
                         .neuron_indices_map
                         .get(&node.id)
                         .expect(&format!("Fail to lookup the node id = {}", node.id));
-                    // .unwrap_or();
 
                     let sub_genome_slice: Vec<Node<f32>> = self.shadow_genome
-                        [forwarded_node_index..self.shadow_genome.len() - 1]
+                        [forwarded_node_index..]
                         .to_vec();
 
                     let jf_slice: Vec<Node<f32>> =
@@ -503,7 +504,7 @@ impl Network<f32> {
         let mut i: usize = 0;
         let mut iota: i32 = 0;
 
-        while iota != 1 {
+        while iota != 1 && i < input_len {
             let node: Node<f32> = input_vec[i].clone();
 
             match node.allele {
@@ -518,11 +519,12 @@ impl Network<f32> {
             output_vec.push(node);
 
             i += 1;
-            if i >= input_len {
+            if i > input_len {
                 println!(
                     "@build_jf_slice:\n\t>> Genome end reached. Looking for N{} at index {}, but we reached index {} and nothing.",
                     neuron_id, neuron_index, i
                 );
+                Network::pretty_print(input_vec);
                 break;
             }
         }
@@ -561,7 +563,7 @@ impl Network<f32> {
                     let (mut a, mut b) = Network::build_input_subnetwork_slice_of_a_neuron(
                         node.id,
                         node.iota,
-                        &input_vec[i..input_len],
+                        &input_vec[i..],
                     );
 
                     untouchable_inputs.push(node);
@@ -581,7 +583,7 @@ impl Network<f32> {
             if i > input_len {
                 println!(
                     "@build_input_subnetwork_slice_of_a_neuron:\n\
-                     \t>> Sub-genome end reached. Looking for N{} 's inputs.",
+                    \t>> Sub-genome end reached. Looking for N{} 's inputs.",
                     neuron_id,
                 );
                 break;
