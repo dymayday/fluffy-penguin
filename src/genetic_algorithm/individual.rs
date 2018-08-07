@@ -101,8 +101,6 @@ impl Specimen<f32> {
             StructuralMutation::SubNetworkAddition,
             StructuralMutation::JumperAddition,
             StructuralMutation::ConnectionRemoval,
-            // StructuralMutation::ConnectionRemoval,
-            // StructuralMutation::ConnectionRemoval,
         ];
 
         // Find the unique ID of a potential new Neuron added by the special mutation:
