@@ -42,8 +42,8 @@ mod specimen {
         let specimen_origin_output: Vec<f32> = specimen_origin.evaluate();
 
         specimen_mutated.ann.update_input(&input_vector);
-        for _ in 0..10 {
-            specimen_mutated.structural_mutation(0.1);
+        for _ in 0..30 {
+            specimen_mutated.structural_mutation(0.5);
             specimen_mutated.ann.update_input(&input_vector);
 
             assert_eq!(specimen_origin_output, specimen_mutated.evaluate());
@@ -58,32 +58,33 @@ mod network {
 
     #[test]
     fn evaluation() {
-        assert_eq!(Network::build_from_example().evaluate(), [0.69_f32]);
+        // assert_eq!(Network::build_from_example().evaluate(), [0.69_f32]);
+        assert_eq!(Network::build_from_example().evaluate(), [0.65220004]);
     }
 }
 
 
 #[cfg(test)]
 mod node_tests {
-    use cge::node;
+    use cge::node::{Allele, Node};
 
     #[test]
     fn neuron() {
-        node::Node::new(node::Allele::Neuron, 0 as usize, 0.3_f32, 1_i32);
+        Node::new(Allele::Neuron, 0 as usize, 0.3_f32, 1_i32, 0);
     }
 
     #[test]
     fn input() {
-        node::Node::new(node::Allele::Input, 0 as usize, 0.3_f32, 1_i32);
+        Node::new(Allele::Input, 0 as usize, 0.3_f32, 1_i32, 99);
     }
 
     #[test]
     fn forward_jumper_connection() {
-        node::Node::new(node::Allele::JumpForward, 0 as usize, 0.3_f32, 1_i32);
+        Node::new(Allele::JumpForward, 0 as usize, 0.3_f32, 1_i32, 1);
     }
 
     #[test]
     fn recurrent_jumper_connection() {
-        node::Node::new(node::Allele::JumpRecurrent, 0 as usize, 0.3_f32, 1_i32);
+        Node::new(Allele::JumpRecurrent, 0 as usize, 0.3_f32, 1_i32, 1);
     }
 }
