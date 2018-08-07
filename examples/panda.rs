@@ -117,8 +117,8 @@ fn _test_subnetwork_generation(export: bool) {
 
     let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
-    let nbi: usize = 16;
-    let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
+    // let nbi: usize = 16;
+    // let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
     let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
 
     let input_vector: Vec<f32> = vec![1_f32; nbi];
@@ -235,12 +235,16 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
                 .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
         }
 
-        println!("");
+        // println!("");
         specimen_origin.ann.update_input(&input_vector);
-        println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
+        // println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
+        println!("\nOrigin:");
+        specimen_origin.ann.pretty_print();
+        println!("Output = {:?}\n", specimen_origin.evaluate());
     }
 
     let generation_size: usize = 10;
+
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
     specimen_mutated.structural_mutation(0.1);
 
@@ -282,7 +286,9 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
 
     for i in 0..spec_vec.len() {
         let spec = &mut spec_vec[i];
-        println!("Gen {:>3}: out = {:?}", i, spec.evaluate());
+        println!("\nGen {:>3}:", i);
+        spec.ann.pretty_print();
+        println!("Output = {:?}\n", spec.evaluate());
     }
 }
 
