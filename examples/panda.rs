@@ -34,8 +34,8 @@ fn _dev_population() {
     use fluffy_penguin::genetic_algorithm::population::Population;
 
     let population_size: usize = 10;
-    let input_size: usize = 2;
-    let output_size: usize = 1;
+    let input_size: usize = 5;
+    let output_size: usize = 3;
     let mutation_probability: f32 = 0.5;
 
     let structural_mutation_size: usize = 10;
