@@ -298,7 +298,7 @@ impl Network<f32> {
             let node: &Node<f32> = &self.genome[i];
             match node.allele {
                 Allele::Neuron => {
-                    if node.depth > depth_source + 1 && node.id != source_id {
+                    if node.depth > depth_source && node.id != source_id {
                         indices_v.push(node.id);
                     }
                 }
