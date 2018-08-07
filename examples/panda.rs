@@ -4,6 +4,7 @@ extern crate fluffy_penguin;
 extern crate rand;
 
 use fluffy_penguin::cge::network::Network;
+use fluffy_penguin::genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng};
 use std::process::Command;
 // use fluffy_penguin::cge::node::Allele;
@@ -110,8 +111,24 @@ fn _test_exploitation() {
 }
 
 
+fn export_visu(specimen: &Specimen<f32>, file_name: &str, graph_name: &str) {
+        let file_name_svg: &str = &String::from(file_name).replace(".dot", ".svg");
+        specimen
+                .ann
+                .render_to_dot(file_name, graph_name)
+                .expect("Fail to render ANN to dot file.");
+            Command::new("dot")
+                .arg(file_name)
+                .arg("-Tsvg")
+                .arg("-o")
+                .arg(file_name_svg)
+                .output()
+                .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
+
+}
+
+
 fn _test_specimen_mutation(export: bool) {
-    use fluffy_penguin::genetic_algorithm::individual::Specimen;
 
     let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
@@ -124,23 +141,10 @@ fn _test_specimen_mutation(export: bool) {
     let input_vector: Vec<f32> = vec![1_f32; nbi];
 
     {
-        let file_name: &str = "examples/0rigin.dot";
-        let file_name_svg: &str = "examples/0rigin.svg";
-        let graph_name: &str = "origin";
-
-
         if export {
-            specimen_origin
-                .ann
-                .render_to_dot(file_name, graph_name)
-                .expect("Fail to render ANN to dot file.");
-            Command::new("dot")
-                .arg(file_name)
-                .arg("-Tsvg")
-                .arg("-o")
-                .arg(file_name_svg)
-                .output()
-                .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
+            let file_name: &str = "examples/0rigin.dot";
+            let graph_name: &str = "origin";
+            export_visu(&specimen_origin, file_name, graph_name)
         }
 
         // println!("");
@@ -160,26 +164,11 @@ fn _test_specimen_mutation(export: bool) {
     for i in 0..generation_size {
         specimen_mutated.structural_mutation(pm);
 
-
         {
-            let file_name: &str = &format!("examples/mutated_{}.dot", i);
-            let file_name_svg: &str = &format!("examples/mutated_{}.svg", i);
-            let graph_name: &str = "mutated";
-
-
             if export {
-                specimen_mutated
-                    .ann
-                    .render_to_dot(file_name, graph_name)
-                    .expect("Fail to render ANN to dot file.");
-
-                Command::new("dot")
-                    .arg(file_name)
-                    .arg("-Tsvg")
-                    .arg("-o")
-                    .arg(file_name_svg)
-                    .output()
-                    .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
+                let file_name: &str = &format!("examples/mutated_{}.dot", i);
+                let graph_name: &str = "mutated";
+                export_visu(&specimen_mutated, file_name, graph_name)
             }
         }
 
