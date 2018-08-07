@@ -115,8 +115,10 @@ fn _test_specimen_mutation(export: bool) {
 
     let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
+
     // let nbi: usize = 16;
     // let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
+
     let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
 
     let input_vector: Vec<f32> = vec![1_f32; nbi];
@@ -145,11 +147,12 @@ fn _test_specimen_mutation(export: bool) {
         specimen_origin.ann.update_input(&input_vector);
         // println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
         println!("\nOrigin:");
-        specimen_origin.ann.pretty_print();
+        // specimen_origin.ann.pretty_print();
+        Network::pretty_print(&specimen_origin.ann.genome);
         println!("Output = {:?}\n", specimen_origin.evaluate());
     }
 
-    let generation_size: usize = 10;
+    let generation_size: usize = 5;
     let pm: f32 = 0.5;
 
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
@@ -183,7 +186,8 @@ fn _test_specimen_mutation(export: bool) {
 
         specimen_mutated.ann.update_input(&input_vector);
         // println!("Gen {:>3}: out = {:?}", i+1, specimen_mutated.ann.evaluate());
-        println!("Gen {:>3}: creation", i);
+        println!("\nGen {:>3}: creation", i);
+        Network::pretty_print(&specimen_origin.ann.genome);
         // println!("{:#?}", specimen_mutated.ann.genome);
 
         spec_vec.push(specimen_mutated.clone());
@@ -193,11 +197,13 @@ fn _test_specimen_mutation(export: bool) {
 
     for i in 0..spec_vec.len() {
         let spec = &mut spec_vec[i];
+
         println!("\nGen {:>3}:", i);
-        spec.ann.pretty_print();
+        // spec.ann.pretty_print();
         println!("Output = {:?}\n", spec.evaluate());
     }
 }
+
 
 
 fn main() {
