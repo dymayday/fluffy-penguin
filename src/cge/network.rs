@@ -749,9 +749,9 @@ impl Network<f32> {
             print!("|");
             for i in 0..genome_chunk.len() {
                 print!("{:^9}|", format!("[{:^4}]", acc + i));
-                acc += 1;
             }
             println!("");
+            acc += genome_chunk.len();
 
             // Print Allele and ID.
             print!("|");
