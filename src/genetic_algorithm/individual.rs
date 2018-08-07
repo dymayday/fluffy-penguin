@@ -109,8 +109,10 @@ impl Specimen<f32> {
 
         let mut mutated_genome: Vec<Node<f32>> = Vec::with_capacity(self.ann.genome.len());
 
-        for node in &self.ann.genome {
-            let mut node = node.clone();
+        let genome_len: usize = self.ann.genome.len();
+        let mut node_index: usize = 0;
+        while node_index < genome_len {
+            let mut node = self.ann.genome[node_index].clone();
 
             match node.allele {
                 Allele::Neuron => {
@@ -172,7 +174,13 @@ impl Specimen<f32> {
                             }
                             StructuralMutation::ConnectionRemoval => {
                                 // Connection removal mutation
+                                let sub_network = Network::build_jf_slice(node.id, node_index, &self.ann.genome[node_index..genome_len]);
+                                println!("sub network:");
+                                Network::pretty_print(&sub_network);
                                 mutated_genome.push(node);
+
+                                // let input_node_number_to_remove: usize = thread_rng().gen_range(0, );
+
                             }
                             _ => {
                                 // Unknown structural mutation.
@@ -180,17 +188,18 @@ impl Specimen<f32> {
                             }
                         }
                     } else {
-                        // If we don't mutate this Neuron, we simply push it back to genome,
+                        // If we don't mutate this Neuron, we simply push it back to the genome,
                         // unharmed ^^'.
                         mutated_genome.push(node);
                     }
                 }
                 _ => {
-                    // Structural mutation only aply on Neuron Node, so we simply push a,ything that's
+                    // Structural mutation only aply on Neuron Node, so we simply push anything that is
                     // not a Neuron back to the genome.
                     mutated_genome.push(node);
                 }
             }
+            node_index += 1;
         }
 
         self.ann.genome = mutated_genome;
