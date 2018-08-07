@@ -95,6 +95,14 @@ impl Specimen<f32> {
     /// pm: is the structural mutation probability and is usually set between 5 and 10%.
     pub fn structural_mutation(&mut self, pm: f32) {
         use cge::node::Allele;
+        use genetic_algorithm::mutation::StructuralMutation;
+        // use rand::random;
+
+        let available_structural_mutation: [StructuralMutation; 3] = [
+            StructuralMutation::SubNetworkAddition,
+            StructuralMutation::JumperAddition,
+            StructuralMutation::ConnectionRemoval,
+        ];
 
         // Find the unique ID of a potential new Neuron added by the special mutation:
         // 'sub-network addition'.
@@ -112,8 +120,10 @@ impl Specimen<f32> {
                         // println!("Structural Mutation occuring !");
 
                         // match thread_rng().gen_range(0_usize, 3_usize) {
-                        match thread_rng().gen_range(1_usize, 2_usize) {
-                            0 => {
+                        #[allow(unreachable_patterns)]
+                        match thread_rng().choose(&available_structural_mutation).expect("Fail to pick a random structural mutation.") {
+                        // match random::<StructuralMutation>() {
+                            StructuralMutation::SubNetworkAddition => {
                                 // Sub-network addition mutation.
 
                                 // Add the mutated neuron to the mutated genome.
@@ -121,11 +131,13 @@ impl Specimen<f32> {
                                 // N.B.: to add an input connection to the current Neuron
                                 // we need to add -1 to the iota value.
                                 node.iota -= 1;
+                                let depth: u8 = node.depth;
                                 mutated_genome.push(node);
 
                                 // Add a new sub-network to the genome.
                                 let mut subnetwork: Vec<Node<f32>> = Network::gen_random_subnetwork(
                                     new_neuron_id,
+                                    depth,
                                     &self.ann.input_map,
                                 );
                                 // println!("New subnetwork: \n{:#?}\n", subnetwork);
@@ -134,22 +146,32 @@ impl Specimen<f32> {
                                 // self.ann.neuron_map.push(0.0_f32);
                                 new_neuron_id += 1;
                             }
-                            1 => {
+                            StructuralMutation::JumperAddition => {
                                 // Connection addition mutation.
 
-                                // Increase the number of input the current Neuron has.
-                                node.iota -= 1;
-                                mutated_genome.push(node);
+                                let source_id: usize = node.id;
+                                let depth: u8 = node.depth;
+                                match self.ann.gen_random_jumper_connection(source_id, depth) {
+                                    Some(jumper) => {
+                                        // Increase the number of input the current Neuron has.
+                                        node.iota -= 1;
+                                        mutated_genome.push(node);
 
-                                mutated_genome.push(self.ann.gen_random_jumper_connection());
+                                        mutated_genome.push(jumper);
+                                    },
+                                    None => {
+                                        mutated_genome.push(node);
+                                    }
+                                }
                             }
-                            2 => {
+                            StructuralMutation::ConnectionRemoval => {
                                 // Connection removal mutation
                                 mutated_genome.push(node);
                             }
                             _ => {
                                 // Unknown structural mutation.
                                 println!("Unknown structural mutation behavior draw.");
+                                unreachable!();
                             }
                         }
                     } else {
@@ -176,7 +198,7 @@ impl Specimen<f32> {
     fn _insert_subnetwork(&mut self, index: usize) {
         // ...
         let _subnetwork: Vec<Node<f32>> =
-            Network::gen_random_subnetwork(index, &self.ann.input_map);
+            Network::gen_random_subnetwork(index, 0, &self.ann.input_map);
     }
 
 
