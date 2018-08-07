@@ -491,8 +491,8 @@ impl Network<f32> {
         neuron_index: usize,
         input_vec: &[Node<f32>],
     ) -> Vec<Node<f32>> {
-        let input_len: usize = input_vec.len();
 
+        let input_len: usize = input_vec.len();
         let mut output_vec: Vec<Node<f32>> = Vec::with_capacity(input_len + 1);
 
         let mut i: usize = 0;
@@ -515,7 +515,7 @@ impl Network<f32> {
             i += 1;
             if i >= input_len {
                 println!(
-                    "Genome end reached. Looking for N{} at index {}, but we reached index {} and nothing.",
+                    "@build_jf_slice:\n\t>> Genome end reached. Looking for N{} at index {}, but we reached index {} and nothing.",
                     neuron_id, neuron_index, i
                 );
                 break;
@@ -524,6 +524,62 @@ impl Network<f32> {
 
         output_vec.shrink_to_fit();
         output_vec
+    }
+
+
+    /// Returns the input Node vector of a Neuron.
+    /// Returns two vectors of Node.
+    /// * the first vector are the Node we can actually remove without breaking the linear genome.
+    /// * the second one regroups the Nodes we are not allowed to touch.
+    pub fn build_input_subnetwork_slice_of_a_neuron(
+        neuron_id: usize,
+        // neuron_index: usize,
+        iota: i32,
+        input_vec: &[Node<f32>],
+    ) -> (Vec<Node<f32>>, Vec<Node<f32>>) {
+
+        let input_len: usize = input_vec.len();
+
+        let mut disposable_inputs: Vec<Node<f32>> = Vec::with_capacity(input_vec.len());
+        let mut untouchable_inputs: Vec<Node<f32>> = Vec::with_capacity(input_vec.len());
+        let mut iota: i32 = iota;
+        let mut i: usize = 0;
+
+
+        // As long as we did not walk through all the input from our current Neuron, we keep going.
+        while iota != 1 && i < input_len {
+            let node: Node<f32> = input_vec[i].clone();
+
+            match node.allele {
+                Allele::Neuron => {
+                    i += 1;
+                    iota += 1;
+                    let (mut a, mut b) = Network::build_input_subnetwork_slice_of_a_neuron(node.id, node.iota, &input_vec[i..input_len]);
+
+                    untouchable_inputs.push(node);
+
+                    i += a.len();
+                    i += b.len();
+                    untouchable_inputs.append(&mut a);
+                    untouchable_inputs.append(&mut b);
+                }
+                _ => {
+                    disposable_inputs.push(node);
+                    i += 1;
+                    iota += 1;
+                }
+            }
+
+            if i > input_len {
+                println!(
+                    "@build_input_subnetwork_slice_of_a_neuron:\n\t>> Sub-genome end reached. Looking for N{} 's inputs.",
+                    neuron_id, 
+                );
+                break;
+            }
+        }
+
+        (disposable_inputs, untouchable_inputs)
     }
 
 
@@ -686,47 +742,51 @@ impl Network<f32> {
 
     /// Pretty print the liear genome on a line.
     pub fn pretty_print(genome: &[Node<f32>]) {
-        // Print indices.
-        print!("|");
-        for i in 0..genome.len() {
-            print!("{:^9}|", format!("[{:^4}]", i));
-        }
-        println!("");
+        let mut acc: usize = 0;
+        for genome_chunk in genome.chunks(20) {
 
-        // Print Allele and ID.
-        print!("|");
-        for node in genome.iter() {
-            match node.allele {
-                Allele::Input => print!("{:^9}|", format!(" I{:<3}", node.id)),
-                Allele::Neuron => print!("{:^9}|", format!(" N{:<3}", node.id)),
-                Allele::JumpForward => print!("{:^9}|", format!(" JF{:<3}", node.id)),
-                Allele::JumpRecurrent => print!("{:^9}|", format!(" JR{:<3}", node.id)),
+            // Print indices.
+            print!("|");
+            for i in 0..genome_chunk.len() {
+                print!("{:^9}|", format!("[{:^4}]", acc + i));
+                acc += 1;
             }
-        }
-        println!("");
+            println!("");
 
-        // Print depths.
-        print!("|");
-        for node in genome.iter() {
-            print!("{:^9}|", format!("d{:<2}", node.depth));
-        }
-        println!("");
+            // Print Allele and ID.
+            print!("|");
+            for node in genome_chunk.iter() {
+                match node.allele {
+                    Allele::Input => print!("{:^9}|", format!(" I{:<3}", node.id)),
+                    Allele::Neuron => print!("{:^9}|", format!(" N{:<3}", node.id)),
+                    Allele::JumpForward => print!("{:^9}|", format!(" JF{:<3}", node.id)),
+                    Allele::JumpRecurrent => print!("{:^9}|", format!(" JR{:<3}", node.id)),
+                }
+            }
+            println!("");
 
-        // Print weights.
-        print!("|");
-        for node in genome.iter() {
-            print!("{:^9}|", format!("w{:.3}", node.w));
-        }
-        println!("");
+            // Print depths.
+            print!("|");
+            for node in genome_chunk.iter() {
+                print!("{:^9}|", format!("d{:<2}", node.depth));
+            }
+            println!("");
 
-        // Print iotas.
-        print!("|");
-        for node in genome.iter() {
-            print!("{:^9}|", format!("{:^3}", node.iota));
+            // Print weights.
+            print!("|");
+            for node in genome_chunk.iter() {
+                print!("{:^9}|", format!("w{:.3}", node.w));
+            }
+            println!("");
+
+            // Print iotas.
+            print!("|");
+            for node in genome_chunk.iter() {
+                print!("{:^9}|", format!("{:^3}", node.iota));
+            }
+            println!("");
+
+
         }
-        println!("");
     }
-
-
-    // fn render_slice_to_dot(writer: &mut BufWriter: input: &[Node<f32>]) {}
 }
