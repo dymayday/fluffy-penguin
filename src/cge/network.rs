@@ -5,7 +5,7 @@
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
 use activation::TransferFunctionTrait;
-use cge::node::{Allele, Node, IOTA_INPUT_VALUE};
+use cge::node::{Allele, Node, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE};
 use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 use std::io::Write;
@@ -61,6 +61,7 @@ impl Network<f32> {
                     omega,
                     Node::random_weight(),
                     iota_for_each_neuron,
+                    0_u8,
                 );
                 genome.push(neuron);
 
@@ -168,17 +169,17 @@ impl Network<f32> {
         let input_map = vec![1_f32, 1_f32];
         let neuron_map: Vec<f32> = vec![0.0; 4];
         let genome: Vec<Node<f32>> = vec![
-            Node::new(Allele::Neuron, 0, 0.6, -1),
-            Node::new(Allele::Neuron, 1, 0.8, -1),
-            Node::new(Allele::Neuron, 3, 0.9, -1),
-            Node::new(Allele::Input, 0, 0.1, IOTA_INPUT_VALUE),
-            Node::new(Allele::Input, 1, 0.4, IOTA_INPUT_VALUE),
-            Node::new(Allele::Input, 1, 0.5, IOTA_INPUT_VALUE),
-            Node::new(Allele::Neuron, 2, 0.2, -3),
-            Node::new(Allele::JumpForward, 3, 0.3, IOTA_INPUT_VALUE),
-            Node::new(Allele::Input, 0, 0.7, IOTA_INPUT_VALUE),
-            Node::new(Allele::Input, 1, 0.8, IOTA_INPUT_VALUE),
-            Node::new(Allele::JumpRecurrent, 0, 0.2, IOTA_INPUT_VALUE),
+            Node::new(Allele::Neuron, 0, 0.6, -1, 0),
+            Node::new(Allele::Neuron, 1, 0.8, -1, 1),
+            Node::new(Allele::Neuron, 3, 0.9, -1, 2),
+            Node::new(Allele::Input, 0, 0.1, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE),
+            Node::new(Allele::Input, 1, 0.4, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE),
+            Node::new(Allele::Input, 1, 0.5, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE),
+            Node::new(Allele::Neuron, 2, 0.2, -3, 1),
+            Node::new(Allele::JumpForward, 3, 0.3, IOTA_INPUT_VALUE, 2),
+            Node::new(Allele::Input, 0, 0.7, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE),
+            Node::new(Allele::Input, 1, 0.8, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE),
+            Node::new(Allele::JumpRecurrent, 0, 0.2, IOTA_INPUT_VALUE, 2),
         ];
         let shadow_genome = genome.clone();
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
@@ -197,7 +198,7 @@ impl Network<f32> {
 
     /// Returns a sub-network composed of one Neuron Node followed by randomly selected
     /// input Node from a vector of input.
-    pub fn gen_random_subnetwork(neuron_id: usize, input_map: &Vec<f32>) -> Vec<Node<f32>> {
+    pub fn gen_random_subnetwork(neuron_id: usize, depth: u8, input_map: &Vec<f32>) -> Vec<Node<f32>> {
         let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
 
         let mut input_node_vec: Vec<Node<f32>> = Network::gen_input_node_vector(&input_map);
@@ -219,7 +220,7 @@ impl Network<f32> {
 
         // The initial weight of the first node of a newly added sub-network is set to zero
         // so as not to disturb the performance or behavior of the neural network.
-        let neuron: Node<f32> = Node::new(Allele::Neuron, neuron_id, 0.0, iota);
+        let neuron: Node<f32> = Node::new(Allele::Neuron, neuron_id, 0.0, iota, depth + 1);
         subgenome.push(neuron);
 
         // Append all the inputs of our newly created Neuron.
@@ -236,7 +237,7 @@ impl Network<f32> {
         let mut input_node_vector: Vec<Node<f32>> = Vec::with_capacity(input_vec.len());
         for (i, v) in input_vec.iter().enumerate() {
             let mut input_node: Node<f32> =
-                Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE);
+                Node::new(Allele::Input, i, Node::random_weight(), IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
             input_node.value = *v;
 
             input_node_vector.push(input_node);
@@ -245,23 +246,61 @@ impl Network<f32> {
     }
 
 
-    /// ...
-    pub fn gen_random_jumper_connection(&self) -> Node<f32> {
-        // let jumper_kind: Allele = match thread_rng().gen_range(0_usize, 2_usize) {
-        //     0 => Allele::JumpForward,
-        //     _ => Allele::JumpRecurrent,
-        // };
-        let jumper_kind: Allele = Allele::JumpForward;
-        // let jumper_kind: Allele = Allele::JumpRecurrent;
+    /// Find the potential Neuron Node with the right depth.
+    /// Dsource > Djf and Dtarget =< Djf.
+    fn get_potential_neuron_indices_for_jf_node(&self, source_id: usize, depth_source: u8) -> Vec<usize> {
 
-        let values: Vec<usize> = self.neuron_indices_map.keys().map(|x| *x).collect();
-        let jumper_id: usize = *thread_rng()
-            .choose(&values)
-            .expect("Fail to draw a jumper connection id to link to an existing Neuron.");
+        let mut indices_v: Vec<usize> = Vec::with_capacity(self.neuron_map.len());
+        for i in 0..self.genome.len() {
+            let node: &Node<f32> = &self.genome[i];
+            match node.allele {
+                Allele::Neuron => {
+                    if node.depth > depth_source + 1 && node.id != source_id {
+                        indices_v.push(node.id);
+                    }
+                }
+                _ => {}
+            }
+        }
+        indices_v.shrink_to_fit();
+        indices_v
+    }
 
-        let jumper: Node<f32> = Node::new(jumper_kind, jumper_id, 0.0, IOTA_INPUT_VALUE);
-        // println!("JR {:<3} \n{:#?} \nfrom values: {:?}", jumper_id, jumper, values);
-        jumper
+
+    /// Compute the proper jumper connection Node from a set of rules to not break everything.
+    pub fn gen_random_jumper_connection(&self, source_id: usize, depth_source: u8) -> Option<Node<f32>> {
+
+        let mut jumper_kind: Allele;
+        let mut potential_target_neuron_indices: Vec<usize>;
+        match thread_rng().gen_range(0_usize, 2_usize) {
+            0 => {
+                jumper_kind = Allele::JumpForward;
+                potential_target_neuron_indices = self.get_potential_neuron_indices_for_jf_node(source_id, depth_source);
+            }
+            _ => {
+                jumper_kind = Allele::JumpRecurrent;
+                potential_target_neuron_indices = self.neuron_indices_map.keys().map(|x| *x).collect();
+            }
+        };
+
+        // If there is no possibility to form a new forward connection in the current genome, we
+        // fall back to a recurrent connection, which should be in the most cases possible.
+        if jumper_kind == Allele::JumpForward && potential_target_neuron_indices.len() < 1 {
+            jumper_kind = Allele::JumpRecurrent;
+            potential_target_neuron_indices = self.neuron_indices_map.keys().map(|x| *x).collect();
+        }
+
+        // Still, we check if there is some possible solution.
+        if potential_target_neuron_indices.len() > 0 {
+            let jumper_id: usize = *thread_rng()
+                .choose(&potential_target_neuron_indices)
+                .expect("Fail to draw a jumper connection id to link to an existing Neuron.");
+            let jumper: Node<f32> = Node::new(jumper_kind, jumper_id, 0.0, IOTA_INPUT_VALUE, depth_source + 1);
+
+            Some(jumper)
+        } else {
+            None
+        }
     }
 
 
@@ -285,9 +324,7 @@ impl Network<f32> {
         self.shadow_genome = self.genome.clone();
         self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
 
-
         self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
-        // println!("neuron_indices_map = {:#?}", self.neuron_indices_map);
     }
 
 
@@ -296,15 +333,6 @@ impl Network<f32> {
         assert_eq!(self.input_map.len(), input.len());
         self.input_map = input.to_vec();
     }
-
-
-    // /// Update the neuron map attribute of the network if needed.
-    // /// This is specifically use after a structural mutation.
-    // fn update_neuron_map(&mut self) {
-    //     // let genome: &Vec<Node<f32>> = &self.genome;
-    //     // self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
-    //
-    // }
 
 
     /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
@@ -351,8 +379,8 @@ impl Network<f32> {
                         .expect(&format!("Fail to lookup the node id = {}", node.id));
                     self.genome[neuron_index].value = neuron_output;
 
-                    let activated_neuron_value: f32 = node.isrlu(0.1);
-                    // let activated_neuron_value: f32 = node.relu();
+                    // let activated_neuron_value: f32 = node.isrlu(0.1);
+                    let activated_neuron_value: f32 = node.relu();
                     // let activated_neuron_value: f32 = node.sigmoids();
 
                     // Update the neuron value in the neuron_map with its activated value from its
@@ -376,20 +404,19 @@ impl Network<f32> {
                     let sub_genome_slice: Vec<Node<f32>> = self.shadow_genome
                         [forwarded_node_index..self.shadow_genome.len() - 1]
                         .to_vec();
+
                     let jf_slice: Vec<Node<f32>> =
-                        Network::build_jf_slice(forwarded_node_index, &sub_genome_slice);
-                    stack.append(&mut self.evaluate_slice(&jf_slice));
-                    // stack.append(&mut vec![0_f32]);
+                        Network::build_jf_slice(node.id, forwarded_node_index, &sub_genome_slice);
+
+                    // let mut activated_values: Vec<f32> = self.evaluate_slice(&jf_slice).iter().map(|x| x.isrlu(0.1) * node.w).collect();
+                    // let mut activated_values: Vec<f32> = self.evaluate_slice(&jf_slice).iter().map(|x| x.relu() * node.w).collect();
+                    // stack.append(&mut activated_values);
+
+                    // stack.append(&mut self.evaluate_slice(&jf_slice));
+                    // stack.push(self.evaluate_slice(&jf_slice)[0]);
+                    stack.push(self.evaluate_slice(&jf_slice)[0].isrlu(0.1) * node.w);
                 }
             }
-            // println!("Stack = {:#?}", stack);
-
-            // println!("\n\n####################################################################\n");
-            // println!("Stack: [{:>2}] = {:?} ", i, stack);
-            // let mut input = String::new();
-            // ::std::io::stdin().read_line(&mut input)
-            //     .ok()
-            //     .expect("Couldn't read line");
         }
 
         assert_eq!(
@@ -405,7 +432,7 @@ impl Network<f32> {
 
     /// Returns the sub-network corresponding to JumpForward Node to be evaluated as slice of a
     /// Network.
-    fn build_jf_slice(neuron_index: usize, input_vec: &[Node<f32>]) -> Vec<Node<f32>> {
+    fn build_jf_slice(neuron_id: usize, neuron_index: usize, input_vec: &[Node<f32>]) -> Vec<Node<f32>> {
         let input_len: usize = input_vec.len();
 
         let mut output_vec: Vec<Node<f32>> = Vec::with_capacity(input_len + 1);
@@ -430,11 +457,10 @@ impl Network<f32> {
             i += 1;
             if i >= input_len {
                 println!(
-                    "Genome end reached for Neuron id = {} : {}",
-                    neuron_index, i
+                    "Genome end reached. Looking for N{} at index {}, but we reached index {} and nothing.",
+                    neuron_id, neuron_index, i
                 );
-                i = 0;
-                // break;
+                break;
             }
         }
 
@@ -536,18 +562,18 @@ impl Network<f32> {
                         stack.push(format!("[label=\"\"]"));
                     }
                     Allele::JumpForward => {
-                        let msg: String =
+                        let _msg: String =
                             format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "JF", i = node.id);
-                        // writer.write(msg.as_bytes())?;
+                        // writer.write(_msg.as_bytes())?;
 
                         stack.push(format!("JF{id}", id = node.id));
                         // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
                         stack.push(format!("[label=\"\"]"));
                     }
                     Allele::JumpRecurrent => {
-                        let msg: String =
+                        let _msg: String =
                             format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "JR", i = node.id);
-                        // writer.write(msg.as_bytes())?;
+                        // writer.write(_msg.as_bytes())?;
 
                         stack.push(format!("JR{id}", id = node.id));
                         // stack.push(format!("[xlabel=\"{w:.3}\"]", w = node.w));
@@ -581,6 +607,51 @@ impl Network<f32> {
         } // the buffer is flushed once writer goes out of scope
 
         Ok(())
+    }
+
+
+    /// Pretty print the liear genome on a line.
+    pub fn pretty_print(&self) {
+        // Print indices.
+        print!("|");
+        for i in 0..self.genome.len() {
+            print!("{:^9}|", format!("[{:^4}]", i));
+        }
+        println!("");
+
+        // Print Allele and ID.
+        print!("|");
+        for node in &self.genome {
+            match node.allele {
+                Allele::Input => print!("{:^9}|", format!(" I{:<3}", node.id)),
+                Allele::Neuron => print!("{:^9}|", format!(" N{:<3}", node.id)),
+                Allele::JumpForward => print!("{:^9}|", format!(" JF{:<3}", node.id)),
+                Allele::JumpRecurrent => print!("{:^9}|", format!(" JR{:<3}", node.id)),
+            }
+        }
+        println!("");
+
+        // Print depths.
+        print!("|");
+        for node in &self.genome {
+            print!("{:^9}|", format!("d{:<2}", node.depth));
+        }
+        println!("");
+
+        // Print weights.
+        print!("|");
+        for node in &self.genome {
+            print!("{:^9}|", format!("w{:.3}", node.w));
+        }
+        println!("");
+
+        // Print iotas.
+        print!("|");
+        for node in &self.genome {
+            print!("{:^9}|", format!("{:^3}", node.iota));
+        }
+        println!("");
+
     }
 
 
