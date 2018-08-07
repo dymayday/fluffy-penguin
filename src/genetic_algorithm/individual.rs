@@ -177,7 +177,6 @@ impl Specimen<f32> {
                             _ => {
                                 // Unknown structural mutation.
                                 println!("Unknown structural mutation behavior draw.");
-                                unreachable!();
                             }
                         }
                     } else {
