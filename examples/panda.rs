@@ -152,11 +152,10 @@ fn _test_specimen_mutation(export: bool) {
         println!("Output = {:?}\n", specimen_origin.evaluate());
     }
 
-    let generation_size: usize = 10;
-    let pm: f32 = 0.5;
+    let generation_size: usize = 20;
+    let pm: f32 = 0.1;
 
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
-    // specimen_mutated.structural_mutation(pm);
 
     for i in 0..generation_size {
         specimen_mutated.structural_mutation(pm);
@@ -191,20 +190,26 @@ fn _test_specimen_mutation(export: bool) {
 
         spec_vec.push(specimen_mutated.clone());
         specimen_mutated = specimen_mutated.clone();
+        println!("Output = {:?}\n", specimen_mutated.ann.evaluate());
+
+        println!(
+            "\n{:^240}",
+            "------------------------------------------------------------\n"
+        );
     }
 
-    println!(
-        "\n{:^240}",
-        "------------------------------------------------------------\n"
-    );
-
-    for i in 0..spec_vec.len() {
-        let spec = &mut spec_vec[i];
-
-        println!("Gen {:>3}:", i);
-        // spec.ann.pretty_print();
-        println!("Output = {:?}\n", spec.evaluate());
-    }
+    // println!(
+    //     "\n{:^240}",
+    //     "------------------------------------------------------------\n"
+    // );
+    //
+    // for i in 0..spec_vec.len() {
+    //     let spec = &mut spec_vec[i];
+    //
+    //     println!("Gen {:>3}:", i);
+    //     // spec.ann.pretty_print();
+    //     println!("Output = {:?}\n", spec.evaluate());
+    // }
 }
 
 
