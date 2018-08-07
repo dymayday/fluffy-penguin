@@ -101,6 +101,8 @@ impl Specimen<f32> {
             StructuralMutation::SubNetworkAddition,
             StructuralMutation::JumperAddition,
             StructuralMutation::ConnectionRemoval,
+            // StructuralMutation::ConnectionRemoval,
+            // StructuralMutation::ConnectionRemoval,
         ];
 
         // Find the unique ID of a potential new Neuron added by the special mutation:
@@ -174,13 +176,31 @@ impl Specimen<f32> {
                             }
                             StructuralMutation::ConnectionRemoval => {
                                 // Connection removal mutation
-                                let sub_network = Network::build_jf_slice(node.id, node_index, &self.ann.genome[node_index..genome_len]);
-                                println!("sub network:");
-                                Network::pretty_print(&sub_network);
-                                mutated_genome.push(node);
+                                let sub_network_slice = &self.ann.genome[node_index+1..genome_len];
 
-                                // let input_node_number_to_remove: usize = thread_rng().gen_range(0, );
+                                let (mut disposable, mut untouchable) =
+                                    Network::build_input_subnetwork_slice_of_a_neuron(node.id, node.iota, sub_network_slice);
 
+                                node_index += disposable.len() + untouchable.len();
+
+                                if disposable.len() > 1 {
+                                    let input_index_to_remove: usize = thread_rng().gen_range(0, disposable.len());
+
+                                    let _removed_node = disposable.swap_remove(input_index_to_remove);
+
+                                    // If we actually remove something, we need to decrease the number of input
+                                    // of the current Neuron to mutate by adding 1 to its iota attribute.
+                                    node.iota += 1;
+
+                                    mutated_genome.push(node);
+                                    mutated_genome.append(&mut disposable);
+
+                                } else {
+                                    mutated_genome.push(node);
+                                    mutated_genome.append(&mut disposable);
+                                }
+
+                                mutated_genome.append(&mut untouchable);
                             }
                             _ => {
                                 // Unknown structural mutation.
@@ -207,20 +227,9 @@ impl Specimen<f32> {
     }
 
 
-    /// As part of the structural exploitation, a sub-network has a chance to be added to the
-    /// linear genome.
-    fn _insert_subnetwork(&mut self, index: usize) {
-        // ...
-        let _subnetwork: Vec<Node<f32>> =
-            Network::gen_random_subnetwork(index, 0, &self.ann.input_map);
-    }
-
-
     /// Returns if a Neuron Node should be mutated or not by drawing a random number from a uniform
     /// distribution [0, 1) and comparing it with the mutation probability `pm`.
     fn to_mutate(pm: f32) -> bool {
         thread_rng().gen::<f32>() <= pm
     }
-
-    // fn compute_new_neuron_id()
 }
