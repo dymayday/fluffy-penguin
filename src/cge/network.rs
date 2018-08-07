@@ -394,7 +394,13 @@ impl Network<f32> {
         // println!("neuron_indices_map: {:#?}", self.neuron_indices_map);
         let g = self.genome.clone();
         let output: Vec<f32> = self.evaluate_slice(&g);
-        assert_eq!(self.omega_size, output.len());
+        assert_eq!(
+            output.len(),
+            self.omega_size,
+            "Evaluated genome output length {} != Expected output length {}",
+            output.len(),
+            self.omega_size
+        );
         output
     }
 
@@ -467,18 +473,19 @@ impl Network<f32> {
 
                     // stack.append(&mut self.evaluate_slice(&jf_slice));
                     // stack.push(self.evaluate_slice(&jf_slice)[0]);
-                    stack.push(self.evaluate_slice(&jf_slice)[0].isrlu(0.1) * node.w);
+                    // let sum_value: f32 = self.evaluate_slice(&jf_slice).iter().sum::<f32>().isrlu(0.1);
+                    stack.push(self.evaluate_slice(&jf_slice).iter().sum::<f32>().isrlu(0.1) * node.w);
                 }
             }
         }
 
-        assert_eq!(
-            stack.len(),
-            self.omega_size,
-            "Evaluated genome output length differt from expected output length: {} != {}",
-            stack.len(),
-            self.omega_size
-        );
+        // assert_eq!(
+        //     stack.len(),
+        //     self.omega_size,
+        //     "Evaluated genome output length differ from expected output length: {} != {}",
+        //     stack.len(),
+        //     self.omega_size
+        // );
         stack
     }
 
@@ -545,8 +552,9 @@ impl Network<f32> {
                     format!("\trankdir=BT\n\tsplines=spline\n\tnode [fixedsize=true];\n");
                 writer.write(msg.as_bytes())?;
 
+                // Print Inputs.
                 let msg: String =
-                    format!("\tsubgraph cluster_0 {{\n\t\tcolor=white;\n\t\tnode [style=bold, color=orchid, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_0 {{\n\t\tcolor=white;\n\t\tnode [style=bold, color=orchid, shape=circle, rank=\"min\"];\n\t");
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.input_map.len() {
@@ -555,8 +563,9 @@ impl Network<f32> {
                 }
                 writer.write(";\n\t}\n".as_bytes())?;
 
+                // Print Output Nodes.
                 let msg: String =
-                    format!("\tsubgraph cluster_1 {{\n\t\tcolor=white;\n\t\tnode [style=bold, color=tomato, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_1 {{\n\t\tcolor=white;\n\t\tnode [style=bold, color=tomato, shape=circle, rank=\"max\"];\n\t");
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.omega_size {
@@ -570,26 +579,36 @@ impl Network<f32> {
                     format!("\tsubgraph cluster_2 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=cornflowerblue, shape=circle];\n\t");
                 writer.write(msg.as_bytes())?;
 
+                let mut empty: bool = true;
                 for node in &self.genome {
                     if node.allele == Allele::JumpForward {
+                        empty = false;
                         let msg: String = format!("JF{} ", node.id);
                         writer.write(msg.as_bytes())?;
                     }
                 }
-                writer.write(";\n\t}\n\n".as_bytes())?;
+                if !empty {
+                    writer.write(";\n".as_bytes())?;
+                }
+                writer.write("\t}\n\n".as_bytes())?;
 
                 // Paint JR.
                 let msg: String =
                     format!("\tsubgraph cluster_3 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=yellowgreen, shape=circle];\n\t");
                 writer.write(msg.as_bytes())?;
 
+                empty = true;
                 for node in &self.genome {
                     if node.allele == Allele::JumpRecurrent {
+                        empty = false;
                         let msg: String = format!("JR{} ", node.id);
                         writer.write(msg.as_bytes())?;
                     }
                 }
-                writer.write(";\n\t}\n\n".as_bytes())?;
+                if !empty {
+                    writer.write(";\n".as_bytes())?;
+                }
+                writer.write("\t}\n\n".as_bytes())?;
             }
 
             // for ni in 0..self.neuron_map.len() {
