@@ -110,101 +110,7 @@ fn _test_exploitation() {
 }
 
 
-fn _test_subnetwork_generation(export: bool) {
-    use fluffy_penguin::genetic_algorithm::individual::Specimen;
-
-    println!("Test subnetwork generation.");
-
-    let nbi: usize = 2;
-    let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
-    // let nbi: usize = 16;
-    // let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
-    let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
-
-    let input_vector: Vec<f32> = vec![1_f32; nbi];
-
-    {
-        let file_name: &str = "examples/0rigin.dot";
-        let file_name_svg: &str = "examples/0rigin.svg";
-        let graph_name: &str = "origin";
-
-
-        if export {
-            specimen_origin
-                .ann
-                .render_to_dot(file_name, graph_name)
-                .expect("Fail to render ANN to dot file.");
-            Command::new("dot")
-                .arg(file_name)
-                .arg("-Tsvg")
-                .arg("-o")
-                .arg(file_name_svg)
-                .output()
-                .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
-        }
-        // Command::new("eog")
-        //     .arg(file_name_svg)
-        //     .arg("&")
-        //     .spawn()
-        //     .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
-
-        println!("");
-        specimen_origin.ann.update_input(&input_vector);
-        println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
-    }
-
-    for i in 0..200 {
-        // println!("Generation {:>3}         ####################################################################", i+1);
-
-        specimen_mutated.structural_mutation(0.05);
-        {
-            let file_name: &str = &format!("examples/mutated_{}.dot", i);
-            let file_name_svg: &str = &format!("examples/mutated_{}.svg", i);
-            let graph_name: &str = "mutated";
-
-
-            if export {
-                specimen_mutated
-                    .ann
-                    .render_to_dot(file_name, graph_name)
-                    .expect("Fail to render ANN to dot file.");
-
-                Command::new("dot")
-                    .arg(file_name)
-                    .arg("-Tsvg")
-                    .arg("-o")
-                    .arg(file_name_svg)
-                    .output()
-                    .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
-            }
-            // Command::new("eog")
-            //     .arg(file_name_svg)
-            //     .arg("&")
-            //     .spawn()
-            //     .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
-
-            // println!("");
-            // specimen_mutated.ann.update_input(&vec![1_f32; 2]);
-            // println!("gen {}: out = {:?}", i, specimen_mutated.ann.evaluate());
-        }
-
-        // println!("Origin:                    ####################################################################");
-        // println!("{:#?}", specimen_origin.ann.genome);
-        // println!("\n\nMutated gen {}:                   ####################################################################", i);
-        // println!("ann len = {}", specimen_mutated.ann.genome.len());
-        // println!("{:#?}", specimen_mutated.ann.genome);
-        // println!("");
-        specimen_mutated.ann.update_input(&input_vector);
-        // println!("Gen {:>3}: out = {:?}", i+1, specimen_mutated.ann.evaluate());
-        println!("Gen {:>3}: out = {:?}", i + 1, 0.0);
-        //
-        //
-        // println!("                       ####################################################################\n");
-    }
-}
-
-
-fn _bench_eval_on_mutated_specimen(export: bool) {
+fn _test_specimen_mutation(export: bool) {
     use fluffy_penguin::genetic_algorithm::individual::Specimen;
 
     let nbi: usize = 2;
@@ -244,12 +150,13 @@ fn _bench_eval_on_mutated_specimen(export: bool) {
     }
 
     let generation_size: usize = 10;
+    let pm: f32 = 0.5;
 
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
-    specimen_mutated.structural_mutation(0.1);
+    specimen_mutated.structural_mutation(pm);
 
     for i in 0..generation_size {
-        specimen_mutated.structural_mutation(0.1);
+        specimen_mutated.structural_mutation(pm);
 
 
         {
@@ -302,5 +209,5 @@ fn main() {
     // exploitation();
     // test_exploitation();
     // _test_subnetwork_generation(false);
-    _bench_eval_on_mutated_specimen(true);
+    _test_specimen_mutation(true);
 }
