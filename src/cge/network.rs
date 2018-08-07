@@ -475,7 +475,13 @@ impl Network<f32> {
                     // stack.append(&mut self.evaluate_slice(&jf_slice));
                     // stack.push(self.evaluate_slice(&jf_slice)[0]);
                     // let sum_value: f32 = self.evaluate_slice(&jf_slice).iter().sum::<f32>().isrlu(0.1);
-                    stack.push(self.evaluate_slice(&jf_slice).iter().sum::<f32>().isrlu(0.1) * node.w);
+                    stack.push(
+                        self.evaluate_slice(&jf_slice)
+                            .iter()
+                            .sum::<f32>()
+                            .isrlu(0.1)
+                            * node.w,
+                    );
                 }
             }
         }
@@ -491,7 +497,6 @@ impl Network<f32> {
         neuron_index: usize,
         input_vec: &[Node<f32>],
     ) -> Vec<Node<f32>> {
-
         let input_len: usize = input_vec.len();
         let mut output_vec: Vec<Node<f32>> = Vec::with_capacity(input_len + 1);
 
@@ -537,7 +542,6 @@ impl Network<f32> {
         iota: i32,
         input_vec: &[Node<f32>],
     ) -> (Vec<Node<f32>>, Vec<Node<f32>>) {
-
         let input_len: usize = input_vec.len();
 
         let mut disposable_inputs: Vec<Node<f32>> = Vec::with_capacity(input_vec.len());
@@ -554,7 +558,11 @@ impl Network<f32> {
                 Allele::Neuron => {
                     i += 1;
                     iota += 1;
-                    let (mut a, mut b) = Network::build_input_subnetwork_slice_of_a_neuron(node.id, node.iota, &input_vec[i..input_len]);
+                    let (mut a, mut b) = Network::build_input_subnetwork_slice_of_a_neuron(
+                        node.id,
+                        node.iota,
+                        &input_vec[i..input_len],
+                    );
 
                     untouchable_inputs.push(node);
 
@@ -572,8 +580,9 @@ impl Network<f32> {
 
             if i > input_len {
                 println!(
-                    "@build_input_subnetwork_slice_of_a_neuron:\n\t>> Sub-genome end reached. Looking for N{} 's inputs.",
-                    neuron_id, 
+                    "@build_input_subnetwork_slice_of_a_neuron:\n\
+                     \t>> Sub-genome end reached. Looking for N{} 's inputs.",
+                    neuron_id,
                 );
                 break;
             }
@@ -598,13 +607,14 @@ impl Network<f32> {
 
             // Pretty printing setup.
             {
-                let msg: String =
-                    format!("\trankdir=BT;\n\
-                            \tsplines=spline;\n\
-                            \tratio=1.0;\n\
-                            \tremincross=true;\n\
-                            \tnode [fixedsize=false, remincross=true];\
-                            \n\n");
+                let msg: String = format!(
+                    "\trankdir=BT;\n\
+                     \tsplines=spline;\n\
+                     \tratio=1.0;\n\
+                     \tremincross=true;\n\
+                     \tnode [fixedsize=false, remincross=true];\
+                     \n\n"
+                );
                 writer.write(msg.as_bytes())?;
 
                 // Print Inputs.
@@ -744,7 +754,6 @@ impl Network<f32> {
     pub fn pretty_print(genome: &[Node<f32>]) {
         let mut acc: usize = 0;
         for genome_chunk in genome.chunks(20) {
-
             // Print indices.
             print!("|");
             for i in 0..genome_chunk.len() {
@@ -785,8 +794,6 @@ impl Network<f32> {
                 print!("{:^9}|", format!("{:^3}", node.iota));
             }
             println!("");
-
-
         }
     }
 }

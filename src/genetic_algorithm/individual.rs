@@ -174,17 +174,23 @@ impl Specimen<f32> {
                             }
                             StructuralMutation::ConnectionRemoval => {
                                 // Connection removal mutation
-                                let sub_network_slice = &self.ann.genome[node_index+1..genome_len];
+                                let sub_network_slice =
+                                    &self.ann.genome[node_index + 1..genome_len];
 
                                 let (mut disposable, mut untouchable) =
-                                    Network::build_input_subnetwork_slice_of_a_neuron(node.id, node.iota, sub_network_slice);
+                                    Network::build_input_subnetwork_slice_of_a_neuron(
+                                        node.id,
+                                        node.iota,
+                                        sub_network_slice,
+                                    );
 
                                 node_index += disposable.len() + untouchable.len();
 
                                 if disposable.len() > 1 {
                                     let input_index_to_remove: usize = thread_rng().gen_range(0, disposable.len());
 
-                                    let _removed_node = disposable.swap_remove(input_index_to_remove);
+                                    let _removed_node =
+                                        disposable.swap_remove(input_index_to_remove);
 
                                     // If we actually remove something, we need to decrease the number of input
                                     // of the current Neuron to mutate by adding 1 to its iota attribute.
@@ -192,7 +198,6 @@ impl Specimen<f32> {
 
                                     mutated_genome.push(node);
                                     mutated_genome.append(&mut disposable);
-
                                 } else {
                                     mutated_genome.push(node);
                                     mutated_genome.append(&mut disposable);

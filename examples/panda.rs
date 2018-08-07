@@ -193,7 +193,10 @@ fn _test_specimen_mutation(export: bool) {
         specimen_mutated = specimen_mutated.clone();
     }
 
-    println!("\n{:^240}", "------------------------------------------------------------\n");
+    println!(
+        "\n{:^240}",
+        "------------------------------------------------------------\n"
+    );
 
     for i in 0..spec_vec.len() {
         let spec = &mut spec_vec[i];
@@ -203,7 +206,6 @@ fn _test_specimen_mutation(export: bool) {
         println!("Output = {:?}\n", spec.evaluate());
     }
 }
-
 
 
 fn main() {
