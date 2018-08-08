@@ -20,17 +20,14 @@ fn _dev_variation_operator() {
     println!("Random input vector = {:?}", rnd_vec);
     let mut panda_net: Network<f32> = Network::new_simple(rnd_vec.len(), 9);
     panda_net.update_input(&rnd_vec);
-    
+
     println!("Evaluated panda_net output = {:?}", panda_net.evaluate());
     println!("");
 }
 
 
-
-
-
 /// Test learning rate and weight mutation.
-fn _dev_population() {
+fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
     use fluffy_penguin::genetic_algorithm::population::Population;
 
     let population_size: usize = 10;
@@ -42,23 +39,35 @@ fn _dev_population() {
     let parametric_mutation_size: usize = 20;
     let input_vector: Vec<f32> = vec![1.0; input_size];
 
-    let mut pop: Population<f32> = Population::new(population_size, input_size, output_size, mutation_probability);
+    let mut pop: Population<f32> = Population::new(
+        population_size,
+        input_size,
+        output_size,
+        mutation_probability,
+    );
 
     let mut gen: u8 = 0;
     for _ in 0..structural_mutation_size {
-
         for i in 0..pop.species.len() {
             let mut specimen: &mut Specimen<f32> = &mut pop.species[i];
 
-            // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);
-            let file_name: &str = &format!("examples/Speciment{:02}_Gen{:03}.dot", i, gen);
-            specimen.render(file_name, "", true);
-
+            // if visualize {
+            //     // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);
+            //     let file_name: &str = &format!("examples/Speciment{:02}_Gen{:03}.dot", i, gen);
+            //     specimen.render(file_name, "", print_weights);
+            // }
+            //
             println!("Gen{:03}: speciment{:02}", gen, i);
-            Network::pretty_print(&specimen.ann.genome);
+            if pretty_print {
+                Network::pretty_print(&specimen.ann.genome);
+            }
             specimen.ann.update_input(&input_vector);
             println!("Out: {:?}", specimen.evaluate());
             println!("");
+        }
+
+        if visualize {
+            pop.render("examples/", print_weights);
         }
 
         for _ in 0..parametric_mutation_size {
@@ -69,12 +78,7 @@ fn _dev_population() {
         pop.exploration();
         gen += 1;
     }
-
 }
-
-
-
-
 
 
 fn _test_exploitation() {
@@ -110,9 +114,7 @@ fn _test_exploitation() {
 }
 
 
-
 fn _test_specimen_mutation(export: bool) {
-
     let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
 
@@ -191,11 +193,12 @@ fn main() {
     let mut network: Network<f32> = Network::build_from_example();
     println!("Evaluated example output = {:?}", network.evaluate());
 
-    // _dev_variation_operator();
+    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
+    _dev_population(pretty_print, visualize, print_weights);
 
+    // _dev_variation_operator();
     // exploitation();
     // test_exploitation();
     // _test_subnetwork_generation(false);
     // _test_specimen_mutation(true);
-    _dev_population();
 }

@@ -61,7 +61,7 @@ impl Population<f32> {
 
     /// Selection
     fn selection(&mut self) {
-    unimplemented!();
+        unimplemented!();
     }
 
 
@@ -74,20 +74,21 @@ impl Population<f32> {
     /// Visualisation of the artificial neural network of each specimen of our population with
     /// GraphViz.
     pub fn render(&self, root_path: &str, print_weights: bool) {
-        use std::path::Path;
         use rayon::prelude::*;
+        use std::path::Path;
 
         // Specimen rendering are done in parallele.
-        self.species.par_iter()
+        self.species
+            .par_iter()
             .enumerate()
             .for_each(|(i, specimen)| {
                 let file_name: String = format!("Specimen_{:03}.dot", i);
                 let file_path = Path::new(root_path).join(&file_name);
-                let file_path: &str = file_path.to_str()
+                let file_path: &str = file_path
+                    .to_str()
                     .expect("Fail to build render's output file path.");
 
                 specimen.render(file_path, &format!("Specimen_{:03}", i), print_weights);
-
             });
     }
 }

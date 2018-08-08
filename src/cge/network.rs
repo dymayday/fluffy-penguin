@@ -316,7 +316,6 @@ impl Network<f32> {
         source_id: usize,
         depth_source: u8,
     ) -> Option<Node<f32>> {
-
         let mut jumper_kind: Allele;
         let mut potential_target_neuron_indices: Vec<usize>;
         match thread_rng().gen_range(0_usize, 2_usize) {
@@ -397,6 +396,9 @@ impl Network<f32> {
         // println!("neuron_indices_map: {:#?}", self.neuron_indices_map);
         let g = self.genome.clone();
         let output: Vec<f32> = self.evaluate_slice(&g);
+
+        // We test here if the evaluation worked smoothly by checking the expected number of
+        // output spit out by our artificial neural network.
         assert_eq!(
             output.len(),
             self.omega_size,
@@ -462,9 +464,8 @@ impl Network<f32> {
                         .get(&node.id)
                         .expect(&format!("Fail to lookup the node id = {}", node.id));
 
-                    let sub_genome_slice: Vec<Node<f32>> = self.shadow_genome
-                        [forwarded_node_index..]
-                        .to_vec();
+                    let sub_genome_slice: Vec<Node<f32>> =
+                        self.shadow_genome[forwarded_node_index..].to_vec();
 
                     let jf_slice: Vec<Node<f32>> =
                         Network::build_jf_slice(node.id, forwarded_node_index, &sub_genome_slice);
@@ -583,7 +584,7 @@ impl Network<f32> {
             if i > input_len {
                 println!(
                     "@build_input_subnetwork_slice_of_a_neuron:\n\
-                    \t>> Sub-genome end reached. Looking for N{} 's inputs.",
+                     \t>> Sub-genome end reached. Looking for N{} 's inputs.",
                     neuron_id,
                 );
                 break;
@@ -596,7 +597,12 @@ impl Network<f32> {
 
     /// Render an articial neural network to a dot file for a better visualization purpose.
     /// cf.: https://www.graphviz.org/documentation/.
-    pub fn render_to_dot(&self, file_name: &str, graph_name: &str, print_weight: bool) -> ::std::io::Result<()> {
+    pub fn render_to_dot(
+        &self,
+        file_name: &str,
+        graph_name: &str,
+        print_weight: bool,
+    ) -> ::std::io::Result<()> {
         use std::fs::File;
         use std::io::BufWriter;
 
