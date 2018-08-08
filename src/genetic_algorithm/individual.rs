@@ -77,15 +77,16 @@ impl Specimen<f32> {
             // Since standard deviations very close to zero are unwanted (they will have on average
             // a negligible effect), the following boundary rule is used to force step
             // sizes to be no smaller than a pre-defined threshold.
-            if sigma_p < LEARNING_RATE_THRESHOLD {
-                sigma_p = LEARNING_RATE_THRESHOLD;
-            }
+            // if sigma_p < LEARNING_RATE_THRESHOLD {
+            //     sigma_p = LEARNING_RATE_THRESHOLD;
+            // }
 
             // Compute a new mutated connection weight.
             let mut w_p: f32 = node.w + sigma_p * nu_i;
 
             // Curtaining the weight and sigma values.
-            if sigma_p < -10.0 || w_p < -10.0 || sigma_p > 10.0 || w_p > 10.0 {
+            // if sigma_p < -10.0 || w_p < -10.0 || sigma_p > 10.0 || w_p > 10.0 {
+            if w_p < -10.0 || w_p > 10.0 {
                 // Do nothing.
             } else {
                 // Assign the new mutated learning rate value to the Node.
