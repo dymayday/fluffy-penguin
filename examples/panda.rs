@@ -90,7 +90,7 @@ fn _test_exploitation() {
     // let mut specimen_origin: Specimen<f32> = Specimen::new(16, 9);
     // let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
 
-    for i in 0..10 {
+    for i in 0..30 {
         specimen_mutated.parametric_mutation();
         let mutated_genome = &specimen_mutated.ann.genome;
 
@@ -191,9 +191,11 @@ fn main() {
     let mut network: Network<f32> = Network::build_from_example();
     println!("Evaluated example output = {:?}", network.evaluate());
 
+
     let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
     _dev_population(pretty_print, visualize, print_weights);
 
+    // _test_exploitation();
     // _dev_variation_operator();
     // exploitation();
     // test_exploitation();
