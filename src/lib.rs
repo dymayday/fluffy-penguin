@@ -5,6 +5,7 @@
 //! beautiful peace of art =].
 
 extern crate rand;
+extern crate rayon;
 pub mod activation;
 pub mod cge;
 pub mod genetic_algorithm;

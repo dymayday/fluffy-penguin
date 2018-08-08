@@ -16,7 +16,6 @@ impl Population<f32> {
         output_size: usize,
         mutation_probability: f32,
     ) -> Self {
-
         let mut species: Vec<Specimen<f32>> = Vec::with_capacity(population_size);
 
         for _ in 0..population_size {
@@ -47,16 +46,48 @@ impl Population<f32> {
     /// weights of the newly acquired structural parts of the new structure are initialized to zero
     /// so as not to form(get) a new structure whose fitness value is less than its parent.
     pub fn exploration(&mut self) {
-        // ...
         for mut specimen in &mut self.species {
             specimen.structural_mutation(self.pm);
         }
     }
 
 
-    /// Selection
-    pub fn selection(&mut self) {
-        // ...
+    /// Apply evolution to our population by selection and reproduction.
+    pub fn evolve(&mut self) {
+        self.selection();
+        self.crossover();
+        unimplemented!();
+    }
 
+    /// Selection
+    fn selection(&mut self) {
+    unimplemented!();
+    }
+
+
+    /// Crossover is the main method of reproduction of our genetic algorithm.
+    fn crossover(&mut self) {
+        unimplemented!();
+    }
+
+
+    /// Visualisation of the artificial neural network of each specimen of our population with
+    /// GraphViz.
+    pub fn render(&self, root_path: &str, print_weights: bool) {
+        use std::path::Path;
+        use rayon::prelude::*;
+
+        // Specimen rendering are done in parallele.
+        self.species.par_iter()
+            .enumerate()
+            .for_each(|(i, specimen)| {
+                let file_name: String = format!("Specimen_{:03}.dot", i);
+                let file_path = Path::new(root_path).join(&file_name);
+                let file_path: &str = file_path.to_str()
+                    .expect("Fail to build render's output file path.");
+
+                specimen.render(file_path, &format!("Specimen_{:03}", i), print_weights);
+
+            });
     }
 }
