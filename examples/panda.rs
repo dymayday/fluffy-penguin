@@ -116,7 +116,6 @@ fn _test_exploitation() {
 
 /// Test all available mutation on the example ANN from the research papers.
 fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool) {
-
     println!(
         "\n{:^120}",
         "------------------------------------------------------------\n"

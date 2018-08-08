@@ -361,7 +361,13 @@ impl Network<f32> {
 
     /// Returns the maximum depth of an artificial neural network.
     pub fn get_max_depth(genome: &[Node<f32>]) -> u16 {
-        genome.iter().map(|x| x.depth).filter(|x| *x < INPUT_NODE_DEPTH_VALUE).map(|x| x).max().unwrap_or(0_u16)
+        genome
+            .iter()
+            .map(|x| x.depth)
+            .filter(|x| *x < INPUT_NODE_DEPTH_VALUE)
+            .map(|x| x)
+            .max()
+            .unwrap_or(0_u16)
     }
 
     /// Compute the indexes of the Neuron in the linear genome so we can find them easily during
@@ -612,8 +618,6 @@ impl Network<f32> {
         use std::io::BufWriter;
 
 
-
-
         let f = File::create(file_name)?;
         {
             let mut writer = BufWriter::new(f);
@@ -634,11 +638,12 @@ impl Network<f32> {
                 writer.write(msg.as_bytes())?;
 
                 // Print Inputs.
-                let msg: String =
-                    format!("\tsubgraph cluster_0 {{\n\
-                            \t\tcolor=white;\n\
-                            \t\tnode [style=bold, color=orchid, shape=doublecircle];\n\
-                            \t");
+                let msg: String = format!(
+                    "\tsubgraph cluster_0 {{\n\
+                     \t\tcolor=white;\n\
+                     \t\tnode [style=bold, color=orchid, shape=doublecircle];\n\
+                     \t"
+                );
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.input_map.len() {
@@ -648,11 +653,12 @@ impl Network<f32> {
                 writer.write(";\n\t}\n".as_bytes())?;
 
                 // Print Output Nodes.
-                let msg: String =
-                    format!("\tsubgraph cluster_1 {{\n\
-                            \t\tcolor=white;\n\
-                            \t\tnode [style=bold, color=tomato, shape=doublecircle];\n\
-                            \t");
+                let msg: String = format!(
+                    "\tsubgraph cluster_1 {{\n\
+                     \t\tcolor=white;\n\
+                     \t\tnode [style=bold, color=tomato, shape=doublecircle];\n\
+                     \t"
+                );
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.omega_size {
@@ -664,11 +670,12 @@ impl Network<f32> {
                 let mut empty: bool = true;
 
                 // Paint JF.
-                let msg: String =
-                    format!("\tsubgraph cluster_2 {{\n\
-                            \t\tcolor=white;\n\
-                            \t\tnode [style=solid, color=cornflowerblue, shape=circle];\n\
-                            \t");
+                let msg: String = format!(
+                    "\tsubgraph cluster_2 {{\n\
+                     \t\tcolor=white;\n\
+                     \t\tnode [style=solid, color=cornflowerblue, shape=circle];\n\
+                     \t"
+                );
                 writer.write(msg.as_bytes())?;
 
                 for node in &self.genome {
@@ -684,11 +691,12 @@ impl Network<f32> {
                 writer.write("\t}\n\n".as_bytes())?;
 
                 // Paint JR.
-                let msg: String =
-                    format!("\tsubgraph cluster_3 {{\n\
-                            \t\tcolor=white;\n\
-                            \t\tnode [style=solid, color=yellowgreen, shape=circle];\n\
-                            \t");
+                let msg: String = format!(
+                    "\tsubgraph cluster_3 {{\n\
+                     \t\tcolor=white;\n\
+                     \t\tnode [style=solid, color=yellowgreen, shape=circle];\n\
+                     \t"
+                );
                 writer.write(msg.as_bytes())?;
 
                 empty = true;
@@ -703,7 +711,6 @@ impl Network<f32> {
                     writer.write(";\n".as_bytes())?;
                 }
                 writer.write("\t}\n\n".as_bytes())?;
-
 
 
                 let mut depth_v: Vec<u16> = self.genome.iter().map(|x| x.depth).collect();
@@ -728,7 +735,6 @@ impl Network<f32> {
                     }
                     writer.write("};\n".as_bytes())?;
                 }
-
             }
 
             let input_len: usize = self.genome.len();
