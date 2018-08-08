@@ -7,5 +7,8 @@
 //! an input gene encodes an input to the network (for example, a sensory signal), and
 //! a jumper gene encodes a connection between two vertices.
 
-pub mod network;
-pub mod node;
+mod network;
+mod node;
+
+pub use self::network::Network;
+pub use self::node::{Allele, Node, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE};

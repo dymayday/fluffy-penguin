@@ -3,7 +3,7 @@
 extern crate fluffy_penguin;
 extern crate rand;
 
-use fluffy_penguin::cge::network::Network;
+use fluffy_penguin::cge::Network;
 use fluffy_penguin::genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng};
 // use std::process::Command;
@@ -82,8 +82,6 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
 
 
 fn _test_exploitation() {
-    use fluffy_penguin::genetic_algorithm::individual::Specimen;
-
     println!("Test Exploitation phase.");
 
     let specimen_origin: Specimen<f32> = Specimen::new_from_example();

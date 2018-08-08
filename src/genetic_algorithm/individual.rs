@@ -1,5 +1,5 @@
-use cge::network::Network;
-use cge::node::Node;
+use cge::Network;
+use cge::Node;
 use rand::distributions::StandardNormal;
 use rand::{thread_rng, Rng};
 
@@ -100,7 +100,7 @@ impl Specimen<f32> {
     ///
     /// pm: is the structural mutation probability and is usually set between 5 and 10%.
     pub fn structural_mutation(&mut self, pm: f32) {
-        use cge::node::Allele;
+        use cge::Allele;
         use genetic_algorithm::mutation::StructuralMutation;
 
         let available_structural_mutation: [StructuralMutation; 3] = [
