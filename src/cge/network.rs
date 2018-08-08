@@ -61,7 +61,7 @@ impl Network<f32> {
                     omega,
                     Node::random_weight(),
                     iota_for_each_neuron,
-                    0_u8,
+                    0,
                 );
                 genome.push(neuron);
 
@@ -230,7 +230,7 @@ impl Network<f32> {
     /// input Node from a vector of input.
     pub fn gen_random_subnetwork(
         neuron_id: usize,
-        depth: u8,
+        depth: u16,
         input_map: &Vec<f32>,
     ) -> Vec<Node<f32>> {
         let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
@@ -290,7 +290,7 @@ impl Network<f32> {
     fn get_potential_neuron_indices_for_jf_node(
         &self,
         source_id: usize,
-        depth_source: u8,
+        depth_source: u16,
     ) -> Vec<usize> {
         let mut indices_v: Vec<usize> = Vec::with_capacity(self.neuron_map.len());
 
@@ -314,7 +314,7 @@ impl Network<f32> {
     pub fn gen_random_jumper_connection(
         &self,
         source_id: usize,
-        depth_source: u8,
+        depth_source: u16,
     ) -> Option<Node<f32>> {
         let mut jumper_kind: Allele;
         let mut potential_target_neuron_indices: Vec<usize>;
@@ -360,8 +360,8 @@ impl Network<f32> {
 
 
     /// Returns the maximum depth of an artificial neural network.
-    pub fn get_max_depth(genome: &[Node<f32>]) -> u8 {
-        genome.iter().map(|x| x.depth).filter(|x| *x < 99).map(|x| x).max().unwrap_or(0_u8)
+    pub fn get_max_depth(genome: &[Node<f32>]) -> u16 {
+        genome.iter().map(|x| x.depth).filter(|x| *x < INPUT_NODE_DEPTH_VALUE).map(|x| x).max().unwrap_or(0_u16)
     }
 
     /// Compute the indexes of the Neuron in the linear genome so we can find them easily during
@@ -612,7 +612,7 @@ impl Network<f32> {
         use std::io::BufWriter;
 
 
-        let max_depth: u8 = Network::get_max_depth(&self.genome);
+
 
         let f = File::create(file_name)?;
         {
@@ -637,7 +637,7 @@ impl Network<f32> {
                 let msg: String =
                     format!("\tsubgraph cluster_0 {{\n\
                             \t\tcolor=white;\n\
-                            \t\tnode [style=bold, color=orchid, shape=box, rank=\"min\"];\n\
+                            \t\tnode [style=bold, color=orchid, shape=doublecircle];\n\
                             \t");
                 writer.write(msg.as_bytes())?;
 
@@ -651,7 +651,7 @@ impl Network<f32> {
                 let msg: String =
                     format!("\tsubgraph cluster_1 {{\n\
                             \t\tcolor=white;\n\
-                            \t\tnode [style=bold, color=tomato, shape=doublecircle, rank=\"max\"];\n\
+                            \t\tnode [style=bold, color=tomato, shape=doublecircle];\n\
                             \t");
                 writer.write(msg.as_bytes())?;
 
@@ -704,8 +704,14 @@ impl Network<f32> {
                 }
                 writer.write("\t}\n\n".as_bytes())?;
 
+
+
+                let mut depth_v: Vec<u16> = self.genome.iter().map(|x| x.depth).collect();
+                depth_v.sort();
+                depth_v.dedup();
+
                 // Paint depth.
-                for depth in 1..max_depth {
+                for depth in depth_v {
                     let msg: String = format!("\t{{ rank=same; ");
                     writer.write(msg.as_bytes())?;
 
@@ -715,7 +721,7 @@ impl Network<f32> {
                                 Allele::JumpRecurrent => format!("JR{} ", node.id),
                                 Allele::Neuron => format!("N{} ", node.id),
                                 Allele::JumpForward => format!("JF{} ", node.id),
-                                _ => format!("X{} ", node.id),
+                                _ => format!("I{} ", node.id),
                             };
                             writer.write(msg.as_bytes())?;
                         }

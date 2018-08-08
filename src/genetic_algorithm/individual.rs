@@ -138,7 +138,7 @@ impl Specimen<f32> {
                                 // N.B.: to add an input connection to the current Neuron
                                 // we need to add -1 to the iota value.
                                 node.iota -= 1;
-                                let depth: u8 = node.depth;
+                                let depth: u16 = node.depth;
 
                                 // Add the mutated neuron to the mutated genome.
                                 mutated_genome.push(node);
@@ -158,7 +158,7 @@ impl Specimen<f32> {
                                 // Connection addition mutation.
 
                                 let source_id: usize = node.id;
-                                let depth: u8 = node.depth;
+                                let depth: u16 = node.depth;
                                 match self.ann.gen_random_jumper_connection(source_id, depth) {
                                     Some(jumper) => {
                                         // Increase the number of input the current new mutated Neuron has.
