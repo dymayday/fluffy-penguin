@@ -196,9 +196,4 @@ fn main() {
     _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
-    // _dev_variation_operator();
-    // exploitation();
-    // test_exploitation();
-    // _test_subnetwork_generation(false);
-    // _test_specimen_mutation(true);
 }
