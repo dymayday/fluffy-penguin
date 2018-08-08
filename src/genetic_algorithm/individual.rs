@@ -39,6 +39,12 @@ impl Specimen<f32> {
         }
     }
 
+    /// Update the input vector.
+    pub fn update_input(&mut self, input: &[f32]) {
+        // assert_eq!(self.input_size.len(), input.len());
+        self.ann.update_input(input);
+    }
+
     /// Directly link to the ANN evaluation method.
     pub fn evaluate(&mut self) -> Vec<f32> {
         self.ann.evaluate()
@@ -238,12 +244,12 @@ impl Specimen<f32> {
 
 
     /// Render the Specimen artificial neural network to a dot and svg file.
-    pub fn render(&self, file_name: &str, graph_name: &str, print_weigth: bool) {
+    pub fn render(&self, file_name: &str, graph_name: &str, print_weights: bool) {
         use std::process::Command;
 
         let file_name_svg: &str = &String::from(file_name).replace(".dot", ".svg");
         self.ann
-            .render_to_dot(file_name, graph_name, print_weigth)
+            .render_to_dot(file_name, graph_name, print_weights)
             .expect("Fail to render ANN to dot file.");
         Command::new("dot")
             .arg(file_name)
@@ -252,6 +258,5 @@ impl Specimen<f32> {
             .arg(file_name_svg)
             .output()
             .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
-
     }
 }
