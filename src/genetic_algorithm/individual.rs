@@ -82,12 +82,17 @@ impl Specimen<f32> {
             }
 
             // Compute a new mutated connection weight.
-            let w_p: f32 = node.w + sigma_p * nu_i;
+            let mut w_p: f32 = node.w + sigma_p * nu_i;
 
-            // Assign the new mutated learning rate value to the Node.
-            node.sigma = sigma_p;
-            // Assign the new mutated weight to the Node.
-            node.w = w_p;
+            // Curtaining the weight and sigma values.
+            if sigma_p < -10.0 || w_p < -10.0 || sigma_p > 10.0 || w_p > 10.0 {
+                // Do nothing.
+            } else {
+                // Assign the new mutated learning rate value to the Node.
+                node.sigma = sigma_p;
+                // Assign the new mutated weight to the Node.
+                node.w = w_p;
+            }
         }
     }
 

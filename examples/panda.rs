@@ -38,7 +38,7 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
     let mutation_probability: f32 = 0.5;
 
     let structural_mutation_size: usize = 10;
-    let parametric_mutation_size: usize = 20;
+    let parametric_mutation_size: usize = 100;
     let input_vector: Vec<f32> = vec![1.0; input_size];
 
     let mut pop: Population<f32> = Population::new(
@@ -48,7 +48,7 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
         mutation_probability,
     );
 
-    let mut gen: u8 = 0;
+    let mut gen: u32 = 0;
     for _ in 0..structural_mutation_size {
         for i in 0..pop.species.len() {
             let mut specimen: &mut Specimen<f32> = &mut pop.species[i];
@@ -212,5 +212,5 @@ fn main() {
     _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
-    _test_specimen_mutation(pretty_print, visualize, print_weights);
+    // _test_specimen_mutation(pretty_print, visualize, print_weights);
 }
