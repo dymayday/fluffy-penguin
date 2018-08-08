@@ -359,6 +359,11 @@ impl Network<f32> {
     }
 
 
+    /// Returns the maximum depth of an artificial neural network.
+    pub fn get_max_depth(genome: &[Node<f32>]) -> u8 {
+        genome.iter().map(|x| x.depth).filter(|x| *x < 99).map(|x| x).max().unwrap_or(0_u8)
+    }
+
     /// Compute the indexes of the Neuron in the linear genome so we can find them easily during
     /// the evaluation process. This function is meant to be call only once at init time.
     fn compute_neuron_indices(genome: &Vec<Node<f32>>) -> HashMap<usize, usize> {
@@ -606,6 +611,9 @@ impl Network<f32> {
         use std::fs::File;
         use std::io::BufWriter;
 
+
+        let max_depth: u8 = Network::get_max_depth(&self.genome);
+
         let f = File::create(file_name)?;
         {
             let mut writer = BufWriter::new(f);
@@ -627,7 +635,10 @@ impl Network<f32> {
 
                 // Print Inputs.
                 let msg: String =
-                    format!("\tsubgraph cluster_0 {{\n\t\tcolor=white;\n\t\tnode [style=bold, color=orchid, shape=circle, rank=\"min\"];\n\t");
+                    format!("\tsubgraph cluster_0 {{\n\
+                            \t\tcolor=white;\n\
+                            \t\tnode [style=bold, color=orchid, shape=box, rank=\"min\"];\n\
+                            \t");
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.input_map.len() {
@@ -638,7 +649,10 @@ impl Network<f32> {
 
                 // Print Output Nodes.
                 let msg: String =
-                    format!("\tsubgraph cluster_1 {{\n\t\tcolor=white;\n\t\tnode [style=bold, color=tomato, shape=circle, rank=\"max\"];\n\t");
+                    format!("\tsubgraph cluster_1 {{\n\
+                            \t\tcolor=white;\n\
+                            \t\tnode [style=bold, color=tomato, shape=doublecircle, rank=\"max\"];\n\
+                            \t");
                 writer.write(msg.as_bytes())?;
 
                 for i in 0..self.omega_size {
@@ -647,12 +661,16 @@ impl Network<f32> {
                 }
                 writer.write(";\n\t}\n\n".as_bytes())?;
 
+                let mut empty: bool = true;
+
                 // Paint JF.
                 let msg: String =
-                    format!("\tsubgraph cluster_2 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=cornflowerblue, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_2 {{\n\
+                            \t\tcolor=white;\n\
+                            \t\tnode [style=solid, color=cornflowerblue, shape=circle];\n\
+                            \t");
                 writer.write(msg.as_bytes())?;
 
-                let mut empty: bool = true;
                 for node in &self.genome {
                     if node.allele == Allele::JumpForward {
                         empty = false;
@@ -667,7 +685,10 @@ impl Network<f32> {
 
                 // Paint JR.
                 let msg: String =
-                    format!("\tsubgraph cluster_3 {{\n\t\tcolor=white;\n\t\tnode [style=solid, color=yellowgreen, shape=circle];\n\t");
+                    format!("\tsubgraph cluster_3 {{\n\
+                            \t\tcolor=white;\n\
+                            \t\tnode [style=solid, color=yellowgreen, shape=circle];\n\
+                            \t");
                 writer.write(msg.as_bytes())?;
 
                 empty = true;
@@ -682,24 +703,33 @@ impl Network<f32> {
                     writer.write(";\n".as_bytes())?;
                 }
                 writer.write("\t}\n\n".as_bytes())?;
-            }
 
-            // for ni in 0..self.neuron_map.len() {
-            //     let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "N", i = ni);
-            //     writer.write(msg.as_bytes())?;
-            // }
-            //
-            // for ii in 0..self.input_map.len() {
-            //     let msg: String = format!("    {t}{i}[label=\"{t}{i}\"];\n", t = "I", i = ii);
-            //     writer.write(msg.as_bytes())?;
-            // }
+                // Paint depth.
+                for depth in 1..max_depth {
+                    let msg: String = format!("\t{{ rank=same; ");
+                    writer.write(msg.as_bytes())?;
+
+                    for node in &self.genome {
+                        if node.depth == depth {
+                            let msg: String = match node.allele {
+                                Allele::JumpRecurrent => format!("JR{} ", node.id),
+                                Allele::Neuron => format!("N{} ", node.id),
+                                Allele::JumpForward => format!("JF{} ", node.id),
+                                _ => format!("X{} ", node.id),
+                            };
+                            writer.write(msg.as_bytes())?;
+                        }
+                    }
+                    writer.write("};\n".as_bytes())?;
+                }
+
+            }
 
             let input_len: usize = self.genome.len();
             let input: &Vec<Node<f32>> = &self.genome;
 
             let mut stack: Vec<String> = Vec::with_capacity(input_len);
 
-            // println!("input len = {}", input_len);
             for i in 0..input_len {
                 let node: &Node<f32> = &input[input_len - i - 1];
 
