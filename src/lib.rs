@@ -39,15 +39,18 @@ mod specimen {
         let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
         let input_vector: Vec<f32> = vec![1_f32; 2];
 
-        specimen_origin.ann.update_input(&input_vector);
+        specimen_origin.update_input(&input_vector);
         let specimen_origin_output: Vec<f32> = specimen_origin.evaluate();
 
-        specimen_mutated.ann.update_input(&input_vector);
+        specimen_mutated.update_input(&input_vector);
         for _ in 0..30 {
             specimen_mutated.structural_mutation(0.5);
-            specimen_mutated.ann.update_input(&input_vector);
+            specimen_mutated.update_input(&input_vector);
 
-            assert_eq!(specimen_origin_output, specimen_mutated.evaluate());
+            assert_eq!(
+                specimen_origin_output.len(),
+                specimen_mutated.evaluate().len()
+            );
         }
     }
 }
@@ -55,11 +58,10 @@ mod specimen {
 
 #[cfg(test)]
 mod network {
-    use cge::network::Network;
+    use cge::Network;
 
     #[test]
     fn evaluation() {
-        // assert_eq!(Network::build_from_example().evaluate(), [0.69_f32]);
         assert_eq!(Network::build_from_example().evaluate(), [0.65220004]);
     }
 }
@@ -67,7 +69,7 @@ mod network {
 
 #[cfg(test)]
 mod node_tests {
-    use cge::node::{Allele, Node};
+    use cge::{Allele, Node};
 
     #[test]
     fn neuron() {

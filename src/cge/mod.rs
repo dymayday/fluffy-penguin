@@ -11,4 +11,4 @@ mod network;
 mod node;
 
 pub use self::network::Network;
-pub use self::node::{Allele, Node, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE};
+pub use self::node::{Allele, Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
