@@ -6,8 +6,7 @@ extern crate rand;
 use fluffy_penguin::cge::network::Network;
 use fluffy_penguin::genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng};
-use std::process::Command;
-// use fluffy_penguin::cge::node::Allele;
+// use std::process::Command;
 
 
 /// Dev purpose: this function test the different implementation of the available variation operators:
@@ -21,61 +20,61 @@ fn _dev_variation_operator() {
     println!("Random input vector = {:?}", rnd_vec);
     let mut panda_net: Network<f32> = Network::new_simple(rnd_vec.len(), 9);
     panda_net.update_input(&rnd_vec);
-
+    
     println!("Evaluated panda_net output = {:?}", panda_net.evaluate());
     println!("");
 }
 
 
+
+
+
 /// Test learning rate and weight mutation.
-fn _exploitation() {
-    use fluffy_penguin::cge::node::Node;
-    use rand::distributions::StandardNormal;
+fn _dev_population() {
+    use fluffy_penguin::genetic_algorithm::population::Population;
 
-    let n: f64 = 16.0 * 9.0;
-    let threshold: f64 = 0.01;
-    let mut sigma: f64 = 0.01;
-    // let mut sigma: f64 = 1.0;
+    let population_size: usize = 10;
+    let input_size: usize = 5;
+    let output_size: usize = 3;
+    let mutation_probability: f32 = 0.5;
 
-    let nu: f64 = thread_rng().sample(StandardNormal);
-    println!("\nN = {}", nu);
+    let structural_mutation_size: usize = 10;
+    let parametric_mutation_size: usize = 20;
+    let input_vector: Vec<f32> = vec![1.0; input_size];
 
-    let mut w: f64 = Node::random_weight() as f64;
-    // let mut w: f64 = 0.0;
-    println!("w = {}", w);
+    let mut pop: Population<f32> = Population::new(population_size, input_size, output_size, mutation_probability);
 
-    let tho: f64 = 1.0 / (2.0 * n.sqrt()).sqrt();
-    let tho_p: f64 = 1.0 / (2.0 * n).sqrt();
+    let mut gen: u8 = 0;
+    for _ in 0..structural_mutation_size {
 
-    println!(
-        "{:<3} : {:<20} + {:<20} * {:<20} = {:<20}",
-        "i", "w", "sigma_p", "Ni", "w_p"
-    );
-    for i in 0..100 {
-        let nu_i: f64 = thread_rng().sample(StandardNormal);
-        let mut sigma_p = sigma * (tho_p * nu + tho * nu_i).exp();
+        for i in 0..pop.species.len() {
+            let mut specimen: &mut Specimen<f32> = &mut pop.species[i];
 
-        if sigma_p < threshold {
-            sigma_p = threshold;
+            // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);
+            let file_name: &str = &format!("examples/Speciment{:02}_Gen{:03}.dot", i, gen);
+            specimen.render(file_name, "", true);
+
+            println!("Gen{:03}: speciment{:02}", gen, i);
+            Network::pretty_print(&specimen.ann.genome);
+            specimen.ann.update_input(&input_vector);
+            println!("Out: {:?}", specimen.evaluate());
+            println!("");
         }
 
-        let mut w_p = w + sigma_p * nu_i;
+        for _ in 0..parametric_mutation_size {
+            gen += 1;
+            pop.exploitation();
+        }
 
-        // if w_p > 1.0 { w_p = w; }
-
-        println!(
-            "{:<3} : {:<20} + {:<20} * {:<20} = {:<20}",
-            i, w, sigma_p, nu_i, w_p
-        );
-
-        sigma = sigma_p;
-        w = w_p;
+        pop.exploration();
+        gen += 1;
     }
-    println!(
-        "{:<3} : {:<20} + {:<20} * {:<20} = {:<20}",
-        "i", "w", "sigma_p", "Ni", "w_p"
-    );
+
 }
+
+
+
+
 
 
 fn _test_exploitation() {
@@ -111,22 +110,6 @@ fn _test_exploitation() {
 }
 
 
-fn export_visu(specimen: &Specimen<f32>, file_name: &str, graph_name: &str) {
-        let file_name_svg: &str = &String::from(file_name).replace(".dot", ".svg");
-        specimen
-                .ann
-                .render_to_dot(file_name, graph_name)
-                .expect("Fail to render ANN to dot file.");
-            Command::new("dot")
-                .arg(file_name)
-                .arg("-Tsvg")
-                .arg("-o")
-                .arg(file_name_svg)
-                .output()
-                .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
-
-}
-
 
 fn _test_specimen_mutation(export: bool) {
 
@@ -144,7 +127,8 @@ fn _test_specimen_mutation(export: bool) {
         if export {
             let file_name: &str = "examples/0rigin.dot";
             let graph_name: &str = "origin";
-            export_visu(&specimen_origin, file_name, graph_name)
+            // export_visu(&specimen_origin, file_name, graph_name);
+            specimen_origin.render(file_name, graph_name, true);
         }
 
         // println!("");
@@ -168,7 +152,8 @@ fn _test_specimen_mutation(export: bool) {
             if export {
                 let file_name: &str = &format!("examples/mutated_{}.dot", i);
                 let graph_name: &str = "mutated";
-                export_visu(&specimen_mutated, file_name, graph_name)
+                // export_visu(&specimen_mutated, file_name, graph_name);
+                specimen_mutated.render(file_name, graph_name, true);
             }
         }
 
@@ -211,5 +196,6 @@ fn main() {
     // exploitation();
     // test_exploitation();
     // _test_subnetwork_generation(false);
-    _test_specimen_mutation(true);
+    // _test_specimen_mutation(true);
+    _dev_population();
 }

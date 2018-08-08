@@ -1,3 +1,5 @@
+//! Population doc string.
+
 use genetic_algorithm::individual::Specimen;
 
 pub struct Population<T> {
@@ -8,12 +10,13 @@ pub struct Population<T> {
 }
 
 impl Population<f32> {
-    fn new(
+    pub fn new(
         population_size: usize,
         input_size: usize,
         output_size: usize,
         mutation_probability: f32,
     ) -> Self {
+
         let mut species: Vec<Specimen<f32>> = Vec::with_capacity(population_size);
 
         for _ in 0..population_size {

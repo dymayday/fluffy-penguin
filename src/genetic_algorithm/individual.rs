@@ -235,4 +235,23 @@ impl Specimen<f32> {
     fn to_mutate(pm: f32) -> bool {
         thread_rng().gen::<f32>() <= pm
     }
+
+
+    /// Render the Specimen artificial neural network to a dot and svg file.
+    pub fn render(&self, file_name: &str, graph_name: &str, print_weigth: bool) {
+        use std::process::Command;
+
+        let file_name_svg: &str = &String::from(file_name).replace(".dot", ".svg");
+        self.ann
+            .render_to_dot(file_name, graph_name, print_weigth)
+            .expect("Fail to render ANN to dot file.");
+        Command::new("dot")
+            .arg(file_name)
+            .arg("-Tsvg")
+            .arg("-o")
+            .arg(file_name_svg)
+            .output()
+            .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
+
+    }
 }
