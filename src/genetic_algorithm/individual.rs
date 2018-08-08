@@ -128,7 +128,7 @@ impl Specimen<f32> {
 
             match node.allele {
                 Allele::Neuron => {
-                    if Specimen::to_mutate(pm) {
+                    if Specimen::roll_the_mutation_wheel(pm) {
                         // [TODO]: Add more structural mutation here.
                         // println!("Structural Mutation occuring !");
 
@@ -244,7 +244,7 @@ impl Specimen<f32> {
 
     /// Returns if a Neuron Node should be mutated or not by drawing a random number from a uniform
     /// distribution [0, 1) and comparing it with the mutation probability `pm`.
-    fn to_mutate(pm: f32) -> bool {
+    fn roll_the_mutation_wheel(pm: f32) -> bool {
         thread_rng().gen::<f32>() <= pm
     }
 
