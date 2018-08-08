@@ -30,6 +30,8 @@ fn _dev_variation_operator() {
 fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
     use fluffy_penguin::genetic_algorithm::population::Population;
 
+    println!("@_dev_population:");
+
     let population_size: usize = 10;
     let input_size: usize = 5;
     let output_size: usize = 3;
@@ -112,7 +114,16 @@ fn _test_exploitation() {
 }
 
 
-fn _test_specimen_mutation(export: bool) {
+/// Test all available mutation on the example ANN from the research papers.
+fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool) {
+
+    println!(
+        "\n{:^120}",
+        "------------------------------------------------------------\n"
+    );
+    println!("@_test_specimen_mutation:");
+
+    // Example ANN has 2 inputs and 1 output.
     let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
 
@@ -128,7 +139,7 @@ fn _test_specimen_mutation(export: bool) {
             let file_name: &str = "examples/0rigin.dot";
             let graph_name: &str = "origin";
             // export_visu(&specimen_origin, file_name, graph_name);
-            specimen_origin.render(file_name, graph_name, true);
+            specimen_origin.render(file_name, graph_name, print_weights);
         }
 
         // println!("");
@@ -136,12 +147,15 @@ fn _test_specimen_mutation(export: bool) {
         // println!("*Origin: out = {:?}", specimen_origin.ann.evaluate());
         println!("\nOrigin:");
         // specimen_origin.ann.pretty_print();
-        Network::pretty_print(&specimen_origin.ann.genome);
+        if pretty_print {
+            Network::pretty_print(&specimen_origin.ann.genome);
+        }
         println!("Output = {:?}\n", specimen_origin.evaluate());
     }
 
+    // Mutation probability.
+    let pm: f32 = 0.5;
     let generation_size: usize = 20;
-    let pm: f32 = 0.1;
 
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
 
@@ -150,24 +164,26 @@ fn _test_specimen_mutation(export: bool) {
 
         {
             if export {
-                let file_name: &str = &format!("examples/mutated_{}.dot", i);
+                let file_name: &str = &format!("examples/mutated_{:03}.dot", i);
                 let graph_name: &str = "mutated";
                 // export_visu(&specimen_mutated, file_name, graph_name);
-                specimen_mutated.render(file_name, graph_name, true);
+                specimen_mutated.render(file_name, graph_name, print_weights);
             }
         }
 
         specimen_mutated.ann.update_input(&input_vector);
 
         println!("\n>> Gen {:>3}: creation", i);
-        Network::pretty_print(&specimen_mutated.ann.genome);
+        if pretty_print {
+            Network::pretty_print(&specimen_mutated.ann.genome);
+        }
 
         spec_vec.push(specimen_mutated.clone());
         specimen_mutated = specimen_mutated.clone();
         println!("Output = {:?}\n", specimen_mutated.ann.evaluate());
 
         println!(
-            "\n{:^240}",
+            "\n{:^120}",
             "------------------------------------------------------------\n"
         );
     }
@@ -196,4 +212,5 @@ fn main() {
     _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
+    _test_specimen_mutation(pretty_print, visualize, print_weights);
 }
