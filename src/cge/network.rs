@@ -226,6 +226,61 @@ impl Network<f32> {
     }
 
 
+    /// Builds and returns the genome from the research papers we use to implement EANT2.
+    pub fn _build_parent2_from_example() -> Self {
+        let input_map = vec![1_f32, 1_f32];
+        let neuron_map: Vec<f32> = vec![0.0; 3];
+        let genome: Vec<Node<f32>> = vec![
+            Node::new(Allele::Neuron, 0, 0.8, -1, 0),
+            Node::new(Allele::Neuron, 1, 1.0, -2, 1),
+            Node::new(Allele::JumpRecurrent, 1, 0.3, IOTA_INPUT_VALUE, 1),
+            Node::new(
+                Allele::Input,
+                0,
+                0.1,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+            Node::new(
+                Allele::Input,
+                1,
+                0.7,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+            Node::new(Allele::Neuron, 2, 0.9, -1, 1),
+            Node::new(
+                Allele::Input,
+                0,
+                0.5,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+            Node::new(
+                Allele::Input,
+                1,
+                2.8,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+        ];
+        let shadow_genome = genome.clone();
+        let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
+
+        Network {
+            genome,
+            shadow_genome,
+            input_map,
+            neuron_map,
+            neuron_indices_map,
+            iota_size: 2,
+            omega_size: 1,
+        }
+    }
+
+
+
+
     /// Returns a sub-network composed of one Neuron Node followed by randomly selected
     /// input Node from a vector of input.
     pub fn gen_random_subnetwork(

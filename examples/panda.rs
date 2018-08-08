@@ -186,19 +186,26 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
             "------------------------------------------------------------\n"
         );
     }
+}
 
-    // println!(
-    //     "\n{:^240}",
-    //     "------------------------------------------------------------\n"
-    // );
-    //
-    // for i in 0..spec_vec.len() {
-    //     let spec = &mut spec_vec[i];
-    //
-    //     println!("Gen {:>3}:", i);
-    //     // spec.ann.pretty_print();
-    //     println!("Output = {:?}\n", spec.evaluate());
-    // }
+
+/// Test crossover operation between specimens.
+fn _test_crossover() {
+    println!();
+    let mut p1: Specimen<f32> = Specimen::new_from_example();
+    let mut p2: Specimen<f32> = Specimen::new(2, 1);
+
+    let n2: Network<f32> = Network::_build_parent2_from_example();
+    p2.ann = n2;
+
+    println!("Parent 1:");
+    Network::pretty_print(&p1.ann.genome);
+    println!("Output = {:?}\n", p1.evaluate());
+
+    println!("Parent 2:");
+    Network::pretty_print(&p2.ann.genome);
+    println!("Output = {:?}\n", p2.evaluate());
+
 }
 
 
@@ -207,9 +214,10 @@ fn main() {
     println!("Evaluated example output = {:?}", network.evaluate());
 
 
-    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
-    _dev_population(pretty_print, visualize, print_weights);
+    // let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
+    // _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
+    _test_crossover();
 }
