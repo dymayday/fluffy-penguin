@@ -30,6 +30,25 @@ impl Population<f32> {
     }
 
 
+    /// New population of only specimen from the example.
+    pub fn new_from_example(
+        population_size: usize,
+        mutation_probability: f32,
+    ) -> Self {
+        let mut species: Vec<Specimen<f32>> = Vec::with_capacity(population_size);
+
+        for _ in 0..population_size {
+            species.push(Specimen::new_from_example());
+        }
+
+        Population {
+            species,
+            current_generation: 0,
+            pm: mutation_probability,
+        }
+    }
+
+
     /// The exploitation phase researches the optimal weight of each Node in the current artificial
     /// neural network.
     pub fn exploitation(&mut self) {

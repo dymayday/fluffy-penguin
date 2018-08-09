@@ -33,18 +33,25 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
     println!("@_dev_population:");
 
     let population_size: usize = 10;
+    let mutation_probability: f32 = 0.1;
+
     let input_size: usize = 5;
     let output_size: usize = 3;
-    let mutation_probability: f32 = 0.5;
 
-    let structural_mutation_size: usize = 10;
+    let structural_mutation_size: usize = 30;
     let parametric_mutation_size: usize = 100;
-    let input_vector: Vec<f32> = vec![1.0; input_size];
 
-    let mut pop: Population<f32> = Population::new(
+    // let input_vector: Vec<f32> = vec![1.0; input_size];
+    // let mut pop: Population<f32> = Population::new(
+    //     population_size,
+    //     input_size,
+    //     output_size,
+    //     mutation_probability,
+    // );
+
+    let input_vector: Vec<f32> = vec![1.0; 2];
+    let mut pop: Population<f32> = Population::new_from_example(
         population_size,
-        input_size,
-        output_size,
         mutation_probability,
     );
 
@@ -53,12 +60,12 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
         for i in 0..pop.species.len() {
             let mut specimen: &mut Specimen<f32> = &mut pop.species[i];
 
-            // if visualize {
-            //     // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);
-            //     let file_name: &str = &format!("examples/Speciment{:02}_Gen{:03}.dot", i, gen);
-            //     specimen.render(file_name, "", print_weights);
-            // }
-            //
+        // if visualize {
+        //     // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);
+        //     let file_name: &str = &format!("examples/Speciment{:02}_Gen{:03}.dot", i, gen);
+        //     specimen.render(file_name, "", print_weights);
+        // }
+
             println!("Gen{:03}: speciment{:02}", gen, i);
             if pretty_print {
                 Network::pretty_print(&specimen.ann.genome);
@@ -214,8 +221,8 @@ fn main() {
     println!("Evaluated example output = {:?}", network.evaluate());
 
 
-    // let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
-    // _dev_population(pretty_print, visualize, print_weights);
+    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
+    _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
