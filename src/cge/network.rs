@@ -776,19 +776,28 @@ impl Network<f32> {
         let mut gin: usize = 1;
 
         while i < netw1_len && j < netw2_len {
-            let n1: &Node<f32> = &network_1.genome[netw1_len - i -1];
-            let n2: &Node<f32> = &network_1.genome[netw2_len - j -1];
+            let n1: &Node<f32> = &network_1.genome[i];
+            let n2: &Node<f32> = &network_1.genome[j];
 
-            if n1.gin == n2.gin {
-                gin += 1;
+            // println!("GIN {}", gin);
+            // let mut netw1 = network_1.clone();
+            // netw1.genome = filled_genome_1.clone();
+            // Network::pretty_print(&netw1.genome);
+
+            if n1.gin == gin && n2.gin == gin {
                 filled_genome_1.push(n1.clone());
                 // filled_genome_2.push(n2.clone());
                 i += 1;
                 j += 1;
+                println!("== GIN {} ==", gin);
+                let mut netw1 = network_1.clone();
+                netw1.genome = filled_genome_1.clone();
+                Network::pretty_print(&netw1.genome);
+                gin += 1;
             } else {
 
                 while i < netw1_len && j < netw2_len {
-                    let n1: &Node<f32> = &network_1.genome[netw1_len - i -1];
+                    let n1: &Node<f32> = &network_1.genome[i];
                     // let n2: &Node<f32> = &network_1.genome[netw2_len - j -1];
 
                     if n1.gin != gin {
@@ -802,7 +811,7 @@ impl Network<f32> {
 
                 while i < netw1_len && j < netw2_len {
                     // let n1: &Node<f32> = &network_1.genome[netw1_len - i -1];
-                    let n2: &Node<f32> = &network_1.genome[netw2_len - j -1];
+                    let n2: &Node<f32> = &network_1.genome[j];
 
                     if n2.gin != gin {
                         filled_genome_1.push(n2.clone());
@@ -811,13 +820,18 @@ impl Network<f32> {
                         break;
                     }
                 }
-            }
 
+                println!("GIN {}", gin);
+                // let net_tmp = filled_genome_1.clone();
+                let mut netw1 = network_1.clone();
+                netw1.genome = filled_genome_1.clone();
+                Network::pretty_print(&netw1.genome);
+            }
 
         }
 
 
-        filled_genome_1.reverse();
+        // filled_genome_1.reverse();
 
         let mut netw1 = network_1.clone();
         let mut netw2 = network_2.clone();

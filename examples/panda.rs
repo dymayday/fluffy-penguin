@@ -218,6 +218,8 @@ fn _test_crossover() {
     println!("Output = {:?}\n", p2.evaluate());
 
     let (a1, a2) = Network::align(&p1.ann, &p2.ann);
+
+    println!("\n>> Crossover: ");
     Network::pretty_print(&a1.genome);
     // Network::pretty_print(&a2.genome);
 
