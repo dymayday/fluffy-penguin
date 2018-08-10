@@ -7,6 +7,8 @@ pub struct Population<T> {
     pub current_generation: usize,
     // The structural mutation probability 'pm' , which is usually set between 5 and 10%.
     pub pm: T,
+    // Global Innovation Number.
+    gin: usize,
 }
 
 impl Population<f32> {
@@ -26,6 +28,7 @@ impl Population<f32> {
             species,
             current_generation: 0,
             pm: mutation_probability,
+            gin: input_size * output_size,
         }
     }
 
@@ -45,6 +48,7 @@ impl Population<f32> {
             species,
             current_generation: 0,
             pm: mutation_probability,
+            gin: 11,
         }
     }
 
@@ -65,9 +69,11 @@ impl Population<f32> {
     /// weights of the newly acquired structural parts of the new structure are initialized to zero
     /// so as not to form(get) a new structure whose fitness value is less than its parent.
     pub fn exploration(&mut self) {
+        let mut gin = self.gin;
         for mut specimen in &mut self.species {
-            specimen.structural_mutation(self.pm);
+            gin += specimen.structural_mutation(self.pm, gin);
         }
+        self.gin = gin;
     }
 
 

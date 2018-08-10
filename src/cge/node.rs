@@ -32,7 +32,11 @@ pub enum Allele {
     //  between neurons having the same depth, or a connection starting
     //  from a neuron at a lower depth and ending at a neuron at a higher depth.
     JumpRecurrent,
+    // Not a Node special kind of Allele, used during crossover operation to align the common parts
+    // of two genomes.
+    NaN,
 }
+
 
 /// A flexible encoding method enables one to design an efficient evolutionary method that can evolve both
 /// the structures and weights of neural networks. The genome in EANT is designed by taking this fact
@@ -46,6 +50,8 @@ pub struct Node<T> {
     pub allele: Allele,
     // Unique global identification number. This is used especially by jumper connections.
     pub id: usize,
+    // Global Innovation Number represents a chronology of every gene in the system.
+    pub gin: usize,
     // The weight encodes the synaptic strength of the connection between the Node
     // coded by the gene and the Neuron to which it is connected.
     // w ∈ R.
@@ -64,11 +70,12 @@ pub struct Node<T> {
 
 
 impl Node<f32> {
-    pub fn new(allele: Allele, id: usize, w: f32, iota: i32, depth: u16) -> Self {
+    pub fn new(allele: Allele, id: usize, gin: usize, w: f32, iota: i32, depth: u16) -> Self {
         use genetic_algorithm::individual::LEARNING_RATE_THRESHOLD;
         Node {
             allele,
             id,
+            gin,
             w,
             sigma: LEARNING_RATE_THRESHOLD as f32,
             iota,
@@ -78,12 +85,52 @@ impl Node<f32> {
     }
 
 
+    /// Returns a special kind of allele: NaN (Not a Node).
+    pub fn new_nan() -> Self {
+        Node {
+            allele: Allele::NaN,
+            id: 0,
+            gin: 0,
+            w: 0.0,
+            sigma: 0.0,
+            iota: 0,
+            value: 0.0,
+            depth: 0,
+        }
+    }
+
+
     /// Returns a proper random weight in the space: [0.0, 1.0], with one decimal value.
     pub fn random_weight() -> f32 {
         // thread_rng().gen_range(0_i32, 11_i32) as f32 / 10.0_f32
         thread_rng().gen_range(0_f32, 1_f32)
     }
+
+    /// Returns wether or not 2 alleles are considered as common part during alignment process.
+    pub fn is_common(&self, other: &Node<f32>) -> bool {
+        if self.allele == other.allele && self.id == other.id {
+            true
+        } else {
+            false
+        }
+    }
 }
+
+
+
+// use std::fmt;
+// impl fmt::Display for Node<f32> {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         let msg: &str = match &self.allele {
+//             Allele::Input => &format!(" I{:<3}", &self.id),
+//             Allele::Neuron => &format!(" N{:<3}", &self.id),
+//             Allele::JumpForward => &format!(" JF{:<3}", &self.id),
+//             Allele::JumpRecurrent => &format!(" JR{:<3}", &self.id),
+//             Allele::NaN => &format!(" X{:<3}", 'x'),
+//         };
+//         write!(f, "{:^9}|", msg)
+//     }
+// }
 
 
 impl TransferFunctionTrait<f32> for Node<f32> {

@@ -54,20 +54,28 @@ impl Network<f32> {
         let mut genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
 
         {
+            // Global Innovation Number is used to keep track of the Nodes to enable crossover
+            // later during evolution.
+            let mut gin: usize = 1;
+
             let iota_for_each_neuron: i32 = 1 - iota_size as i32;
             for omega in 0..(omega_size as usize) {
                 let neuron: Node<f32> = Node::new(
                     Allele::Neuron,
                     omega,
+                    gin,
                     Node::random_weight(),
                     iota_for_each_neuron,
                     0,
                 );
                 genome.push(neuron);
+                gin += 1;
 
                 let mut input_node_vector: Vec<Node<f32>> =
-                    Network::gen_input_node_vector(&input_map);
+                    Network::gen_input_node_vector(gin, &input_map);
                 genome.append(&mut input_node_vector);
+
+                gin += input_size;
             }
         }
 
@@ -169,12 +177,13 @@ impl Network<f32> {
         let input_map = vec![1_f32, 1_f32];
         let neuron_map: Vec<f32> = vec![0.0; 4];
         let genome: Vec<Node<f32>> = vec![
-            Node::new(Allele::Neuron, 0, 0.6, -1, 0),
-            Node::new(Allele::Neuron, 1, 0.8, -1, 1),
-            Node::new(Allele::Neuron, 3, 0.9, -1, 2),
+            Node::new(Allele::Neuron, 0, 1, 0.6, -1, 0),
+            Node::new(Allele::Neuron, 1, 2, 0.8, -1, 1),
+            Node::new(Allele::Neuron, 3, 3, 0.9, -1, 2),
             Node::new(
                 Allele::Input,
                 0,
+                4,
                 0.1,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
@@ -182,6 +191,7 @@ impl Network<f32> {
             Node::new(
                 Allele::Input,
                 1,
+                5,
                 0.4,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
@@ -189,15 +199,17 @@ impl Network<f32> {
             Node::new(
                 Allele::Input,
                 1,
+                6,
                 0.5,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
             ),
-            Node::new(Allele::Neuron, 2, 0.2, -3, 1),
-            Node::new(Allele::JumpForward, 3, 0.3, IOTA_INPUT_VALUE, 2),
+            Node::new(Allele::Neuron, 2, 7, 0.2, -3, 1),
+            Node::new(Allele::JumpForward, 3, 8, 0.3, IOTA_INPUT_VALUE, 2),
             Node::new(
                 Allele::Input,
                 0,
+                9,
                 0.7,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
@@ -205,11 +217,77 @@ impl Network<f32> {
             Node::new(
                 Allele::Input,
                 1,
+                10,
                 0.8,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
             ),
-            Node::new(Allele::JumpRecurrent, 0, 0.2, IOTA_INPUT_VALUE, 2),
+            Node::new(Allele::JumpRecurrent, 0, 11, 0.2, IOTA_INPUT_VALUE, 2),
+        ];
+        let shadow_genome = genome.clone();
+        let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
+
+        Network {
+            genome,
+            shadow_genome,
+            input_map,
+            neuron_map,
+            neuron_indices_map,
+            iota_size: 2,
+            omega_size: 1,
+        }
+    }
+    /// Builds and returns the parent 1's genome from the research papers we use to implement EANT2.
+    pub fn _build_parent1_from_example() -> Self {
+        let input_map = vec![1_f32, 1_f32];
+        let neuron_map: Vec<f32> = vec![0.0; 4];
+        let genome: Vec<Node<f32>> = vec![
+            Node::new(Allele::Neuron, 0, 1, 0.6, -1, 0),
+            Node::new(Allele::Neuron, 1, 2, 0.8, -1, 1),
+            Node::new(Allele::Neuron, 3, 7, 0.9, -1, 2),
+            Node::new(
+                Allele::Input,
+                0,
+                8,
+                0.1,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+            Node::new(
+                Allele::Input,
+                1,
+                9,
+                0.4,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+            Node::new(
+                Allele::Input,
+                1,
+                3,
+                0.5,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+            Node::new(Allele::Neuron, 2, 4, 0.2, -3, 1),
+            Node::new(Allele::JumpForward, 3, 13, 0.3, IOTA_INPUT_VALUE, 2),
+            Node::new(
+                Allele::Input,
+                0,
+                5,
+                0.7,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+            Node::new(
+                Allele::Input,
+                1,
+                6,
+                0.8,
+                IOTA_INPUT_VALUE,
+                INPUT_NODE_DEPTH_VALUE,
+            ),
+            Node::new(Allele::JumpRecurrent, 0, 12, 0.2, IOTA_INPUT_VALUE, 2),
         ];
         let shadow_genome = genome.clone();
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
@@ -226,17 +304,18 @@ impl Network<f32> {
     }
 
 
-    /// Builds and returns the genome from the research papers we use to implement EANT2.
+    /// Builds and returns the parent 2's genome from the research papers we use to implement EANT2.
     pub fn _build_parent2_from_example() -> Self {
         let input_map = vec![1_f32, 1_f32];
         let neuron_map: Vec<f32> = vec![0.0; 3];
         let genome: Vec<Node<f32>> = vec![
-            Node::new(Allele::Neuron, 0, 0.8, -1, 0),
-            Node::new(Allele::Neuron, 1, 1.0, -2, 1),
-            Node::new(Allele::JumpRecurrent, 1, 0.3, IOTA_INPUT_VALUE, 1),
+            Node::new(Allele::Neuron, 0, 1, 0.8, -1, 0),
+            Node::new(Allele::Neuron, 1, 2, 1.0, -2, 1),
+            Node::new(Allele::JumpRecurrent, 1, 10, 0.3, IOTA_INPUT_VALUE, 1),
             Node::new(
                 Allele::Input,
                 0,
+                11,
                 0.1,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
@@ -244,14 +323,16 @@ impl Network<f32> {
             Node::new(
                 Allele::Input,
                 1,
+                3,
                 0.7,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
             ),
-            Node::new(Allele::Neuron, 2, 0.9, -1, 1),
+            Node::new(Allele::Neuron, 2, 4, 0.9, -1, 1),
             Node::new(
                 Allele::Input,
                 0,
+                5,
                 0.5,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
@@ -259,6 +340,7 @@ impl Network<f32> {
             Node::new(
                 Allele::Input,
                 1,
+                6,
                 2.8,
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
@@ -285,12 +367,14 @@ impl Network<f32> {
     /// input Node from a vector of input.
     pub fn gen_random_subnetwork(
         neuron_id: usize,
+        gin: usize,
         depth: u16,
         input_map: &Vec<f32>,
     ) -> Vec<Node<f32>> {
         let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
+        let gin: usize = gin + 1;
 
-        let mut input_node_vec: Vec<Node<f32>> = Network::gen_input_node_vector(&input_map);
+        let mut input_node_vec: Vec<Node<f32>> = Network::gen_input_node_vector(gin, &input_map);
         thread_rng().shuffle(&mut input_node_vec);
 
         // New hidden neurons are only connected to a subset of inputs, approximately 50%,
@@ -309,7 +393,7 @@ impl Network<f32> {
 
         // The initial weight of the first node of a newly added sub-network is set to zero
         // so as not to disturb the performance or behavior of the neural network.
-        let neuron: Node<f32> = Node::new(Allele::Neuron, neuron_id, 0.0, iota, depth + 1);
+        let neuron: Node<f32> = Node::new(Allele::Neuron, neuron_id, gin, 0.0, iota, depth + 1);
         subgenome.push(neuron);
 
         // Append all the inputs of our newly created Neuron.
@@ -322,12 +406,16 @@ impl Network<f32> {
 
 
     /// Returns a vector of Input Node generated from a vector of value.
-    fn gen_input_node_vector(input_vec: &[f32]) -> Vec<Node<f32>> {
+    fn gen_input_node_vector(neuron_gin: usize, input_vec: &[f32]) -> Vec<Node<f32>> {
         let mut input_node_vector: Vec<Node<f32>> = Vec::with_capacity(input_vec.len());
+
+        let mut gin: usize = neuron_gin;
         for (i, v) in input_vec.iter().enumerate() {
+            gin += 1;
             let mut input_node: Node<f32> = Node::new(
                 Allele::Input,
                 i,
+                gin,
                 Node::random_weight(),
                 IOTA_INPUT_VALUE,
                 INPUT_NODE_DEPTH_VALUE,
@@ -369,6 +457,7 @@ impl Network<f32> {
     pub fn gen_random_jumper_connection(
         &self,
         source_id: usize,
+        gin: usize,
         depth_source: u16,
     ) -> Option<Node<f32>> {
         let mut jumper_kind: Allele;
@@ -401,6 +490,7 @@ impl Network<f32> {
             let jumper: Node<f32> = Node::new(
                 jumper_kind,
                 jumper_id,
+                gin,
                 // Set weight to zero in order to not disturb the performance or behavior of the neural network
                 0.0,
                 IOTA_INPUT_VALUE,
@@ -551,6 +641,9 @@ impl Network<f32> {
                             * node.w,
                     );
                 }
+                Allele::NaN => {
+                    // Do nothing because the is Not a Node.
+                }
             }
         }
 
@@ -658,6 +751,81 @@ impl Network<f32> {
         }
 
         (disposable_inputs, untouchable_inputs)
+    }
+
+
+
+    /// Find next Node index with matching GIN.
+    fn find_match_gin_node_index(node_index: usize, gin: usize, net1: &Network<f32>, net2: &Network<f32>) {
+        // ...
+    }
+
+
+    /// Returns the aligned common parts of two linear genomes.
+    pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> (Network<f32>, Network<f32>) {
+
+        let max_genome_size: usize = network_1.genome.len() + network_1.genome.len();
+        let mut filled_genome_1: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
+        let mut filled_genome_2: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
+
+        let netw1_len: usize = network_1.genome.len();
+        let netw2_len: usize = network_2.genome.len();
+        // let mut i: usize = 0;
+        // let mut j: usize = 0;
+        let (mut i, mut j ): (usize, usize) = (0, 0);
+        let mut gin: usize = 1;
+
+        while i < netw1_len && j < netw2_len {
+            let n1: &Node<f32> = &network_1.genome[netw1_len - i -1];
+            let n2: &Node<f32> = &network_1.genome[netw2_len - j -1];
+
+            if n1.gin == n2.gin {
+                gin += 1;
+                filled_genome_1.push(n1.clone());
+                // filled_genome_2.push(n2.clone());
+                i += 1;
+                j += 1;
+            } else {
+
+                while i < netw1_len && j < netw2_len {
+                    let n1: &Node<f32> = &network_1.genome[netw1_len - i -1];
+                    // let n2: &Node<f32> = &network_1.genome[netw2_len - j -1];
+
+                    if n1.gin != gin {
+                        filled_genome_1.push(n1.clone());
+                        i += 1;
+                    } else {
+                        break;
+                    }
+                }
+
+
+                while i < netw1_len && j < netw2_len {
+                    // let n1: &Node<f32> = &network_1.genome[netw1_len - i -1];
+                    let n2: &Node<f32> = &network_1.genome[netw2_len - j -1];
+
+                    if n2.gin != gin {
+                        filled_genome_1.push(n2.clone());
+                        j += 1;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+
+        }
+
+
+        filled_genome_1.reverse();
+
+        let mut netw1 = network_1.clone();
+        let mut netw2 = network_2.clone();
+        netw1.genome = filled_genome_1;
+        netw2.genome = filled_genome_2;
+        (netw1, netw2)
+
+        // (Network::build_from_example(), Network::_build_parent2_from_example())
     }
 
 
@@ -855,12 +1023,15 @@ impl Network<f32> {
                             stack.push(format!("[label=\"\"]"));
                         }
                     }
+                    Allele::NaN => {
+                        // Do nothing because the is Not a Node.
+                    }
                 }
             }
 
             // println!("Stack = {:#?}", stack);
             // Close the graph repsentation.
-            writer.write("}".as_bytes())?;
+            writer.write(b"}")?;
         } // the buffer is flushed once writer goes out of scope
 
         Ok(())
@@ -879,6 +1050,13 @@ impl Network<f32> {
             println!("");
             acc += genome_chunk.len();
 
+            // The global innovation number.
+            print!("|");
+            for node in genome_chunk.iter() {
+                print!("{:^9}|", format!(" ({:^3})", node.gin));
+            }
+            println!("");
+
             // Print Allele and ID.
             print!("|");
             for node in genome_chunk.iter() {
@@ -887,6 +1065,7 @@ impl Network<f32> {
                     Allele::Neuron => print!("{:^9}|", format!(" N{:<3}", node.id)),
                     Allele::JumpForward => print!("{:^9}|", format!(" JF{:<3}", node.id)),
                     Allele::JumpRecurrent => print!("{:^9}|", format!(" JR{:<3}", node.id)),
+                    Allele::NaN => print!("{:^9}|", format!(" X{:<3}", 'x')),
                 }
             }
             println!("");

@@ -132,9 +132,11 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
     // Example ANN has 2 inputs and 1 output.
     let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
+    let mut gin: usize = 11;
 
     // let nbi: usize = 16;
     // let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
+    // let mut gin: usize = specimen_origin.input_size * specimen_origin.output_size;
 
     let mut specimen_mutated: Specimen<f32> = specimen_origin.clone();
 
@@ -166,7 +168,7 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
 
     for i in 0..generation_size {
-        specimen_mutated.structural_mutation(pm);
+        gin = specimen_mutated.structural_mutation(pm, gin);
 
         {
             if export {
@@ -202,7 +204,9 @@ fn _test_crossover() {
     let mut p1: Specimen<f32> = Specimen::new_from_example();
     let mut p2: Specimen<f32> = Specimen::new(2, 1);
 
+    let n1: Network<f32> = Network::_build_parent1_from_example();
     let n2: Network<f32> = Network::_build_parent2_from_example();
+    p1.ann = n1;
     p2.ann = n2;
 
     println!("Parent 1:");
@@ -213,6 +217,10 @@ fn _test_crossover() {
     Network::pretty_print(&p2.ann.genome);
     println!("Output = {:?}\n", p2.evaluate());
 
+    let (a1, a2) = Network::align(&p1.ann, &p2.ann);
+    Network::pretty_print(&a1.genome);
+    // Network::pretty_print(&a2.genome);
+
 }
 
 
@@ -221,8 +229,8 @@ fn main() {
     println!("Evaluated example output = {:?}", network.evaluate());
 
 
-    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
-    _dev_population(pretty_print, visualize, print_weights);
+    // let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
+    // _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);

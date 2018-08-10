@@ -105,9 +105,13 @@ impl Specimen<f32> {
     /// so as not to form(get) a new structure whose fitness value is less than its parent.
     ///
     /// pm: is the structural mutation probability and is usually set between 5 and 10%.
-    pub fn structural_mutation(&mut self, pm: f32) {
+    pub fn structural_mutation(&mut self, pm: f32, gin: usize) -> usize {
         use cge::Allele;
         use genetic_algorithm::mutation::StructuralMutation;
+
+        // Copy the value of the global innovation number to return its updated value by the number
+        // of innovation that occured during this mutation cycle.
+        let mut gin: usize = gin;
 
         let available_structural_mutation: [StructuralMutation; 3] = [
             StructuralMutation::SubNetworkAddition,
@@ -152,12 +156,14 @@ impl Specimen<f32> {
                                 // Add a new sub-network to the genome.
                                 let mut subnetwork: Vec<Node<f32>> = Network::gen_random_subnetwork(
                                     new_neuron_id,
+                                    gin,
                                     depth,
                                     &self.ann.input_map,
                                 );
+
+                                gin += subnetwork.len();
                                 mutated_genome.append(&mut subnetwork);
 
-                                // self.ann.neuron_map.push(0.0_f32);
                                 new_neuron_id += 1;
                             }
                             StructuralMutation::JumperAddition => {
@@ -165,7 +171,7 @@ impl Specimen<f32> {
 
                                 let source_id: usize = node.id;
                                 let depth: u16 = node.depth;
-                                match self.ann.gen_random_jumper_connection(source_id, depth) {
+                                match self.ann.gen_random_jumper_connection(source_id, gin, depth) {
                                     Some(jumper) => {
                                         // Increase the number of input the current new mutated Neuron has.
                                         node.iota -= 1;
@@ -175,6 +181,7 @@ impl Specimen<f32> {
                                         // Add the mutated a new jumper connection to the genome
                                         // connecting the current mutated Neuron.
                                         mutated_genome.push(jumper);
+                                        gin += 1;
                                     }
                                     None => {
                                         // If there is no possibility to add a new jumper
@@ -239,6 +246,7 @@ impl Specimen<f32> {
 
         self.ann.genome = mutated_genome;
         self.ann.update_network_attributes();
+        gin
     }
 
 
@@ -246,6 +254,12 @@ impl Specimen<f32> {
     /// distribution [0, 1) and comparing it with the mutation probability `pm`.
     fn roll_the_mutation_wheel(pm: f32) -> bool {
         thread_rng().gen::<f32>() <= pm
+    }
+
+
+    /// Returns the aligned common parts of two linear genomes.
+    pub fn align(n1: &Specimen<f32>, n2: &Specimen<f32>) -> (Network<f32>, Network<f32>) {
+        Network::align(&n1.ann, &n2.ann)
     }
 
 
@@ -263,6 +277,7 @@ impl Specimen<f32> {
             .arg("-o")
             .arg(file_name_svg)
             .output()
-            .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
+            .expect(&format!("Fail to render Specimen to dot/svg file: {}", file_name));
+            // .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
     }
 }
