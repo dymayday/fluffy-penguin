@@ -5,6 +5,7 @@ extern crate rand;
 
 use fluffy_penguin::cge::Network;
 use fluffy_penguin::genetic_algorithm::individual::Specimen;
+use fluffy_penguin::genetic_algorithm::Population;
 use rand::{thread_rng, Rng};
 // use std::process::Command;
 
@@ -28,7 +29,7 @@ fn _dev_variation_operator() {
 
 /// Test learning rate and weight mutation.
 fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
-    use fluffy_penguin::genetic_algorithm::population::Population;
+    use fluffy_penguin::genetic_algorithm::Population;
 
     println!("@_dev_population:");
 
@@ -222,8 +223,46 @@ fn _test_crossover() {
     println!("\n>> Crossover: ");
     Network::pretty_print(&crossover_specimen.ann.genome);
 
-    let crossover_specimen = Specimen::crossover(&sp2, &sp1);
-    Network::pretty_print(&crossover_specimen.ann.genome);
+    // let crossover_specimen = Specimen::crossover(&sp2, &sp1);
+    // Network::pretty_print(&crossover_specimen.ann.genome);
+
+}
+
+
+fn _test_population_crossover() {
+    println!();
+
+    let mut population: Population<f32> = Population::new(2, 2, 1, 0.5);
+
+    println!("Init population:");
+    for (i, specimen) in population.species.iter().enumerate() {
+            println!("Spec {}", i);
+            Network::pretty_print(&specimen.ann.genome);
+        }
+        println!();
+
+    let structural_mutation_size: usize = 10;
+
+    for smi in 0..structural_mutation_size {
+        population.exploration();
+        // println!("~~~~ After Structural Mutation:");
+        // for (i, specimen) in population.species.iter().enumerate() {
+        //     println!("Spec {}", i);
+        //     Network::pretty_print(&specimen.ann.genome);
+        //     println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
+        // }
+        // println!("\n");
+
+        population.evolve();
+
+        println!("SMI {}", smi);
+        for (i, specimen) in population.species.iter().enumerate() {
+            println!("Spec {}", i);
+            Network::pretty_print(&specimen.ann.genome);
+            println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
+        }
+        println!();
+    }
 
 }
 
@@ -239,4 +278,5 @@ fn main() {
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     _test_crossover();
+    // _test_population_crossover();
 }

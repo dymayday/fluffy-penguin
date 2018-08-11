@@ -39,6 +39,12 @@ impl Specimen<f32> {
         }
     }
 
+
+    /// Updates a Specimen's attibutes.
+    pub fn update(&mut self) {
+        self.ann.update();
+    }
+
     /// Update the input vector.
     pub fn update_input(&mut self, input: &[f32]) {
         // assert_eq!(self.input_size.len(), input.len());
@@ -156,7 +162,7 @@ impl Specimen<f32> {
                                 // Add a new sub-network to the genome.
                                 let mut subnetwork: Vec<Node<f32>> = Network::gen_random_subnetwork(
                                     new_neuron_id,
-                                    gin,
+                                    gin + 1,
                                     depth,
                                     &self.ann.input_map,
                                 );
@@ -260,7 +266,7 @@ impl Specimen<f32> {
     /// Returns the aligned common parts of two linear genomes.
     pub fn crossover(specimen_1: &Specimen<f32>, specimen_2: &Specimen<f32>) -> Specimen<f32> {
         let mut specimen = specimen_1.clone();
-        specimen.ann = Network::align(&specimen_1.ann, &specimen_2.ann);
+        specimen.ann = Network::crossover(&specimen_1.ann, &specimen_2.ann);
         specimen.fitness = 0.0;
         specimen
     }

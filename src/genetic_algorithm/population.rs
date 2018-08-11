@@ -23,12 +23,15 @@ impl Population<f32> {
         for _ in 0..population_size {
             species.push(Specimen::new(input_size, output_size));
         }
+        let gin: usize = species[0].ann.genome.last().unwrap().gin;
+        println!("Init GIN = {}", gin);
 
         Population {
             species,
             current_generation: 0,
             pm: mutation_probability,
-            gin: input_size * output_size,
+            gin,
+            // gin: input_size * output_size,
         }
     }
 
@@ -71,7 +74,8 @@ impl Population<f32> {
     pub fn exploration(&mut self) {
         let mut gin = self.gin;
         for mut specimen in &mut self.species {
-            gin += specimen.structural_mutation(self.pm, gin);
+            gin = specimen.structural_mutation(self.pm, gin);
+            println!("\n>> GIN = {}\n", gin);
         }
         self.gin = gin;
     }
@@ -79,9 +83,9 @@ impl Population<f32> {
 
     /// Apply evolution to our population by selection and reproduction.
     pub fn evolve(&mut self) {
-        self.selection();
+        // self.selection();
         self.crossover();
-        unimplemented!();
+        // unimplemented!();
     }
 
     /// Selection
@@ -92,7 +96,20 @@ impl Population<f32> {
 
     /// Crossover is the main method of reproduction of our genetic algorithm.
     fn crossover(&mut self) {
-        unimplemented!();
+
+        let mut offspring_vector: Vec<Specimen<f32>> = Vec::with_capacity(self.species.len());
+        offspring_vector.push(self.species[0].clone());
+
+        for specimen in &self.species[1..] {
+            let mut offspring: Specimen<f32> = Specimen::crossover(&self.species[0], &specimen);
+            offspring.update();
+
+            offspring_vector.push(offspring);
+
+        }
+
+        self.species = offspring_vector;
+
     }
 
 
