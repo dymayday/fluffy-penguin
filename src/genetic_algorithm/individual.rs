@@ -258,8 +258,11 @@ impl Specimen<f32> {
 
 
     /// Returns the aligned common parts of two linear genomes.
-    pub fn align(n1: &Specimen<f32>, n2: &Specimen<f32>) -> (Network<f32>, Network<f32>) {
-        Network::align(&n1.ann, &n2.ann)
+    pub fn crossover(specimen_1: &Specimen<f32>, specimen_2: &Specimen<f32>) -> Specimen<f32> {
+        let mut specimen = specimen_1.clone();
+        specimen.ann = Network::align(&specimen_1.ann, &specimen_2.ann);
+        specimen.fitness = 0.0;
+        specimen
     }
 
 

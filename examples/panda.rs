@@ -201,27 +201,29 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
 /// Test crossover operation between specimens.
 fn _test_crossover() {
     println!();
-    let mut p1: Specimen<f32> = Specimen::new_from_example();
-    let mut p2: Specimen<f32> = Specimen::new(2, 1);
+    let mut sp1: Specimen<f32> = Specimen::new_from_example();
+    let mut sp2: Specimen<f32> = Specimen::new(2, 1);
 
     let n1: Network<f32> = Network::_build_parent1_from_example();
     let n2: Network<f32> = Network::_build_parent2_from_example();
-    p1.ann = n1;
-    p2.ann = n2;
+    sp1.ann = n1;
+    sp2.ann = n2;
 
     println!("Parent 1:");
-    Network::pretty_print(&p1.ann.genome);
-    println!("Output = {:?}\n", p1.evaluate());
+    Network::pretty_print(&sp1.ann.genome);
+    println!("Output = {:?}\n", sp1.evaluate());
 
     println!("Parent 2:");
-    Network::pretty_print(&p2.ann.genome);
-    println!("Output = {:?}\n", p2.evaluate());
+    Network::pretty_print(&sp2.ann.genome);
+    println!("Output = {:?}\n", sp2.evaluate());
 
-    let (a1, a2) = Network::align(&p1.ann, &p2.ann);
+    let crossover_specimen = Specimen::crossover(&sp1, &sp2);
 
     println!("\n>> Crossover: ");
-    Network::pretty_print(&a1.genome);
-    // Network::pretty_print(&a2.genome);
+    Network::pretty_print(&crossover_specimen.ann.genome);
+
+    let crossover_specimen = Specimen::crossover(&sp2, &sp1);
+    Network::pretty_print(&crossover_specimen.ann.genome);
 
 }
 
