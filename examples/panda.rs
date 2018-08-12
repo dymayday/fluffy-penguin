@@ -218,14 +218,15 @@ fn _test_crossover() {
     Network::pretty_print(&sp2.ann.genome);
     println!("Output = {:?}\n", sp2.evaluate());
 
-    let crossover_specimen = Specimen::crossover(&sp1, &sp2);
+    // let crossover_specimen = Specimen::crossover(&sp1, &sp2);
 
-    println!("\n>> Crossover: ");
-    Network::pretty_print(&crossover_specimen.ann.genome);
+    // println!("\n>> Crossover: ");
+    // Network::pretty_print(&crossover_specimen.ann.genome);
 
     // let crossover_specimen = Specimen::crossover(&sp2, &sp1);
     // Network::pretty_print(&crossover_specimen.ann.genome);
 
+    Network::align(&sp1.ann, &sp2.ann);
 }
 
 

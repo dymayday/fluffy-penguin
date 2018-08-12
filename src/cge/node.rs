@@ -86,11 +86,11 @@ impl Node<f32> {
 
 
     /// Returns a special kind of allele: NaN (Not a Node).
-    pub fn new_nan() -> Self {
+    pub fn new_nan(gin: usize) -> Self {
         Node {
             allele: Allele::NaN,
             id: 0,
-            gin: 0,
+            gin,
             w: 0.0,
             sigma: 0.0,
             iota: 0,
