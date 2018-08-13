@@ -706,7 +706,7 @@ impl Network<f32> {
     /// The updated number of input of a Node affected by a crossover operator follows the
     /// equation:
     /// n(s1 × s2 ) = n(s1 ) + n(s2) − n(s1 ∩ s2 )
-    fn compute_iota_after_crossover(input_1: &[Node<f32>], input_2: &[Node<f32>]) -> i32 {
+    fn _compute_iota_after_crossover(input_1: &[Node<f32>], input_2: &[Node<f32>]) -> i32 {
         let nbi_1: i32 = 1 - input_1[0].iota;
         let nbi_2: i32 = 1 - input_2[0].iota;
 
@@ -734,7 +734,7 @@ impl Network<f32> {
 
 
     /// Build and returns the sub-network of a genome's slice.
-    fn build_subnetwork_slice(input: &[Node<f32>]) -> Vec<Node<f32>> {
+    fn _build_subnetwork_slice(input: &[Node<f32>]) -> Vec<Node<f32>> {
         let input_len: usize = input.len();
         let mut subnetwork: Vec<Node<f32>> = Vec::with_capacity(input_len);
 
@@ -798,6 +798,39 @@ impl Network<f32> {
     }
 
 
+    /// Find removable GIN from a Neuron.
+    pub fn find_removable_gin_list(genome: &[Node<f32>]) -> Vec<usize> {
+
+        let genome_len: usize = genome.len();
+        let mut removable_gin: Vec<usize> = Vec::with_capacity(genome_len);
+
+        let mut iota: i32 = genome[0].iota;
+        let mut i: usize = 1;
+
+
+        while i < genome_len && iota != 1 {
+            
+            let node: Node<f32> = genome[i].clone();
+
+            match node.allele {
+                Allele::Neuron => {
+                    // let mut gin_list: Vec<usize> = Network::find_removable_gin_list(&genome[i..]);
+                    // removable_gin.append(&mut gin_list);
+                    break;
+                },
+                Allele::Input | Allele::JumpForward | Allele::JumpRecurrent => {
+                    removable_gin.push(node.gin);
+                    iota += 1;
+                },
+                _ => { break; }
+            }
+            i += 1;
+        }
+
+        removable_gin
+    }
+
+
     /// Returns the input Node vector of a Neuron.
     /// Returns two vectors of Node.
     /// * the first vector cpntains the Nodes we can actually remove without breaking the linear genome.
@@ -858,350 +891,97 @@ impl Network<f32> {
     }
 
 
-    //
-    // /// Returns the aligned common parts of two linear genomes.
-    // pub fn crossover(network_1: &Network<f32>, network_2: &Network<f32>) -> Network<f32> {
-    //
-    //     let max_genome_size: usize = network_1.genome.len() + network_2.genome.len();
-    //     let mut offspring_genome: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
-    //     let mut shadow_genome: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
-    //
-    //     let netw1_len: usize = network_1.genome.len();
-    //     let netw2_len: usize = network_2.genome.len();
-    //
-    //     let netw1_eval_output_len: usize = Network::pseudo_evaluate_slice(&network_1.genome) {}
-    //         netw1_eval_output_len = netw1_eval_output_len.len();
-    //     } else {
-    //         
-    //     }
-    //     let netw2_eval_output_len: usize = Network::pseudo_evaluate_slice(&network_2.genome).len();
-    //
-    //     let (mut i, mut j ): (usize, usize) = (0, 0);
-    //     let mut gin: usize = 1;
-    //
-    //     while i < netw1_len && j < netw2_len {
-    //         let n1: &Node<f32> = &network_1.genome[i];
-    //         let n2: &Node<f32> = &network_2.genome[j];
-    //
-    //         // println!("GIN {}", gin);
-    //         // let mut netw1 = network_1.clone();
-    //         // netw1.genome = offspring_genome.clone();
-    //         // Network::pretty_print(&netw1.genome);
-    //
-    //         if n1.gin == gin && n2.gin == gin {
-    //             
-    //             let rnd_node_ref: &Node<f32> = thread_rng().choose(&[n1, n2]).unwrap_or(&n1);
-    //             let mut rnd_node: Node<f32> = rnd_node_ref.clone();
-    //             
-    //
-    //             if n1.allele == Allele::Neuron {
-    //                 let subnetwork_1: Vec<Node<f32>> = Network::build_subnetwork_slice(&network_1.genome[i..]);
-    //                 let subnetwork_2: Vec<Node<f32>> = Network::build_subnetwork_slice(&network_2.genome[j..]);
-    //
-    //                 // if !(netw1_eval_output_len == Network::pseudo_evaluate_slice(&subnetwork_1).len()) && !(netw2_eval_output_len == Network::pseudo_evaluate_slice(&subnetwork_2).len()) {
-    //                 {
-    //
-    //
-    //                     println!("Sub-network 1:");
-    //                     Network::pretty_print(&subnetwork_1);
-    //                     let evaluated_slice: Vec<f32> = Network::pseudo_evaluate_slice(&subnetwork_1);
-    //                     println!("Eval sub slice: {:?}", evaluated_slice);
-    //
-    //                     println!("Sub-network 2:");
-    //                     Network::pretty_print(&subnetwork_2);
-    //                     let evaluated_slice: Vec<f32> = Network::pseudo_evaluate_slice(&subnetwork_2);
-    //                     println!("Eval sub slice: {:?}", evaluated_slice);
-    //
-    //                     println!();
-    //                     let new_iota: i32 = Network::compute_iota_after_crossover(&subnetwork_1, &subnetwork_2);
-    //                     println!("\nNew iota = {}", new_iota);
-    //                     println!();
-    //
-    //                     rnd_node.iota = new_iota;
-    //
-    //                     // println!("\n");
-    //                 }
-    //             }
-    //
-    //
-    //             // if shadow_genome.len() > 0 {
-    //                 // println!("GIN {}: Shadow genome", gin);
-    //                 // Network::pretty_print(&shadow_genome);
-    //
-    //                 // let evaluated_slice: Vec<f32> = Network::pseudo_evaluate_slice(&shadow_genome);
-    //
-    //                 // println!("Eval sub slice: {:?}", evaluated_slice);
-    //                 // shadow_genome.clear();
-    //
-    //                 // rnd_node.iota = 1 - evaluated_slice.len() as i32;
-    //             // }
-    //
-    //
-    //             offspring_genome.push(rnd_node);
-    //
-    //             i += 1;
-    //             j += 1;
-    //             // println!("== GIN {} ==", gin);
-    //             // let mut netw1 = network_1.clone();
-    //             // netw1.genome = offspring_genome.clone();
-    //             // Network::pretty_print(&netw1.genome);
-    //             gin += 1;
-    //         } else {
-    //
-    //             while i < netw1_len && j < netw2_len {
-    //                 let n1: &Node<f32> = &network_1.genome[i];
-    //
-    //                 if n1.gin == gin {
-    //                     break;
-    //                 } else {
-    //                     offspring_genome.push(n1.clone());
-    //                     shadow_genome.push(n1.clone());
-    //                 }
-    //                 i += 1;
-    //             }
-    //             // println!("GIN {}, end loop n1", gin);
-    //             // // let net_tmp = offspring_genome.clone();
-    //             // let mut netw1 = network_1.clone();
-    //             // netw1.genome = offspring_genome.clone();
-    //             // Network::pretty_print(&netw1.genome);
-    //
-    //
-    //             while i < netw1_len && j < netw2_len {
-    //                 let n2: &Node<f32> = &network_2.genome[j];
-    //
-    //                 if n2.gin == gin {
-    //                     break;
-    //                 } else {
-    //                     offspring_genome.push(n2.clone());
-    //                     shadow_genome.push(n2.clone());
-    //                 }
-    //                 j += 1;
-    //             }
-    //
-    //
-    //
-    //             // println!("GIN {}, end loop n2", gin);
-    //             // // let net_tmp = offspring_genome.clone();
-    //             // let mut netw = network_1.clone();
-    //             // netw.genome = offspring_genome.clone();
-    //             // Network::pretty_print(&netw.genome);
-    //         }
-    //         //
-    //         // println!(">> GIN {}", gin);
-    //         // let mut netw1 = network_1.clone();
-    //         // netw1.genome = offspring_genome.clone();
-    //         // Network::pretty_print(&netw1.genome);
-    //         // println!();
-    //
-    //     }
-    //
-    //     let offspring_gin: Vec<usize> = offspring_genome.iter().map(|n| n.gin).collect();
-    //
-    //     // Let's walk through the last Nodes from each network.
-    //     for i1 in i..netw1_len {
-    //         // if !offspring_gin.contains(&network_1.genome[i1].gin) {
-    //         {
-    //             // println!("####### Dumping 1 rest: {:#?}", &network_1.genome[i1]);
-    //             offspring_genome.push(network_1.genome[i1].clone());
-    //         }
-    //     }
-    //     for j2 in j..netw2_len {
-    //         // if !offspring_gin.contains(&network_2.genome[j2].gin) {
-    //         {
-    //             // println!("####### Dumping 2 rest: {:#?}", &network_2.genome[j2]);
-    //             offspring_genome.push(network_2.genome[j2].clone());
-    //         }
-    //     }
-    //
-    //     let mut netw = network_1.clone();
-    //     netw.genome = offspring_genome;
-    //     netw.update_network_attributes();
-    //
-    //     // println!("xXx Crossovered genome:");
-    //     // Network::pretty_print(&netw.genome);
-    //     // println!("\n");
-    //
-    //
-    //     netw
-    // }
 
-
-
+    /// Crossover.
     pub fn crossover(network_1: &Network<f32>, network_2: &Network<f32>) -> Network<f32> {
+        let (netw_1, netw_2) = Network::align(&network_1, &network_2);
 
-        let max_genome_size: usize = network_1.genome.len() + network_2.genome.len();
-        let mut offspring_genome: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
+        let mut netw_crossovered = netw_1.clone();
 
-        let mut arn: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
+        let netw_len: usize = netw_1.genome.len();
+        for i in 0..netw_len {
+            let n1: &Node<f32> = &netw_1.genome[i];
+            let n2: &Node<f32> = &netw_2.genome[i];
 
-        let mut gin_accu_stack: Vec<usize> = Vec::with_capacity(max_genome_size);
+            if n1.allele == n2.allele {
+                let pick_from: [f32; 2] = [n1.w, n2.w];
+                let rnd_weight_ref: &f32 = thread_rng().choose(&pick_from).unwrap_or(&n1.w);
+                netw_crossovered.genome[i].w = *rnd_weight_ref;
 
-        let netw1_len: usize = network_1.genome.len();
-        let netw2_len: usize = network_2.genome.len();
-
-        let n1_gin_vector: Vec<usize> = network_1.genome.iter().map(|n| n.gin).collect();
-        let n2_gin_vector: Vec<usize> = network_2.genome.iter().map(|n| n.gin).collect();
-
-        let mut arn_1: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
-        let mut arn_2: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
-
-        let common_gin_in_both_vector: Vec<usize> = n1_gin_vector.iter().filter(|n| n2_gin_vector.contains(n)).map(|x| *x).collect();
-
-        let mut accu: usize = 0;
-        
-        let (mut i, mut j ): (usize, usize) = (0, 0);
-        while i < netw1_len && j < netw2_len {
-
-            println!("Offspring:");
-            Network::pretty_print(&offspring_genome);
-
-            let offspring_gin_vector: Vec<usize> = offspring_genome.iter().map(|n| n.gin).collect();
-
-            let n1: &Node<f32> = &network_1.genome[netw1_len - 1 - i];
-            let n2: &Node<f32> = &network_2.genome[netw2_len - 1 - j];
-
-
-            // Here we're looking for the first common Neuron Node indices.
-            for ii in 0..(netw1_len - i) {
-                let n1_lookup: &Node<f32> = &network_1.genome[netw1_len - 1 - i - ii];
-                arn_1.push(n1_lookup.clone());
-                if n1_lookup.allele == Allele::Neuron && common_gin_in_both_vector.contains(&n1_lookup.gin) {
-                    println!("Common Neuron index [{:^3}] (-{})", netw1_len - 1 - i - ii, ii);
-                    println!("{:#?}", n1_lookup);
-                    break;
-                }
-            }
-
-
-            for jj in 0..(netw2_len - j) {
-                let n2_lookup: &Node<f32> = &network_2.genome[netw2_len - 1 - j - jj];
-                arn_2.push(n2_lookup.clone());
-                if n2_lookup.allele == Allele::Neuron && common_gin_in_both_vector.contains(&n2_lookup.gin) {
-                    println!("Common Neuron index [{:^3}] (-{})", netw2_len - 1 - j - jj, jj);
-                    println!("{:#?}", n2_lookup);
-                    break;
-                }
-            }
-
-            println!("ARN 1:");
-            arn_1.reverse();
-            Network::pretty_print(&arn_1);
-
-            println!("ARN 2:");
-            arn_2.reverse();
-            Network::pretty_print(&arn_2);
-
-            break;
-
-
-            
-
-
-
-            println!("ARN:");
-            Network::pretty_print(&arn);
-            
-
-            if n1.gin == n2.gin && n1.allele == Allele::Neuron {
-                
-                let rnd_node_ref: &Node<f32> = thread_rng().choose(&[n1, n2]).unwrap_or(&n1);
-                let mut rnd_node: Node<f32> = rnd_node_ref.clone();
-
-                // if n1.allele != Allele::Neuron {
-                //     offspring_genome.push(rnd_node.clone());
-                // }
-
-                gin_accu_stack.push(n1.gin);
-                arn.push(rnd_node);
-
-                let mut arn_r = arn.clone();
-                arn_r.reverse();
-
-                println!("---------------------  ARN_R:  ---------------------");
-                Network::pretty_print(&arn_r);
-
-
-                let pseudo_evaluated = Network::pseudo_evaluate_slice(&arn_r).unwrap_or(vec![]);
-
-                // if n1.allele == Allele::Neuron && pseudo_evaluated.len() == 1 + accu {
-                // if pseudo_evaluated.len() == 1 + accu {
-                    {
-                    println!("\n\n@@@  Here !  @@@\n\n");
-                    accu += 1;
-                    offspring_genome.append(&mut arn_r);
-                    arn.clear();
-
-                // i += 1;
-                // j += 1;
-
-                }
-
-                i += 1;
-                j += 1;
-            // } else if n1.gin == n2.gin {
-                
             } else {
-                
-                if !gin_accu_stack.contains(&n1.gin) {
-                    gin_accu_stack.push(n1.gin);
-                    // offspring_genome.push(n1.clone());
-                    arn.push(n1.clone());
-                    i += 1;
-                } else if !gin_accu_stack.contains(&n2.gin) {
-                    gin_accu_stack.push(n2.gin);
-                    // offspring_genome.push(n2.clone());
-                    arn.push(n2.clone());
-                    j += 1;
+                if n1.allele != Allele::NaN {
+                    netw_crossovered.genome[i] = n1.clone();
+                } else if n2.allele != Allele::NaN {
+                    netw_crossovered.genome[i] = n2.clone();
                 } else {
-                    println!("NOPE");
-                    break; 
+                    assert_eq!(n1.allele, Allele::NaN);
+                    assert_eq!(n2.allele, Allele::NaN);
                 }
-
-
             }
-
-        println!();
-        println!(">> gin_accu_stack = {:?}", gin_accu_stack);
-
         }
-
-        let mut offspring = network_1.clone();
-        offspring_genome.reverse();
-        offspring.genome = offspring_genome;
-        offspring.update_network_attributes();
-
-        offspring
+        netw_crossovered.update();
+        netw_crossovered
     }
 
-
     /// Aligning.
-    pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) {
-    // pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> Network<f32> {
+    pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> (Network<f32>, Network<f32>) {
 
-        println!("\nAligning...\n");
-
-        // let max_genome_size: usize = network_1.genome.len() + network_2.genome.len();
-        // let netw1_len: usize = network_1.genome.len();
-        // let netw2_len: usize = network_2.genome.len();
-
-        // let n1_gin_vector: Vec<usize> = network_1.genome.iter().map(|n| n.gin).collect();
-        // let n2_gin_vector: Vec<usize> = network_2.genome.iter().map(|n| n.gin).collect();
-
-        // let common_gin_in_both_vector: Vec<usize> =
-            // n1_gin_vector.iter().filter(|n| n2_gin_vector.contains(n)).map(|x| *x).collect();
-
+        // println!("\nAligning...\n");
 
         let mut arn_1: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_1.genome, &network_2.genome);
         let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_2.genome, &network_1.genome);
 
 
-
         println!("ARN 1:");
         Network::pretty_print(&arn_1);
 
-        println!("ARN 2:");
+        // println!("ARN 2:");
+        // Network::pretty_print(&arn_2);
+
+        arn_2 = Network::sort_arn(&arn_1, &arn_2);
+
+        println!("ARN 2 sorted:");
         Network::pretty_print(&arn_2);
 
+        println!();
+
+        let arn_1_updated = Network::arn_update_iota(&arn_1, &arn_2);
+        println!();
+        let arn_2_updated = Network::arn_update_iota(&arn_2, &arn_1);
+
+
+        // Check iota values between the 2 ARN.
+        let iota_1: Vec<i32> = arn_1_updated.iter().map(|n| n.iota).collect();
+        let iota_2: Vec<i32> = arn_2_updated.iter().map(|n| n.iota).collect();
+
+        println!("ARN 1 with updated iota values:");
+        Network::pretty_print(&arn_1_updated);
+
+        let iota_sum_1: i32 = iota_1.iter().sum();
+        let out_1 = Network::pseudo_evaluate_slice(&arn_1_updated);
+        println!("Iota = {}, Output = {:?}", iota_sum_1, out_1);
+        assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
+
+        println!("ARN 2 with updated iota values:");
+        Network::pretty_print(&arn_2_updated);
+
+        let iota_sum_2: i32 = iota_2.iter().sum();
+        let out_2 = Network::pseudo_evaluate_slice(&arn_2_updated);
+        println!("Iota = {}, Output = {:?}", iota_sum_2, out_2);
+        assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
+
+        println!("\n");
+
+        assert_eq!(iota_1, iota_2, "Iota values between ARN diverge.");
+
+        let mut netw_1_aligned = network_1.clone();
+        let mut netw_2_aligned = network_2.clone();
+
+        netw_1_aligned.genome = arn_1_updated;
+        netw_2_aligned.genome = arn_2_updated;
+
+        (netw_1_aligned, netw_2_aligned)
+        // (netw_1_aligned.clone(), netw_1_aligned)
     }
 
 
@@ -1237,7 +1017,7 @@ impl Network<f32> {
 
                         if !n1_gin_vector.contains(&n2.gin) {
                             arn.push(
-                                Node::new_nan(n2.gin)
+                                Node::new_nan(n2.gin, n2.iota)
                             );
                         } else {
                             break;
@@ -1255,7 +1035,7 @@ impl Network<f32> {
                 if n2_gin_vector.contains(&n1.gin) {
                     // println!("{:#?}", n1);
                     // arn.push(n1.clone());
-                    arn.push(Node::new_nan(n1.gin));
+                    arn.push(Node::new_nan(n1.gin, n1.iota));
                     j += 1;
                 } else {
                     // println!("Push NaN: {:#?}", n1);
@@ -1271,6 +1051,233 @@ impl Network<f32> {
 
         arn.reverse();
         arn
+    }
+
+
+    /// Sort arn 2 to match the arn 1 order.
+    fn sort_arn(arn_1: &[Node<f32>], arn_2: &[Node<f32>]) -> Vec<Node<f32>> {
+        
+        assert_eq!(arn_1.len(), arn_2.len(), "arn_1.len() != arn_2.len()");
+        let arn_len: usize = arn_1.len();
+
+        let mut arn_sorted: Vec<Node<f32>> = Vec::with_capacity(arn_len);
+
+        // HashMap of the indices of the correspondinf GIN inside arn_2: HashMap<GIN, Index>.
+        let mut arn_map: HashMap<usize, usize> = HashMap::with_capacity(arn_len);
+        for i in 0..arn_len {
+            arn_map.insert(arn_2[i].gin, i);
+        }
+
+        for i in 0..arn_len {
+            let node_index_of_gin: usize = *arn_map.get(&arn_1[i].gin).expect("Fail to lookup arn GIN index.");
+            arn_sorted.push(arn_2[node_index_of_gin].clone());
+        }
+
+        arn_sorted
+    }
+
+
+    /// Update the iota values of all the Neuron Nodes inside an ARN.
+    fn arn_update_iota(arn_1: &[Node<f32>], arn_2: &[Node<f32>]) -> Vec<Node<f32>> {
+        // use std::collections::VecDeque;
+
+        let arn_len: usize = arn_1.len();
+        // let mut arn_updated: Vec<Node<f32>> = Vec::with_capacity(arn_len);
+        let mut arn_updated: Vec<Node<f32>> = arn_1.to_vec().clone();
+
+        // HashMap of the indices of the correspondinf GIN inside arn_2: HashMap<GIN, Index>.
+        let mut arn_map: HashMap<usize, usize> = HashMap::with_capacity(arn_len);
+        for i in 0..arn_len {
+            arn_map.insert(arn_2[i].gin, i);
+        }
+
+        let mut max_gin: usize = *arn_1.iter().map(|n| n.gin).collect::<Vec<usize>>().iter().max().unwrap_or(&1_usize);
+
+        max_gin += 1;
+        let nan = Node::new_nan(max_gin, 1);
+
+        let mut stack_1: Vec<Node<f32>> = Vec::with_capacity(arn_len);
+        let mut stack_2: Vec<Node<f32>> = Vec::with_capacity(arn_len);
+
+
+        // let mut i: usize = 0;
+        for i in 0..arn_len {
+            let n1: Node<f32> = arn_1[arn_len - 1 - i].clone();
+            let n2: Node<f32> = arn_2[arn_len - 1 - i].clone();
+
+                {
+
+                if n1.allele == Allele::Neuron && n2.allele == Allele::Neuron {
+                    // println!("\n\n");
+                    // println!("\n\nif n1 == n2 == Neuron");
+
+                    stack_1 = stack_1.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+                    stack_2 = stack_2.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+
+                    // println!("Stack 1:");
+                    // Network::pretty_print(&stack_1);
+                    // println!("Stack 2:");
+                    // Network::pretty_print(&stack_2);
+                    // println!();
+                    
+                    let mut stack_tmp_1: Vec<Node<f32>> = Vec::with_capacity(stack_1.len());
+                    let slice_len_1: usize = (1 - n1.iota) as usize;
+
+                    let mut j: usize = 0;
+                    while j < slice_len_1 && !stack_1.is_empty() {
+
+                        if stack_1.last().unwrap().allele == Allele::NaN {
+                            stack_1.pop().unwrap();
+                        } else {
+                            stack_tmp_1.push(stack_1.pop().unwrap());
+                            j += 1;
+                        }
+                    }
+                    stack_1 = stack_1.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+
+                    let mut stack_tmp_2: Vec<Node<f32>> = Vec::with_capacity(stack_2.len());
+                    let slice_len_2: usize = (1 - n2.iota) as usize;
+
+                    let mut j: usize = 0;
+                    while j < slice_len_2 && !stack_2.is_empty() {
+
+                        if stack_2.last().unwrap().allele == Allele::NaN {
+                            stack_2.pop().unwrap();
+                        } else {
+                            stack_tmp_2.push(stack_2.pop().unwrap());
+                            j += 1;
+                        }
+                    }
+                    stack_2 = stack_2.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+
+
+                    // println!("Stack 1:");
+                    // Network::pretty_print(&stack_1);
+                    // println!("Stack tmp 1:");
+                    // Network::pretty_print(&stack_tmp_1);
+                    //
+                    // println!("Stack 2:");
+                    // Network::pretty_print(&stack_2);
+                    // println!("Stack tmp 2:");
+                    // Network::pretty_print(&stack_tmp_2);
+
+                    let vnr1: Vec<&Node<f32>> = stack_tmp_1.iter().map(|n| n).collect::<Vec<&Node<f32>>>();
+                    let vnr2: Vec<&Node<f32>> = stack_tmp_2.iter().map(|n| n).collect::<Vec<&Node<f32>>>();
+                    let common_input_number: i32 = Network::count_common_input(&vnr1, &vnr2);
+
+                    let in_1: i32 = 1 - n1.iota;
+                    let in_2: i32 = 1 - n2.iota;
+                    arn_updated[arn_len - 1 - i].iota = 1 - ( in_1 + in_2 - common_input_number );
+                    // println!("iota = 1 - ( {} + {} - {} ) = {}", in_1, in_2, common_input_number, arn_updated[arn_len - 1 - i].iota);
+
+                    // println!("\n\n");
+ 
+                    // max_gin += 1;
+                    let dummy_input = Node::new(Allele::Input, 0, n1.gin, 0.0, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
+                    stack_1.push(dummy_input.clone());
+                    stack_2.push(dummy_input.clone());
+
+                } else if n1.allele == Allele::Neuron {
+                    // println!("Condition Neuron 1 {:#?}", n1);
+
+                    stack_1 = stack_1.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+                    // println!("\n\nif n1 == Allele::Neuron");
+                    // println!("Stack 1:");
+                    // Network::pretty_print(&stack_1);
+                    // println!("Stack 2:");
+                    // Network::pretty_print(&stack_2);
+                    // println!();
+
+                    let mut stack_tmp_1: Vec<Node<f32>> = Vec::with_capacity(stack_1.len());
+                    let slice_len_1: usize = (1 - n1.iota) as usize;
+
+                    let mut j: usize = 0;
+                    while j < slice_len_1 && !stack_1.is_empty() {
+
+                        if stack_1.last().unwrap().allele == Allele::NaN {
+                            stack_1.pop().unwrap();
+                        } else {
+                            stack_tmp_1.push(stack_1.pop().unwrap());
+                            j += 1;
+                        }
+                    }
+                    stack_1 = stack_1.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+
+                    // max_gin += 1;
+                    // let dummy_input = Node::new(Allele::Input, 0, max_gin, 0.0, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
+                    let dummy_input = Node::new(Allele::Input, 0, n1.gin, 0.0, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
+                    stack_1.push(dummy_input.clone());
+
+                    // println!("Stack 1:");
+                    // Network::pretty_print(&stack_1);
+                    // println!("Stack tmp 1:");
+                    // Network::pretty_print(&stack_tmp_1);
+                    // println!("Stack 2:");
+                    // Network::pretty_print(&stack_2);
+
+                } else if n2.allele == Allele::Neuron {
+                    // println!("Condition Neuron 2 {:#?}", n2);
+
+                    stack_2 = stack_2.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+                    // println!("\n\nif n2 == Allele::Neuron");
+                    // println!("Stack 1:");
+                    // Network::pretty_print(&stack_1);
+                    // println!("Stack 2:");
+                    // Network::pretty_print(&stack_2);
+                    // println!();
+
+                    let mut stack_tmp_2: Vec<Node<f32>> = Vec::with_capacity(stack_2.len());
+                    let slice_len_2: usize = (1 - n2.iota) as usize;
+
+                    let mut j: usize = 0;
+                    while j < slice_len_2 && !stack_2.is_empty() {
+
+                        if stack_2.last().unwrap().allele == Allele::NaN {
+                            stack_2.pop().unwrap();
+                        } else {
+                            stack_tmp_2.push(stack_2.pop().unwrap());
+                            j += 1;
+                        }
+                    }
+                    stack_2 = stack_2.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+
+                    // max_gin += 1;
+                    // let dummy_input = Node::new(Allele::Input, 0, max_gin, 0.0, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
+                    let dummy_input = Node::new(Allele::Input, 0, n2.gin, 0.0, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
+                    stack_2.push(dummy_input.clone());
+
+                    // println!("Stack 1:");
+                    // Network::pretty_print(&stack_1);
+                    // println!("Stack 2:");
+                    // Network::pretty_print(&stack_2);
+                    // println!("Stack tmp 2:");
+                    // Network::pretty_print(&stack_tmp_2);
+
+                } else {
+                    stack_1.push(n1);
+                    stack_2.push(n2);
+                }
+            }
+
+        }
+        arn_updated
+    }
+
+
+    /// Counts the number of inputs to a subnetwork.
+    fn count_common_input(arn_1: &[&Node<f32>], arn_2: &[&Node<f32>]) -> i32 {
+        let mut accu: i32 = 0;
+
+        let gin_v1: Vec<usize> = arn_1.iter().map(|n| n.gin).collect();
+        let gin_v2: Vec<usize> = arn_2.iter().map(|n| n.gin).collect();
+
+        for gin in gin_v1.iter() {
+            if gin_v2.contains(&gin) {
+                accu += 1;
+            }
+        }
+
+        accu
     }
 
 
@@ -1532,9 +1539,17 @@ impl Network<f32> {
             // Print iotas.
             print!("|");
             for node in genome_chunk.iter() {
-                print!("{:^9}|", format!("{:^3}", node.iota));
+                print!("{:^9}|", format!("{:^3}({})", node.iota, 1 - node.iota));
             }
             println!("");
+
+            // Print number of inputs.
+            // print!("|");
+            // for node in genome_chunk.iter() {
+            //     print!("{:^9}|", format!("i#{:^3}", 1 - node.iota));
+            // }
+            // println!("");
+
         }
     }
 }

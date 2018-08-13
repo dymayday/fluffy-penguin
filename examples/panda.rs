@@ -202,6 +202,10 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
 /// Test crossover operation between specimens.
 fn _test_crossover() {
     println!();
+
+    let nbi: usize = 2;
+    let input_vector: Vec<f32> = vec![1_f32; nbi];
+
     let mut sp1: Specimen<f32> = Specimen::new_from_example();
     let mut sp2: Specimen<f32> = Specimen::new(2, 1);
 
@@ -226,14 +230,27 @@ fn _test_crossover() {
     // let crossover_specimen = Specimen::crossover(&sp2, &sp1);
     // Network::pretty_print(&crossover_specimen.ann.genome);
 
-    Network::align(&sp1.ann, &sp2.ann);
+    // Network::align(&sp1.ann, &sp2.ann);
+
+    let mut offspring: Specimen<f32> = Specimen::crossover(&sp1, &sp2);
+    println!("\n>> Offspring:");
+    Network::pretty_print(&offspring.ann.genome);
+
+    offspring.ann.update_input(&input_vector);
+    println!("Output = {:?}\n", offspring.ann.evaluate());
 }
 
 
 fn _test_population_crossover() {
     println!();
 
-    let mut population: Population<f32> = Population::new(2, 2, 1, 0.5);
+    let population_size: usize = 2;
+    let input_size: usize = 1;
+    let output_size: usize = 1;
+    let mutation_probability: f32 = 0.5;
+
+    let mut population: Population<f32> =
+        Population::new(population_size, input_size, output_size, mutation_probability);
 
     println!("Init population:");
     for (i, specimen) in population.species.iter().enumerate() {
@@ -242,26 +259,30 @@ fn _test_population_crossover() {
         }
         println!();
 
-    let structural_mutation_size: usize = 10;
+    let structural_mutation_size: usize = 20;
 
     for smi in 0..structural_mutation_size {
+
         population.exploration();
-        // println!("~~~~ After Structural Mutation:");
-        // for (i, specimen) in population.species.iter().enumerate() {
-        //     println!("Spec {}", i);
-        //     Network::pretty_print(&specimen.ann.genome);
-        //     println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
-        // }
-        // println!("\n");
 
-        population.evolve();
-
-        println!("SMI {}", smi);
+        println!("~~~~~~~~~~~~ After Structural Mutation:");
         for (i, specimen) in population.species.iter().enumerate() {
-            println!("Spec {}", i);
+            println!("Specimen {}", i);
             Network::pretty_print(&specimen.ann.genome);
             println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
         }
+        println!(":After Structural Mutation ~~~~~~~~~~~~");
+        println!("\n");
+
+        population.evolve();
+
+        println!("\n\n\t///  Evolution {}  \\\\\\", smi + 1);
+        for (i, specimen) in population.species.iter().enumerate() {
+            println!("Offspring {}", i);
+            Network::pretty_print(&specimen.ann.genome);
+            println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
+        }
+        println!("\t\\\\\\  Evolution {}  ///\n\n", smi + 1);
         println!();
     }
 
@@ -278,6 +299,6 @@ fn main() {
 
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
-    _test_crossover();
-    // _test_population_crossover();
+    // _test_crossover();
+    _test_population_crossover();
 }

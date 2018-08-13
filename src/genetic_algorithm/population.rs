@@ -75,7 +75,7 @@ impl Population<f32> {
         let mut gin = self.gin;
         for mut specimen in &mut self.species {
             gin = specimen.structural_mutation(self.pm, gin);
-            println!("\n>> GIN = {}\n", gin);
+            // println!("\n>> GIN = {}\n", gin);
         }
         self.gin = gin;
     }

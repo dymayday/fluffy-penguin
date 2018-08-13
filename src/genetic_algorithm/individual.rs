@@ -148,6 +148,7 @@ impl Specimen<f32> {
                             .expect("Fail to pick a random structural mutation.")
                         {
                             StructuralMutation::SubNetworkAddition => {
+                                println!("~~~~~~~~~~~~  StructuralMutation::SubNetworkAddition  ~~~~~~~~~~~~");
                                 // Sub-network addition mutation.
 
                                 // let mut node = node.clone();
@@ -173,6 +174,7 @@ impl Specimen<f32> {
                                 new_neuron_id += 1;
                             }
                             StructuralMutation::JumperAddition => {
+                                println!("~~~~~~~~~~~~  StructuralMutation::JumperAddition  ~~~~~~~~~~~~");
                                 // Connection addition mutation.
 
                                 let source_id: usize = node.id;
@@ -198,37 +200,80 @@ impl Specimen<f32> {
                                 }
                             }
                             StructuralMutation::ConnectionRemoval => {
+                                println!("~~~~~~~~~~~~  StructuralMutation::ConnectionRemoval  ~~~~~~~~~~~~");
                                 // Connection removal mutation
                                 let sub_network_slice =
-                                    &self.ann.genome[node_index + 1..genome_len];
+                                    &self.ann.genome[node_index..genome_len];
 
-                                let (mut disposable, mut untouchable) =
-                                    Network::build_input_subnetwork_slice_of_a_neuron(
-                                        node.id,
-                                        node.iota,
-                                        sub_network_slice,
-                                    );
+                                let removable_gin_list: Vec<usize> = Network::find_removable_gin_list(&sub_network_slice);
+                                if removable_gin_list.len() > 1 {
+                                    let removable_gin_index: usize = thread_rng().gen_range(0, removable_gin_list.len());
+                                    let removable_gin: usize = removable_gin_list[removable_gin_index];
 
-                                node_index += disposable.len() + untouchable.len();
-
-                                if disposable.len() > 1 {
-                                    let input_index_to_remove: usize = thread_rng().gen_range(0, disposable.len());
-
-                                    let _removed_node =
-                                        disposable.swap_remove(input_index_to_remove);
-
-                                    // If we actually remove something, we need to decrease the number of input
-                                    // of the current Neuron to mutate by adding 1 to its iota attribute.
                                     node.iota += 1;
-
                                     mutated_genome.push(node);
-                                    mutated_genome.append(&mut disposable);
+
+                                    for n in sub_network_slice[1..].iter() {
+                                        if n.gin == removable_gin {
+                                            // break;
+                                        } else {
+                                            mutated_genome.push(n.clone());
+                                            node_index += 1;
+                                        }
+                                    }
+
                                 } else {
                                     mutated_genome.push(node);
-                                    mutated_genome.append(&mut disposable);
                                 }
-
-                                mutated_genome.append(&mut untouchable);
+                                //
+                                //
+                                //
+                                // let sub_network_slice =
+                                //     &self.ann.genome[node_index + 1..genome_len];
+                                //
+                                // let (mut disposable, mut untouchable) =
+                                //     Network::build_input_subnetwork_slice_of_a_neuron(
+                                //         node.id,
+                                //         node.iota,
+                                //         sub_network_slice,
+                                //     );
+                                //
+                                // // node_index += disposable.len() + untouchable.len();
+                                //
+                                // println!("Neuron gin : {}", node.gin);
+                                // println!("Disposable:");
+                                // Network::pretty_print(&disposable);
+                                // println!("Untouchable:");
+                                // Network::pretty_print(&untouchable);
+                                // println!();
+                                //
+                                // if disposable.len() > 1 {
+                                //     let input_index_to_remove: usize = thread_rng().gen_range(0, disposable.len());
+                                //     let input_gin_to_remove: usize = disposable[input_index_to_remove].gin;
+                                //
+                                //     // let _removed_node =
+                                //         // disposable.remove(input_index_to_remove);
+                                //
+                                //     // If we actually remove something, we need to decrease the number of input
+                                //     // of the current Neuron to mutate by adding 1 to its iota attribute.
+                                //     node.iota += 1;
+                                //
+                                //     mutated_genome.push(node);
+                                //
+                                //     for n in sub_network_slice.iter() {
+                                //         if n.gin != input_gin_to_remove {
+                                //             mutated_genome.push(n.clone());
+                                //         }
+                                //         node_index += 1;
+                                //     }
+                                //
+                                //     // mutated_genome.append(&mut disposable);
+                                // } else {
+                                //     mutated_genome.push(node);
+                                //     // mutated_genome.append(&mut disposable);
+                                // }
+                                //
+                                // // mutated_genome.append(&mut untouchable);
                             }
                             _ => {
                                 // Unknown structural mutation.
