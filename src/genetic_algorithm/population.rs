@@ -84,6 +84,7 @@ impl Population<f32> {
 
     /// Apply evolution to our population by selection and reproduction.
     pub fn evolve(&mut self) {
+
         // self.selection();
         self.crossover();
         // unimplemented!();
@@ -98,12 +99,41 @@ impl Population<f32> {
     /// Stochastic Universal Sampling is a simple, single phase, O(N) sampling algorithm. It is
     /// zero biased, has Minimum Spread and will achieve all N sanples in a single traversal.
     /// However, the algorithm is strictly sequential.
-    pub fn stochastic_universal_sampling_selection(&self) -> Vec<&Specimen<f32>> {
+    pub fn stochastic_universal_sampling_selection(&mut self) -> Vec<&Specimen<f32>> {
+
+
+        &self.clean_fitness();
 
         let mut shuffled_species: Vec<&Specimen<f32>> = self.species.iter().map(|s| s).collect();
         thread_rng().shuffle(&mut shuffled_species);
 
         shuffled_species
+    }
+
+
+    /// For good number of selection method in genetic algorithm, the fitness needs to be > 0, so
+    /// we up each individual fitness in the population by the absolut value of the lowest fitness.
+    fn clean_fitness(&mut self) {
+
+        // let fitness_vector: Vec<f32> = self.species.iter().map(|s| s.fitness).collect();
+        // let lowest_fitness: f32 = *fitness_vector
+        //     .iter()
+        //     .min_by(|x, y| x.partial_cmp(y).unwrap())
+        //     .unwrap_or(&0.0);
+
+        let lowest_fitness: f32 = *self.species
+            .iter()
+            .map(|s| s.fitness)
+            .collect::<Vec<f32>>()
+            .iter()
+            .min_by( |x, y| x.partial_cmp(y).unwrap() )
+            .unwrap_or(&0.0);
+
+        for mut specimen in &mut self.species {
+            specimen.fitness += lowest_fitness.abs();
+        }
+
+        println!("Population's lowest fitness value = {}", lowest_fitness);
     }
 
 
