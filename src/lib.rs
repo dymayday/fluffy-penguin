@@ -43,8 +43,11 @@ mod specimen {
         let specimen_origin_output: Vec<f32> = specimen_origin.evaluate();
 
         specimen_mutated.update_input(&input_vector);
+
+        // Get a not accurate but valid GIN value from the size of the Specimen's genome.
+        let mut gin: usize = specimen_origin.ann.genome.len() * 2;
         for _ in 0..30 {
-            specimen_mutated.structural_mutation(0.5);
+            gin = specimen_mutated.structural_mutation(0.5, gin);
             specimen_mutated.update_input(&input_vector);
 
             assert_eq!(
@@ -73,21 +76,26 @@ mod node_tests {
 
     #[test]
     fn neuron() {
-        Node::new(Allele::Neuron, 0 as usize, 0.3_f32, 1_i32, 0);
+        Node::new(Allele::Neuron, 0 as usize, 0_usize, 0.3_f32, 1_i32, 0);
     }
 
     #[test]
     fn input() {
-        Node::new(Allele::Input, 0 as usize, 0.3_f32, 1_i32, 99);
+        Node::new(Allele::Input, 0 as usize, 0_usize, 0.3_f32, 1_i32, 99);
     }
 
     #[test]
     fn forward_jumper_connection() {
-        Node::new(Allele::JumpForward, 0 as usize, 0.3_f32, 1_i32, 1);
+        Node::new(Allele::JumpForward, 0 as usize, 0_usize, 0.3_f32, 1_i32, 1);
     }
 
     #[test]
     fn recurrent_jumper_connection() {
-        Node::new(Allele::JumpRecurrent, 0 as usize, 0.3_f32, 1_i32, 1);
+        Node::new(Allele::JumpRecurrent, 0 as usize, 0_usize, 0.3_f32, 1_i32, 1);
+    }
+
+    #[test]
+    fn not_a_node() {
+        Node::new_nan(0 as usize, 1);
     }
 }
