@@ -9,8 +9,8 @@ pub const LEARNING_RATE_THRESHOLD: f32 = 0.01;
 /// A Specimen regroups all the attributes needed by the genetic algorithm of an individual.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Specimen<T> {
-    input_size: usize,
-    output_size: usize,
+    pub input_size: usize,
+    pub output_size: usize,
     /// The ANN.
     pub ann: Network<T>,
     /// Symbolizes how well an individual solves a problem.

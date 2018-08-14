@@ -567,13 +567,13 @@ impl Network<f32> {
 
         // We test here if the evaluation worked smoothly by checking the expected number of
         // output spit out by our artificial neural network.
-        assert_eq!(
-            output.len(),
-            self.omega_size,
-            "Evaluated genome output length {} != Expected output length {}",
-            output.len(),
-            self.omega_size
-        );
+        // assert_eq!(
+        //     output.len(),
+        //     self.omega_size,
+        //     "Evaluated genome output length {} != Expected output length {}",
+        //     output.len(),
+        //     self.omega_size
+        // );
         output
     }
 

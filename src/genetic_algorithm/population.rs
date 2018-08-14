@@ -220,8 +220,12 @@ impl Population<f32> {
                 let father: &Specimen<f32> = &mating_pool[*i];
                 let mother: &Specimen<f32> = &mating_pool[*j];
 
-                let offspring: Specimen<f32> = Specimen::crossover(father, mother);
-                offspring_vector.push(offspring);
+                let mut offspring: Specimen<f32> = Specimen::crossover(father, mother);
+                if offspring.evaluate().len() == offspring.output_size {
+                    offspring_vector.push(offspring);
+                } else {
+                    println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
+                }
             }
 
         }
