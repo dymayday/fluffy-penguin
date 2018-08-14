@@ -10,8 +10,13 @@ pub const IOTA_INPUT_VALUE: i32 = 1;
 pub const INPUT_NODE_DEPTH_VALUE: u16 = 999;
 
 
-/// The forms that can be taken by a gene can either be a neuron, or an input to the neural network, or
-/// a jumper connecting two neurons.
+/// This enum describes the forms that can be taken by a gene.
+///
+/// A gene can either be: 
+///  * a neuron,
+///  * an input to the neural network, 
+///  * a jumper connecting two neurons.
+///
 /// The jumper genes are introduced by structural mutation along the evolution path.
 /// This enum is used during the 'evaluation' process when we compute the output of the artificial
 /// neural network without decoding it.
@@ -41,6 +46,7 @@ pub enum Allele {
 /// A flexible encoding method enables one to design an efficient evolutionary method that can evolve both
 /// the structures and weights of neural networks. The genome in EANT is designed by taking this fact
 /// into consideration.
+///
 /// A genome in EANT is a linear genome consisting of genes (nodes) that can take different forms (alleles),
 /// symbolized by the [`Allele`] enum.
 #[derive(Clone, Debug, PartialEq)]
@@ -108,11 +114,7 @@ impl Node<f32> {
 
     /// Returns wether or not 2 alleles are considered as common part during alignment process.
     pub fn is_common(&self, other: &Node<f32>) -> bool {
-        if self.allele == other.allele && self.id == other.id {
-            true
-        } else {
-            false
-        }
+        self.allele == other.allele && self.id == other.id 
     }
 }
 
