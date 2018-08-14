@@ -932,21 +932,21 @@ impl Network<f32> {
         let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_2.genome, &network_1.genome);
 
 
-        println!("ARN 1:");
-        Network::pretty_print(&arn_1);
+        // println!("ARN 1:");
+        // Network::pretty_print(&arn_1);
 
         // println!("ARN 2:");
         // Network::pretty_print(&arn_2);
 
         arn_2 = Network::sort_arn(&arn_1, &arn_2);
 
-        println!("ARN 2 sorted:");
-        Network::pretty_print(&arn_2);
+        // println!("ARN 2 sorted:");
+        // Network::pretty_print(&arn_2);
 
-        println!();
+        // println!();
 
         let arn_1_updated = Network::arn_update_iota(&arn_1, &arn_2);
-        println!();
+        // println!();
         let arn_2_updated = Network::arn_update_iota(&arn_2, &arn_1);
 
 
@@ -954,23 +954,23 @@ impl Network<f32> {
         let iota_1: Vec<i32> = arn_1_updated.iter().map(|n| n.iota).collect();
         let iota_2: Vec<i32> = arn_2_updated.iter().map(|n| n.iota).collect();
 
-        println!("ARN 1 with updated iota values:");
-        Network::pretty_print(&arn_1_updated);
+        // println!("ARN 1 with updated iota values:");
+        // Network::pretty_print(&arn_1_updated);
 
         let iota_sum_1: i32 = iota_1.iter().sum();
-        let out_1 = Network::pseudo_evaluate_slice(&arn_1_updated);
-        println!("Iota = {}, Output = {:?}", iota_sum_1, out_1);
+        // let out_1 = Network::pseudo_evaluate_slice(&arn_1_updated);
+        // println!("Iota = {}, Output = {:?}", iota_sum_1, out_1);
         assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
 
-        println!("ARN 2 with updated iota values:");
-        Network::pretty_print(&arn_2_updated);
+        // println!("ARN 2 with updated iota values:");
+        // Network::pretty_print(&arn_2_updated);
 
         let iota_sum_2: i32 = iota_2.iter().sum();
-        let out_2 = Network::pseudo_evaluate_slice(&arn_2_updated);
-        println!("Iota = {}, Output = {:?}", iota_sum_2, out_2);
+        // let out_2 = Network::pseudo_evaluate_slice(&arn_2_updated);
+        // println!("Iota = {}, Output = {:?}", iota_sum_2, out_2);
         assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
 
-        println!("\n");
+        // println!("\n");
 
         assert_eq!(iota_1, iota_2, "Iota values between ARN diverge.");
 
@@ -981,7 +981,6 @@ impl Network<f32> {
         netw_2_aligned.genome = arn_2_updated;
 
         (netw_1_aligned, netw_2_aligned)
-        // (netw_1_aligned.clone(), netw_1_aligned)
     }
 
 
@@ -1494,6 +1493,14 @@ impl Network<f32> {
     pub fn pretty_print(genome: &[Node<f32>]) {
         let mut acc: usize = 0;
         for genome_chunk in genome.chunks(20) {
+
+            // Print roof.
+            print!("+");
+            for i in 0..genome_chunk.len() {
+                print!("{:^9}+", format!("{:-^9}", ""));
+            }
+            println!("");
+
             // Print indices.
             print!("|");
             for i in 0..genome_chunk.len() {
@@ -1540,6 +1547,13 @@ impl Network<f32> {
             print!("|");
             for node in genome_chunk.iter() {
                 print!("{:^9}|", format!("{:^3}({})", node.iota, 1 - node.iota));
+            }
+            println!("");
+
+            // Print floor.
+            print!("+");
+            for i in 0..genome_chunk.len() {
+                print!("{:^9}+", format!("{:-^9}", ""));
             }
             println!("");
 
