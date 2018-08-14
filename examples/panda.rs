@@ -335,13 +335,15 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
         }
         println!();
 
-        let sus_selected = population.stochastic_universal_sampling_selection();
+        let sus_selected = &population.stochastic_universal_sampling_selection();
 
         for i in 0..sus_selected.len() {
-            println!(" {:>4} : {:<4}", population.species[i].fitness as i32, sus_selected[i].fitness as i32);
+            // println!(" {:>4} : {:<4}", *&mut population.species[i].fitness as i32, sus_selected[i].fitness as i32);
+            println!(" {:>4} : {:<4}", "", sus_selected[i].fitness as i32);
         }
 
 }
+
 
 
 fn main() {
