@@ -109,6 +109,9 @@ impl Specimen<f32> {
     /// so as not to form(get) a new structure whose fitness value is less than its parent.
     ///
     /// pm: is the structural mutation probability and is usually set between 5 and 10%.
+    ///
+    /// This method returns the updated GIN (Global Innovation Number) to keep track of all the new
+    /// structures added by a round of structural mutation.
     pub fn structural_mutation(&mut self, pm: f32, gin: usize) -> usize {
         // Copy the value of the global innovation number to return its updated value by the number
         // of innovation that occured during this mutation cycle.
