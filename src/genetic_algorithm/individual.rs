@@ -11,9 +11,9 @@ pub const LEARNING_RATE_THRESHOLD: f32 = 0.01;
 pub struct Specimen<T> {
     input_size: usize,
     output_size: usize,
-    // The ANN.
+    /// The ANN.
     pub ann: Network<T>,
-    // Symbolizes how well an individual solves a problem.
+    /// Symbolizes how well an individual solves a problem.
     pub fitness: T,
 }
 
@@ -27,7 +27,6 @@ impl Specimen<f32> {
         }
     }
 
-
     /// Build a Specimen from the example in our research papers.
     /// This corresponds to an ANN with 2 inputs and 1 output.
     pub fn new_from_example() -> Self {
@@ -38,7 +37,6 @@ impl Specimen<f32> {
             fitness: 0.0,
         }
     }
-
 
     /// Updates a Specimen's attibutes.
     pub fn update(&mut self) {
