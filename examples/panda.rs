@@ -241,12 +241,12 @@ fn _test_crossover() {
 }
 
 
-fn _test_population_crossover() {
+fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: bool) {
     println!();
 
-    let population_size: usize = 2;
-    let input_size: usize = 1;
-    let output_size: usize = 1;
+    let population_size: usize = 5;
+    let input_size: usize = 6;
+    let output_size: usize = 3;
     let mutation_probability: f32 = 0.5;
 
     let mut population: Population<f32> =
@@ -254,8 +254,16 @@ fn _test_population_crossover() {
 
     println!("Init population:");
     for (i, specimen) in population.species.iter().enumerate() {
-            println!("Spec {}", i);
-            Network::pretty_print(&specimen.ann.genome);
+            if pretty_print {
+                println!("Specimen {}", i);
+                Network::pretty_print(&specimen.ann.genome);
+            }
+            if export {
+                let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
+                let graph_name: &str = "initial";
+                specimen.render(file_name, graph_name, print_weights);
+            }
+
         }
         println!();
 
@@ -268,7 +276,7 @@ fn _test_population_crossover() {
         println!("~~~~~~~~~~~~ After Structural Mutation:");
         for (i, specimen) in population.species.iter().enumerate() {
             println!("Specimen {}", i);
-            Network::pretty_print(&specimen.ann.genome);
+            // Network::pretty_print(&specimen.ann.genome);
             println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
         }
         println!(":After Structural Mutation ~~~~~~~~~~~~");
@@ -277,10 +285,19 @@ fn _test_population_crossover() {
         population.evolve();
 
         println!("\n\n\t///  Evolution {}  \\\\\\", smi + 1);
-        for (i, specimen) in population.species.iter().enumerate() {
+        for (i, offspring) in population.species.iter().enumerate() {
             println!("Offspring {}", i);
-            Network::pretty_print(&specimen.ann.genome);
-            println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
+
+            if pretty_print {
+                Network::pretty_print(&offspring.ann.genome);
+            }
+            if export {
+                let file_name: &str = &format!("examples/specimen-{:03}_evolved-{:03}.dot",i, smi);
+                let graph_name: &str = "mutated";
+                // export_visu(&specimen_mutated, file_name, graph_name);
+                offspring.render(file_name, graph_name, print_weights);
+            }
+            println!("Output = {:?}", Network::pseudo_evaluate_slice(&offspring.ann.genome).unwrap());
         }
         println!("\t\\\\\\  Evolution {}  ///\n\n", smi + 1);
         println!();
@@ -294,11 +311,11 @@ fn main() {
     println!("Evaluated example output = {:?}", network.evaluate());
 
 
-    // let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, true, true);
+    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, true, false);
     // _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     // _test_crossover();
-    _test_population_crossover();
+    _test_population_crossover(pretty_print, visualize, print_weights);
 }
