@@ -2,6 +2,7 @@
 
 use genetic_algorithm::individual::Specimen;
 
+#[derive(Debug)]
 pub struct Population<T> {
     pub species: Vec<Specimen<T>>,
     pub current_generation: usize,
