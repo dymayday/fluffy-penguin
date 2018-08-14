@@ -893,8 +893,15 @@ impl Network<f32> {
 
 
     /// Crossover.
-    pub fn crossover(network_1: &Network<f32>, network_2: &Network<f32>) -> Network<f32> {
-        let (netw_1, netw_2) = Network::align(&network_1, &network_2);
+    pub fn crossover(network_1: &Network<f32>, network_2: &Network<f32>, fitness_1: f32, fitness_2: f32) -> Network<f32> {
+
+        let default_network: Network<f32>;
+        if fitness_2 > fitness_1 {
+            default_network = network_2.clone();
+        } else {
+            default_network = network_1.clone();
+        }
+        let (netw_1, netw_2) = Network::align(&network_1, &network_2).unwrap_or((default_network.clone(), default_network.clone()));
 
         let mut netw_crossovered = netw_1.clone();
 
@@ -924,7 +931,8 @@ impl Network<f32> {
     }
 
     /// Aligning.
-    pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> (Network<f32>, Network<f32>) {
+    pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> Result<(Network<f32>, Network<f32>), ()> {
+    // pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> (Network<f32>, Network<f32>) {
 
         // println!("\nAligning...\n");
 
@@ -960,7 +968,12 @@ impl Network<f32> {
         let iota_sum_1: i32 = iota_1.iter().sum();
         // let out_1 = Network::pseudo_evaluate_slice(&arn_1_updated);
         // println!("Iota = {}, Output = {:?}", iota_sum_1, out_1);
-        assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
+
+        // assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
+        if network_1.omega_size as i32 != iota_sum_1 {
+            println!("iota and expected output length mismatch. {} != {}", network_1.omega_size as i32, iota_sum_1);
+            return Err(())
+        }
 
         // println!("ARN 2 with updated iota values:");
         // Network::pretty_print(&arn_2_updated);
@@ -968,11 +981,20 @@ impl Network<f32> {
         let iota_sum_2: i32 = iota_2.iter().sum();
         // let out_2 = Network::pseudo_evaluate_slice(&arn_2_updated);
         // println!("Iota = {}, Output = {:?}", iota_sum_2, out_2);
-        assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
+
+        // assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
+        if network_2.omega_size as i32 != iota_sum_2 {
+            println!("iota and expected output length mismatch. {} != {}", network_2.omega_size as i32, iota_sum_2);
+            return Err(())
+        }
 
         // println!("\n");
 
-        assert_eq!(iota_1, iota_2, "Iota values between ARN diverge.");
+        // assert_eq!(iota_1, iota_2, "Iota values between ARN diverge.");
+        if iota_1 != iota_2 {
+            println!("iota1 != iota2. {:?} != {:?}", iota_1, iota_2);
+            return Err(())
+        }
 
         let mut netw_1_aligned = network_1.clone();
         let mut netw_2_aligned = network_2.clone();
@@ -980,7 +1002,7 @@ impl Network<f32> {
         netw_1_aligned.genome = arn_1_updated;
         netw_2_aligned.genome = arn_2_updated;
 
-        (netw_1_aligned, netw_2_aligned)
+        Ok((netw_1_aligned, netw_2_aligned))
     }
 
 

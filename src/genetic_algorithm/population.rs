@@ -217,6 +217,9 @@ impl Population<f32> {
             thread_rng().shuffle(&mut shuffled_mating_pool_index_2);
 
             for (i, j) in shuffled_mating_pool_index_1.iter().zip(shuffled_mating_pool_index_2.iter()) {
+                if offspring_vector.len() == offspring_size {
+                    break;
+                }
                 let father: &Specimen<f32> = &mating_pool[*i];
                 let mother: &Specimen<f32> = &mating_pool[*j];
 
