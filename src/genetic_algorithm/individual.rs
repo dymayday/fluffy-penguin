@@ -1,7 +1,7 @@
-use cge::Network;
-use cge::Node;
+use cge::{Allele, Network, Node};
+use genetic_algorithm::mutation::StructuralMutation;
 use rand::distributions::StandardNormal;
-use rand::{thread_rng, Rng};
+use rand::{self, thread_rng, Rng};
 
 pub const LEARNING_RATE_THRESHOLD: f32 = 0.01;
 
@@ -112,18 +112,9 @@ impl Specimen<f32> {
     ///
     /// pm: is the structural mutation probability and is usually set between 5 and 10%.
     pub fn structural_mutation(&mut self, pm: f32, gin: usize) -> usize {
-        use cge::Allele;
-        use genetic_algorithm::mutation::StructuralMutation;
-
         // Copy the value of the global innovation number to return its updated value by the number
         // of innovation that occured during this mutation cycle.
         let mut gin: usize = gin;
-
-        let available_structural_mutation: [StructuralMutation; 3] = [
-            StructuralMutation::SubNetworkAddition,
-            StructuralMutation::JumperAddition,
-            StructuralMutation::ConnectionRemoval,
-        ];
 
         // Find the unique ID of a potential new Neuron added by the special mutation:
         // 'sub-network addition'.
@@ -139,14 +130,10 @@ impl Specimen<f32> {
             match node.allele {
                 Allele::Neuron => {
                     if Specimen::roll_the_mutation_wheel(pm) {
-                        // [TODO]: Add more structural mutation here.
-                        // println!("Structural Mutation occuring !");
 
                         #[allow(unreachable_patterns)]
-                        match thread_rng()
-                            .choose(&available_structural_mutation)
-                            .expect("Fail to pick a random structural mutation.")
-                        {
+                        match rand::random::<StructuralMutation>() {
+
                             StructuralMutation::SubNetworkAddition => {
                                 // println!("~~~~~~~~~~~~  StructuralMutation::SubNetworkAddition  ~~~~~~~~~~~~");
                                 // Sub-network addition mutation.
@@ -173,6 +160,7 @@ impl Specimen<f32> {
 
                                 new_neuron_id += 1;
                             }
+
                             StructuralMutation::JumperAddition => {
                                 // println!("~~~~~~~~~~~~  StructuralMutation::JumperAddition  ~~~~~~~~~~~~");
                                 // Connection addition mutation.
@@ -199,6 +187,7 @@ impl Specimen<f32> {
                                     }
                                 }
                             }
+
                             StructuralMutation::ConnectionRemoval => {
                                 // println!("~~~~~~~~~~~~  StructuralMutation::ConnectionRemoval  ~~~~~~~~~~~~");
                                 // Connection removal mutation
@@ -230,10 +219,12 @@ impl Specimen<f32> {
                                     mutated_genome.push(node);
                                 }
                             }
+
                             _ => {
                                 // Unknown structural mutation.
                                 println!("Unknown structural mutation behavior draw.");
                             }
+
                         }
                     } else {
                         // If we don't mutate this Neuron, we simply push it back to the genome,
