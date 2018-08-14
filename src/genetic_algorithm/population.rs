@@ -1,6 +1,7 @@
 //! Population doc string.
 
 use genetic_algorithm::individual::Specimen;
+use rand::{thread_rng, Rng};
 
 #[derive(Debug)]
 pub struct Population<T> {
@@ -91,6 +92,18 @@ impl Population<f32> {
     /// Selection
     fn selection(&mut self) {
         unimplemented!();
+    }
+
+
+    /// Stochastic Universal Sampling is a simple, single phase, O(N) sampling algorithm. It is
+    /// zero biased, has Minimum Spread and will achieve all N sanples in a single traversal.
+    /// However, the algorithm is strictly sequential.
+    pub fn stochastic_universal_sampling_selection(&self) -> Vec<&Specimen<f32>> {
+
+        let mut shuffled_species: Vec<&Specimen<f32>> = self.species.iter().map(|s| s).collect();
+        thread_rng().shuffle(&mut shuffled_species);
+
+        shuffled_species
     }
 
 

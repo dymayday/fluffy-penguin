@@ -36,8 +36,8 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
     let population_size: usize = 10;
     let mutation_probability: f32 = 0.1;
 
-    let input_size: usize = 5;
-    let output_size: usize = 3;
+    // let input_size: usize = 5;
+    // let output_size: usize = 3;
 
     let structural_mutation_size: usize = 30;
     let parametric_mutation_size: usize = 100;
@@ -306,16 +306,55 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 }
 
 
+
+fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
+    let population_size: usize = 10;
+    let input_size: usize = 6;
+    let output_size: usize = 3;
+    let mutation_probability: f32 = 0.5;
+
+    let mut population: Population<f32> =
+        Population::new(population_size, input_size, output_size, mutation_probability);
+
+    println!("Init population:");
+    for i in 0..population.species.len() {
+
+        let mut specimen: &mut Specimen<f32> = &mut population.species[i];
+        specimen.fitness = thread_rng().gen_range(-100_i32, 101_i32) as f32;
+
+            if pretty_print {
+                println!("Specimen {}", i);
+                Network::pretty_print(&specimen.ann.genome);
+            }
+            if export {
+                let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
+                let graph_name: &str = "initial";
+                specimen.render(file_name, graph_name, print_weights);
+            }
+
+        }
+        println!();
+
+        let sus_selected = population.stochastic_universal_sampling_selection();
+
+        for i in 0..sus_selected.len() {
+            println!(" {:>4} : {:<4}", population.species[i].fitness as i32, sus_selected[i].fitness as i32);
+        }
+
+}
+
+
 fn main() {
     let mut network: Network<f32> = Network::build_from_example();
     println!("Evaluated example output = {:?}", network.evaluate());
 
 
-    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, true, false);
+    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, false, false);
     // _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     // _test_crossover();
-    _test_population_crossover(pretty_print, visualize, print_weights);
+    // _test_population_crossover(pretty_print, visualize, print_weights);
+    _test_population_selection(pretty_print, visualize, print_weights);
 }
