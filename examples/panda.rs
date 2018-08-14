@@ -308,7 +308,7 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
 
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
-    let population_size: usize = 10;
+    let population_size: usize = 32;
     let input_size: usize = 6;
     let output_size: usize = 3;
     let mutation_probability: f32 = 0.5;
@@ -335,22 +335,29 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
         }
         println!();
 
-        let sus_selected = &population.stochastic_universal_sampling_selection();
+        {
+        let lowest_fitness: f32 = *population.species
+            .iter()
+            .map(|s| s.fitness)
+            .collect::<Vec<f32>>()
+            .iter()
+            .min_by( |x, y| x.partial_cmp(y).unwrap() )
+            .unwrap_or(&0.0);
 
+        population.sort_species_by_fitness();
+        let sus_selected = &population.species;
         for i in 0..sus_selected.len() {
             // println!(" {:>4} : {:<4}", *&mut population.species[i].fitness as i32, sus_selected[i].fitness as i32);
-            println!(" {:>4} : {:<4}", "", sus_selected[i].fitness as i32);
+            println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
         }
+        }
+        population.evolve();
 
 }
 
 
 
 fn main() {
-    let mut network: Network<f32> = Network::build_from_example();
-    println!("Evaluated example output = {:?}", network.evaluate());
-
-
     let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, false, false);
     // _dev_population(pretty_print, visualize, print_weights);
 

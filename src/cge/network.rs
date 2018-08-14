@@ -684,7 +684,7 @@ impl Network<f32> {
                         // stack.pop().expect("The pseudo evaluated stack is empty.");
                         // neuron_output += stack.pop().unwrap_or(0.0_f32);
                         match stack.pop() {
-                            Some(v) => {},
+                            Some(_) => {},
                             None => return None,
                         }
                     }
@@ -712,7 +712,7 @@ impl Network<f32> {
 
         // Now we need to find the number of input Node common to both subnetwork we have as
         // inputs.
-        let gin_1: Vec<usize> = input_1[1..].iter().map(|n| n.gin).collect();
+        // let gin_1: Vec<usize> = input_1[1..].iter().map(|n| n.gin).collect();
         let gin_2: Vec<usize> = input_2[1..].iter().map(|n| n.gin).collect();
 
         let mut common_node: Vec<Node<f32>> = Vec::with_capacity(input_1.len());
@@ -928,7 +928,7 @@ impl Network<f32> {
 
         // println!("\nAligning...\n");
 
-        let mut arn_1: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_1.genome, &network_2.genome);
+        let arn_1: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_1.genome, &network_2.genome);
         let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_2.genome, &network_1.genome);
 
 
@@ -1090,10 +1090,10 @@ impl Network<f32> {
             arn_map.insert(arn_2[i].gin, i);
         }
 
-        let mut max_gin: usize = *arn_1.iter().map(|n| n.gin).collect::<Vec<usize>>().iter().max().unwrap_or(&1_usize);
+        // let mut max_gin: usize = *arn_1.iter().map(|n| n.gin).collect::<Vec<usize>>().iter().max().unwrap_or(&1_usize);
 
-        max_gin += 1;
-        let nan = Node::new_nan(max_gin, 1);
+        // max_gin += 1;
+        // let nan = Node::new_nan(max_gin, 1);
 
         let mut stack_1: Vec<Node<f32>> = Vec::with_capacity(arn_len);
         let mut stack_2: Vec<Node<f32>> = Vec::with_capacity(arn_len);
@@ -1496,7 +1496,7 @@ impl Network<f32> {
 
             // Print roof.
             print!("+");
-            for i in 0..genome_chunk.len() {
+            for _ in 0..genome_chunk.len() {
                 print!("{:^9}+", format!("{:-^9}", ""));
             }
             println!("");
@@ -1552,7 +1552,7 @@ impl Network<f32> {
 
             // Print floor.
             print!("+");
-            for i in 0..genome_chunk.len() {
+            for _ in 0..genome_chunk.len() {
                 print!("{:^9}+", format!("{:-^9}", ""));
             }
             println!("");

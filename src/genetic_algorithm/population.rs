@@ -3,6 +3,11 @@
 use genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng};
 
+/// Rank base selection parameter.
+/// The usual formula for calculating the selection probability for linear 
+/// ranking schemes is parameterised by a value s (1 < s ≤ 2).
+const RANK_S: f32 = 1.5;
+
 #[derive(Debug)]
 pub struct Population<T> {
     pub species: Vec<Specimen<T>>,
@@ -26,7 +31,7 @@ impl Population<f32> {
             species.push(Specimen::new(input_size, output_size));
         }
         let gin: usize = species[0].ann.genome.last().unwrap().gin;
-        println!("Init GIN = {}", gin);
+        // println!("Init GIN = {}", gin);
 
         Population {
             species,
@@ -85,42 +90,66 @@ impl Population<f32> {
     /// Apply evolution to our population by selection and reproduction.
     pub fn evolve(&mut self) {
 
-        // self.selection();
-        self.crossover();
-        // unimplemented!();
+        &self.clean_fitness();
+        &self.sort_species_by_fitness();
+
+        let mating_pool: Vec<Specimen<f32>> = Population::selection(&self.species);
+
+        self.crossover(&mating_pool);
     }
 
-    /// Selection
-    fn selection(&mut self) {
-        unimplemented!();
+    /// Selection process using Stochastic Universal Sampling by default.
+    fn selection(species: &[Specimen<f32>]) -> Vec<Specimen<f32>> {
+        Population::stochastic_universal_sampling_selection(species)
     }
 
 
     /// Stochastic Universal Sampling is a simple, single phase, O(N) sampling algorithm. It is
     /// zero biased, has Minimum Spread and will achieve all N sanples in a single traversal.
     /// However, the algorithm is strictly sequential.
-    pub fn stochastic_universal_sampling_selection(&mut self) -> Vec<&Specimen<f32>> {
+    pub fn stochastic_universal_sampling_selection(species: &[Specimen<f32>]) -> Vec<Specimen<f32>> {
 
+        let lambda: usize = species.len();
+        // let lambda: usize = species.len() / 2_usize;
+        // let lambda: usize = species.len() * 2_usize;
 
-        &self.clean_fitness();
+        let ranking_vector: Vec<f32> = Population::ranking_selection(&species);
 
-        let mut shuffled_species: Vec<&Specimen<f32>> = self.species.iter().map(|s| s).collect();
-        thread_rng().shuffle(&mut shuffled_species);
+        let mut cumulative_probability_distribution: Vec<f32> = Vec::with_capacity(ranking_vector.len());
+        let mut cumsum: f32 = 0.0;
+        for rank in ranking_vector {
+            cumsum += rank;
+            cumulative_probability_distribution.push(cumsum);
+        }
+        // println!("cumulative_probability_distribution = {:?}", cumulative_probability_distribution);
 
-        shuffled_species
+        let mut specimen_index: usize = 0;
+        let mut i: usize = 0;
+        let mut r: f32 = thread_rng().gen_range(0.0, 1.0 / lambda as f32);
+
+        let mut mating_pool: Vec<Specimen<f32>> = Vec::with_capacity(species.len());
+
+        while specimen_index < lambda {
+            while r <= cumulative_probability_distribution[i] {
+
+                mating_pool.push(species[i].clone());
+                r += 1.0 / lambda as f32;
+                specimen_index += 1;
+            }
+
+            i += 1;
+        }
+
+        // let mating_pool_fitness: Vec<f32> = mating_pool.iter().map(|s| s.fitness).collect();
+        // println!("mating_pool_fitness = {:?}", mating_pool_fitness);
+
+       mating_pool
     }
 
 
     /// For good number of selection method in genetic algorithm, the fitness needs to be > 0, so
     /// we up each individual fitness in the population by the absolut value of the lowest fitness.
     fn clean_fitness(&mut self) {
-
-        // let fitness_vector: Vec<f32> = self.species.iter().map(|s| s.fitness).collect();
-        // let lowest_fitness: f32 = *fitness_vector
-        //     .iter()
-        //     .min_by(|x, y| x.partial_cmp(y).unwrap())
-        //     .unwrap_or(&0.0);
-
         let lowest_fitness: f32 = *self.species
             .iter()
             .map(|s| s.fitness)
@@ -129,25 +158,71 @@ impl Population<f32> {
             .min_by( |x, y| x.partial_cmp(y).unwrap() )
             .unwrap_or(&0.0);
 
-        for mut specimen in &mut self.species {
-            specimen.fitness += lowest_fitness.abs();
+        if lowest_fitness < 0.0 {
+            for mut specimen in &mut self.species {
+                specimen.fitness += lowest_fitness.abs();
+            }
+        }
+    }
+
+
+    /// Sort Specimen by their fitness value.
+    pub fn sort_species_by_fitness(&mut self) {
+        &self.species.sort_by_key( |k| k.fitness as i32 );
+    }
+
+
+    /// Ranking Selection.
+    fn ranking_selection(species: &[Specimen<f32>]) -> Vec<f32> {
+
+        // This parameter controls wether or not the worst Specimen should have a chance to be in
+        // the mating pool. s = 2 means a really low chance.
+        let s: f32 = RANK_S;
+        let population_size: usize = species.len();
+        let mu: f32 = population_size as f32;
+
+        let mut ranking_vector: Vec<f32> = Vec::with_capacity(population_size);
+
+        for i in 0..population_size {
+            ranking_vector.push(( (2.0 - s) / mu ) + ( (2.0 * i as f32 * (s - 1.0)) / (mu * ( mu - 1.0)) ));
         }
 
-        println!("Population's lowest fitness value = {}", lowest_fitness);
+        // println!("Ranking vector = {:?}, sum = {}", ranking_vector, ranking_vector.iter().sum::<f32>());
+
+        ranking_vector
     }
 
 
     /// Crossover is the main method of reproduction of our genetic algorithm.
-    fn crossover(&mut self) {
+    fn crossover(&mut self, mating_pool: &[Specimen<f32>]) {
 
-        let mut offspring_vector: Vec<Specimen<f32>> = Vec::with_capacity(self.species.len());
-        offspring_vector.push(self.species[0].clone());
+        let offspring_size: usize = self.species.len();
+        let mut offspring_vector: Vec<Specimen<f32>> = Vec::with_capacity(offspring_size);
 
-        for specimen in &self.species[1..] {
-            let mut offspring: Specimen<f32> = Specimen::crossover(&self.species[0], &specimen);
-            offspring.update();
+        // here we need 2 pool of shuffle mating index to make them randomly have baby babies with
+        // each other.
+        let mating_pool_size: usize = mating_pool.len();
 
-            offspring_vector.push(offspring);
+        while offspring_vector.len() < offspring_size {
+
+            let mut shuffled_mating_pool_index_1: Vec<usize> = Vec::with_capacity(mating_pool_size);
+            let mut shuffled_mating_pool_index_2: Vec<usize> = Vec::with_capacity(mating_pool_size);
+
+            for i in 0..mating_pool_size {
+                shuffled_mating_pool_index_1.push(i);
+                shuffled_mating_pool_index_2.push(i);
+            }
+
+            thread_rng().shuffle(&mut shuffled_mating_pool_index_1);
+            thread_rng().shuffle(&mut shuffled_mating_pool_index_2);
+
+            for (i, j) in shuffled_mating_pool_index_1.iter().zip(shuffled_mating_pool_index_2.iter()) {
+                let father: &Specimen<f32> = &mating_pool[*i];
+                let mother: &Specimen<f32> = &mating_pool[*j];
+
+                let offspring: Specimen<f32> = Specimen::crossover(father, mother);
+                offspring_vector.push(offspring);
+            }
 
         }
 

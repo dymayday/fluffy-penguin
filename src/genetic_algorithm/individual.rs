@@ -255,11 +255,15 @@ impl Specimen<f32> {
     }
 
 
-    /// Returns the aligned common parts of two linear genomes.
+    /// Returns the offspring of two Specimens.
     pub fn crossover(specimen_1: &Specimen<f32>, specimen_2: &Specimen<f32>) -> Specimen<f32> {
         let mut specimen = specimen_1.clone();
         specimen.ann = Network::crossover(&specimen_1.ann, &specimen_2.ann);
+        specimen.update();
+
+        // This is a brand new born offspring so its fitness is null.
         specimen.fitness = 0.0;
+
         specimen
     }
 
