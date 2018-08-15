@@ -6,6 +6,7 @@
 
 extern crate rand;
 extern crate rayon;
+pub mod utils;
 pub mod activation;
 pub mod cge;
 pub mod genetic_algorithm;
@@ -47,7 +48,7 @@ mod specimen {
         // Get a not accurate but valid GIN value from the size of the Specimen's genome.
         let mut gin: usize = specimen_origin.ann.genome.len() * 2;
         for _ in 0..30 {
-            gin = specimen_mutated.structural_mutation(0.5, gin);
+            gin = specimen_mutated.structural_mutation(0.5, gin).unwrap();
             specimen_mutated.update_input(&input_vector);
 
             assert_eq!(

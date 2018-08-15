@@ -581,6 +581,7 @@ impl Network<f32> {
     /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network
     /// without decoding it.
     fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Vec<f32> {
+    // fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Result<Vec<f32>, &str> {
         let mut stack: Vec<f32> = Vec::with_capacity(input.len());
 
         let input_len: usize = input.len();
@@ -602,6 +603,10 @@ impl Network<f32> {
                         // [TODO]: Remove this expect for an unwrap_or maybe ?
                         neuron_output += stack.pop().expect("The evaluated stack is empty.");
                         // neuron_output += stack.pop().unwrap_or(0.0_f32);
+                        // let neuron_output += match stack.pop() {
+                        //     Ok(v) => v,
+                        //     Err(_) => return Err("The evaluated stack is empty.")
+                        // };
                     }
 
                     node.value = neuron_output;
@@ -660,6 +665,7 @@ impl Network<f32> {
         }
 
         stack
+        // Ok(stack)
     }
 
 
@@ -700,6 +706,25 @@ impl Network<f32> {
         Some(stack)
     }
 
+
+
+    /// Returns if a Network is considered valid.
+    pub fn is_valid(&mut self) -> bool {
+        let inputs: Vec<f32> = vec![1.0; self.input_map.len()];
+
+        self.update_input(&inputs);
+        let output: Vec<f32> = self.evaluate();
+
+        if output.len() != self.omega_size {
+            return false;
+        }
+
+        let iota_sum: i32 = self.genome.iter().map(|n| n.iota).collect::<Vec<i32>>().iter().sum();
+        if self.omega_size as i32 != iota_sum {
+            return false;
+        }
+        true
+    }
 
 
     /// Find and returns the proper iota value after a crossover.
@@ -895,11 +920,13 @@ impl Network<f32> {
     /// Crossover.
     pub fn crossover(network_1: &Network<f32>, network_2: &Network<f32>, fitness_1: f32, fitness_2: f32) -> Network<f32> {
 
-        let default_network: Network<f32>;
+        let default_network: &Network<f32>;
         if fitness_2 > fitness_1 {
-            default_network = network_2.clone();
+            // default_network = network_2.clone();
+            default_network = &network_2;
         } else {
-            default_network = network_1.clone();
+            // default_network = network_1.clone();
+            default_network = &network_1;
         }
         let (netw_1, netw_2) = Network::align(&network_1, &network_2).unwrap_or((default_network.clone(), default_network.clone()));
 
@@ -1310,10 +1337,13 @@ impl Network<f32> {
         graph_name: &str,
         print_weight: bool,
     ) -> ::std::io::Result<()> {
+
+        use utils::create_parent_directory;
         use std::fs::File;
         use std::io::BufWriter;
 
 
+        create_parent_directory(file_name)?;
         let f = File::create(file_name)?;
         {
             let mut writer = BufWriter::new(f);

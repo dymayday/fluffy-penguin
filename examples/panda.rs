@@ -169,7 +169,7 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
 
     for i in 0..generation_size {
-        gin = specimen_mutated.structural_mutation(pm, gin);
+        gin = specimen_mutated.structural_mutation(pm, gin).unwrap();
 
         {
             if export {

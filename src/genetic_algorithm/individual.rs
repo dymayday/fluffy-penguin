@@ -112,10 +112,10 @@ impl Specimen<f32> {
     ///
     /// This method returns the updated GIN (Global Innovation Number) to keep track of all the new
     /// structures added by a round of structural mutation.
-    pub fn structural_mutation(&mut self, pm: f32, gin: usize) -> usize {
+    pub fn structural_mutation(&mut self, pm: f32, gin: usize) -> Result<usize, &str> {
         // Copy the value of the global innovation number to return its updated value by the number
         // of innovation that occured during this mutation cycle.
-        let mut gin: usize = gin;
+        let mut updated_gin: usize = gin;
 
         // Find the unique ID of a potential new Neuron added by the special mutation:
         // 'sub-network addition'.
@@ -151,12 +151,12 @@ impl Specimen<f32> {
                                 // Add a new sub-network to the genome.
                                 let mut subnetwork: Vec<Node<f32>> = Network::gen_random_subnetwork(
                                     new_neuron_id,
-                                    gin + 1,
+                                    updated_gin + 1,
                                     depth,
                                     &self.ann.input_map,
                                 );
 
-                                gin += subnetwork.len();
+                                updated_gin += subnetwork.len();
                                 mutated_genome.append(&mut subnetwork);
 
                                 new_neuron_id += 1;
@@ -168,7 +168,7 @@ impl Specimen<f32> {
 
                                 let source_id: usize = node.id;
                                 let depth: u16 = node.depth;
-                                match self.ann.gen_random_jumper_connection(source_id, gin, depth) {
+                                match self.ann.gen_random_jumper_connection(source_id, updated_gin, depth) {
                                     Some(jumper) => {
                                         // Increase the number of input the current new mutated Neuron has.
                                         node.iota -= 1;
@@ -178,7 +178,7 @@ impl Specimen<f32> {
                                         // Add the mutated a new jumper connection to the genome
                                         // connecting the current mutated Neuron.
                                         mutated_genome.push(jumper);
-                                        gin += 1;
+                                        updated_gin += 1;
                                     }
                                     None => {
                                         // If there is no possibility to add a new jumper
@@ -201,7 +201,7 @@ impl Specimen<f32> {
                                     let removable_gin_index: usize = thread_rng().gen_range(0, removable_gin_list.len());
                                     let removable_gin: usize = removable_gin_list[removable_gin_index];
 
-                                    // println!("Node gin = {}, removable_gin_list = {:?} x {}", node.gin, removable_gin_list, removable_gin);
+                                    // println!("Node updated_gin = {}, removable_gin_list = {:?} x {}", node.gin, removable_gin_list, removable_gin);
 
                                     node.iota += 1;
                                     mutated_genome.push(node);
@@ -242,9 +242,16 @@ impl Specimen<f32> {
             node_index += 1;
         }
 
-        self.ann.genome = mutated_genome;
-        self.ann.update_network_attributes();
-        gin
+        let mut mutated_network: Network<f32> = self.ann.clone();
+        mutated_network.genome = mutated_genome;
+        mutated_network.update();
+
+        if mutated_network.is_valid() {
+            self.ann = mutated_network;
+            Ok(updated_gin)
+        } else {
+            Err("Structural Mutation Failure.")
+        }
     }
 
 

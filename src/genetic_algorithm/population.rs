@@ -80,8 +80,9 @@ impl Population<f32> {
     /// so as not to form(get) a new structure whose fitness value is less than its parent.
     pub fn exploration(&mut self) {
         let mut gin = self.gin;
+
         for mut specimen in &mut self.species {
-            gin = specimen.structural_mutation(self.pm, gin);
+            gin = specimen.structural_mutation(self.pm, gin).unwrap_or(gin);
         }
         self.gin = gin;
     }
@@ -224,7 +225,8 @@ impl Population<f32> {
                 let mother: &Specimen<f32> = &mating_pool[*j];
 
                 let mut offspring: Specimen<f32> = Specimen::crossover(father, mother);
-                if offspring.evaluate().len() == offspring.output_size {
+                // if offspring.evaluate().len() == offspring.output_size {
+                if offspring.ann.is_valid() {
                     offspring_vector.push(offspring);
                 } else {
                     println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
