@@ -976,27 +976,27 @@ impl Network<f32> {
     pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> Result<(Network<f32>, Network<f32>), ()> {
     // pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> (Network<f32>, Network<f32>) {
 
-        // println!("\nAligning...\n");
+        println!("\n\n\n================================================   Aligning...   ================================================\n");
 
         let arn_1: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_1.genome, &network_2.genome);
         let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_2.genome, &network_1.genome);
 
 
-        println!("ARN 1:");
+        println!("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ARN 1:");
         Network::pretty_print(&arn_1);
-
-        println!("ARN 2:");
-        Network::pretty_print(&arn_2);
+        //
+        // println!("ARN 2:");
+        // Network::pretty_print(&arn_2);
 
         arn_2 = Network::sort_arn(&arn_1, &arn_2);
 
-        println!("ARN 2 sorted:");
+        println!("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ARN 2 sorted:");
         Network::pretty_print(&arn_2);
 
         println!();
 
         let arn_1_updated = Network::arn_update_iota(&arn_1, &arn_2);
-        // println!();
+        println!();
         let arn_2_updated = Network::arn_update_iota(&arn_2, &arn_1);
 
 
@@ -1004,8 +1004,8 @@ impl Network<f32> {
         let iota_1: Vec<i32> = arn_1_updated.iter().map(|n| n.iota).collect();
         let iota_2: Vec<i32> = arn_2_updated.iter().map(|n| n.iota).collect();
 
-        // println!("ARN 1 with updated iota values:");
-        // Network::pretty_print(&arn_1_updated);
+        println!("ARN 1 with updated iota values:");
+        Network::pretty_print(&arn_1_updated);
 
         let iota_sum_1: i32 = iota_1.iter().sum();
         // let out_1 = Network::pseudo_evaluate_slice(&arn_1_updated);
@@ -1013,19 +1013,19 @@ impl Network<f32> {
 
         // assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
         if network_1.omega_size as i32 != iota_sum_1 {
-            println!("\n\n");
+            // println!("\n\n");
             println!("iota 1 and expected output length mismatch. {} != {}", network_1.omega_size as i32, iota_sum_1);
-            Network::pretty_print(&network_1.genome);
-            Network::pretty_print(&arn_1_updated);
-            Network::pretty_print(&arn_2_updated);
-            Network::pretty_print(&network_2.genome);
-            println!("\n\n");
+            // Network::pretty_print(&network_1.genome);
+            // Network::pretty_print(&arn_1_updated);
+            // Network::pretty_print(&arn_2_updated);
+            // Network::pretty_print(&network_2.genome);
+            // println!("\n\n");
             // println!("Out = {:?}", arn_1.clone().evaluate());
             // return Err(())
         }
 
-        // println!("ARN 2 with updated iota values:");
-        // Network::pretty_print(&arn_2_updated);
+        println!("ARN 2 with updated iota values:");
+        Network::pretty_print(&arn_2_updated);
 
         let iota_sum_2: i32 = iota_2.iter().sum();
         // let out_2 = Network::pseudo_evaluate_slice(&arn_2_updated);
@@ -1033,13 +1033,13 @@ impl Network<f32> {
 
         // assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
         if network_2.omega_size as i32 != iota_sum_2 {
-            println!("\n\n");
+            // println!("\n\n");
             println!("iota 2 and expected output length mismatch. {} != {}", network_2.omega_size as i32, iota_sum_2);
-            Network::pretty_print(&network_1.genome);
-            Network::pretty_print(&arn_1_updated);
-            Network::pretty_print(&arn_2_updated);
-            Network::pretty_print(&network_2.genome);
-            println!("\n\n");
+            // Network::pretty_print(&network_1.genome);
+            // Network::pretty_print(&arn_1_updated);
+            // Network::pretty_print(&arn_2_updated);
+            // Network::pretty_print(&network_2.genome);
+            // println!("\n\n");
             // return Err(())
         }
 
@@ -1175,6 +1175,7 @@ impl Network<f32> {
         let mut stack_1: Vec<Node<f32>> = Vec::with_capacity(arn_len);
         let mut stack_2: Vec<Node<f32>> = Vec::with_capacity(arn_len);
 
+        let debug: bool = false;
 
         // let mut i: usize = 0;
         for i in 0..arn_len {
@@ -1184,17 +1185,21 @@ impl Network<f32> {
                 {
 
                 if n1.allele == Allele::Neuron && n2.allele == Allele::Neuron {
-                    // println!("\n\n");
-                    // println!("\n\nif n1 == n2 == Neuron");
+                    if debug {
+                        println!("\n\n");
+                        println!("\n\nif n1 == n2 == Neuron");
+                    }
 
                     stack_1 = stack_1.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
                     stack_2 = stack_2.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
 
-                    // println!("Stack 1:");
-                    // Network::pretty_print(&stack_1);
-                    // println!("Stack 2:");
-                    // Network::pretty_print(&stack_2);
-                    // println!();
+                    if debug {
+                        println!("Stack 1:");
+                        Network::pretty_print(&stack_1);
+                        println!("Stack 2:");
+                        Network::pretty_print(&stack_2);
+                        println!();
+                    }
                     
                     let mut stack_tmp_1: Vec<Node<f32>> = Vec::with_capacity(stack_1.len());
                     let slice_len_1: usize = (1 - n1.iota) as usize;
@@ -1227,15 +1232,17 @@ impl Network<f32> {
                     stack_2 = stack_2.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
 
 
-                    // println!("Stack 1:");
-                    // Network::pretty_print(&stack_1);
-                    // println!("Stack tmp 1:");
-                    // Network::pretty_print(&stack_tmp_1);
-                    //
-                    // println!("Stack 2:");
-                    // Network::pretty_print(&stack_2);
-                    // println!("Stack tmp 2:");
-                    // Network::pretty_print(&stack_tmp_2);
+                    if debug {
+                        println!("Stack 1:");
+                        Network::pretty_print(&stack_1);
+                        println!("Stack tmp 1:");
+                        Network::pretty_print(&stack_tmp_1);
+
+                        println!("Stack 2:");
+                        Network::pretty_print(&stack_2);
+                        println!("Stack tmp 2:");
+                        Network::pretty_print(&stack_tmp_2);
+                    }
 
                     let vnr1: Vec<&Node<f32>> = stack_tmp_1.iter().map(|n| n).collect::<Vec<&Node<f32>>>();
                     let vnr2: Vec<&Node<f32>> = stack_tmp_2.iter().map(|n| n).collect::<Vec<&Node<f32>>>();
@@ -1244,9 +1251,11 @@ impl Network<f32> {
                     let in_1: i32 = 1 - n1.iota;
                     let in_2: i32 = 1 - n2.iota;
                     arn_updated[arn_len - 1 - i].iota = 1 - ( in_1 + in_2 - common_input_number );
-                    // println!("iota = 1 - ( {} + {} - {} ) = {}", in_1, in_2, common_input_number, arn_updated[arn_len - 1 - i].iota);
 
-                    // println!("\n\n");
+                    if debug {
+                        println!("iota = 1 - ( {} + {} - {} ) = {}", in_1, in_2, common_input_number, arn_updated[arn_len - 1 - i].iota);
+                        println!("\n\n");
+                    }
  
                     // max_gin += 1;
                     let dummy_input = Node::new(Allele::Input, 0, n1.gin, 0.0, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
@@ -1254,15 +1263,17 @@ impl Network<f32> {
                     stack_2.push(dummy_input.clone());
 
                 } else if n1.allele == Allele::Neuron {
-                    // println!("Condition Neuron 1 {:#?}", n1);
+                    if debug {
+                        println!("Condition Neuron 1 {:#?}", n1);
 
-                    stack_1 = stack_1.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
-                    // println!("\n\nif n1 == Allele::Neuron");
-                    // println!("Stack 1:");
-                    // Network::pretty_print(&stack_1);
-                    // println!("Stack 2:");
-                    // Network::pretty_print(&stack_2);
-                    // println!();
+                        stack_1 = stack_1.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
+                        println!("\n\nif n1 == Allele::Neuron");
+                        println!("Stack 1:");
+                        Network::pretty_print(&stack_1);
+                        println!("Stack 2:");
+                        Network::pretty_print(&stack_2);
+                        println!();
+                    }
 
                     let mut stack_tmp_1: Vec<Node<f32>> = Vec::with_capacity(stack_1.len());
                     let slice_len_1: usize = (1 - n1.iota) as usize;
@@ -1284,23 +1295,30 @@ impl Network<f32> {
                     let dummy_input = Node::new(Allele::Input, 0, n1.gin, 0.0, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
                     stack_1.push(dummy_input.clone());
 
-                    // println!("Stack 1:");
-                    // Network::pretty_print(&stack_1);
-                    // println!("Stack tmp 1:");
-                    // Network::pretty_print(&stack_tmp_1);
-                    // println!("Stack 2:");
-                    // Network::pretty_print(&stack_2);
+                    if debug {
+                        println!("Stack 1:");
+                        Network::pretty_print(&stack_1);
+                        println!("Stack tmp 1:");
+                        Network::pretty_print(&stack_tmp_1);
+                        println!("Stack 2:");
+                        Network::pretty_print(&stack_2);
+                    }
 
                 } else if n2.allele == Allele::Neuron {
-                    // println!("Condition Neuron 2 {:#?}", n2);
+                    if debug {
+                        println!("Condition Neuron 2 {:#?}", n2);
+                    }
 
                     stack_2 = stack_2.iter().filter(|n| n.allele != Allele::NaN).map(|m| m.clone()).collect();
-                    // println!("\n\nif n2 == Allele::Neuron");
-                    // println!("Stack 1:");
-                    // Network::pretty_print(&stack_1);
-                    // println!("Stack 2:");
-                    // Network::pretty_print(&stack_2);
-                    // println!();
+
+                    if debug {
+                        println!("\n\nif n2 == Allele::Neuron");
+                        println!("Stack 1:");
+                        Network::pretty_print(&stack_1);
+                        println!("Stack 2:");
+                        Network::pretty_print(&stack_2);
+                        println!();
+                    }
 
                     let mut stack_tmp_2: Vec<Node<f32>> = Vec::with_capacity(stack_2.len());
                     let slice_len_2: usize = (1 - n2.iota) as usize;
@@ -1322,12 +1340,14 @@ impl Network<f32> {
                     let dummy_input = Node::new(Allele::Input, 0, n2.gin, 0.0, IOTA_INPUT_VALUE, INPUT_NODE_DEPTH_VALUE);
                     stack_2.push(dummy_input.clone());
 
-                    // println!("Stack 1:");
-                    // Network::pretty_print(&stack_1);
-                    // println!("Stack 2:");
-                    // Network::pretty_print(&stack_2);
-                    // println!("Stack tmp 2:");
-                    // Network::pretty_print(&stack_tmp_2);
+                    if debug {
+                        println!("Stack 1:");
+                        Network::pretty_print(&stack_1);
+                        println!("Stack 2:");
+                        Network::pretty_print(&stack_2);
+                        println!("Stack tmp 2:");
+                        Network::pretty_print(&stack_tmp_2);
+                    }
 
                 } else {
                     stack_1.push(n1);

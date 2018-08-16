@@ -280,7 +280,7 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
         println!("~~~~~~~~~~~~ After Structural Mutation:");
         for (i, specimen) in population.species.iter().enumerate() {
             println!("Specimen {}", i);
-            // Network::pretty_print(&specimen.ann.genome);
+            Network::pretty_print(&specimen.ann.genome);
             println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
         }
         println!(":After Structural Mutation ~~~~~~~~~~~~");
@@ -317,16 +317,16 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
 
-    let population_size: usize = 5;
+    let population_size: usize = 2;
     let input_size: usize = 2;
     let output_size: usize = 1;
     let mutation_probability: f32 = 0.5;
 
-    let structural_mutation_size: usize = 30;
+    let structural_mutation_size: usize = 5;
 
     let mut population: Population<f32> =
-        // Population::new(population_size, input_size, output_size, mutation_probability);
-        Population::new_from_example(population_size, mutation_probability);
+        Population::new(population_size, input_size, output_size, mutation_probability);
+        // Population::new_from_example(population_size, mutation_probability);
 
     for _smi in 0..structural_mutation_size {
 
@@ -364,8 +364,10 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
             //     println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
             // }
 
-            if _smi % 10 == 0 {
+            if _smi % 2 == 0 || true {
                 population.exploration();
+            } else {
+                population.exploitation();
             }
             population.evolve();
     }
@@ -375,12 +377,12 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
 
 
 fn main() {
-    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, false, false);
+    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, false, false);
     // _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     // _test_crossover();
-    // _test_population_crossover(pretty_print, visualize, print_weights);
-    _test_population_selection(pretty_print, visualize, print_weights);
+    _test_population_crossover(pretty_print, visualize, print_weights);
+    // _test_population_selection(pretty_print, visualize, print_weights);
 }
