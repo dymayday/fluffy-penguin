@@ -47,8 +47,11 @@ mod specimen {
 
         // Get a not accurate but valid GIN value from the size of the Specimen's genome.
         let mut gin: usize = specimen_origin.ann.genome.len() * 2;
+        let mut nn_id: usize = specimen_origin.ann.genome.len();
         for _ in 0..30 {
-            gin = specimen_mutated.structural_mutation(0.5, gin).unwrap();
+            let (gin_tmp, nn_id_tmp) = specimen_mutated.structural_mutation(0.5, gin, nn_id).unwrap();
+            gin = gin_tmp;
+            nn_id = nn_id_tmp;
             specimen_mutated.update_input(&input_vector);
 
             assert_eq!(
