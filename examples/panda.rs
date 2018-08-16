@@ -308,50 +308,58 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
 
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
+
     let population_size: usize = 32;
-    let input_size: usize = 6;
-    let output_size: usize = 3;
+    let input_size: usize = 8;
+    let output_size: usize = 9;
     let mutation_probability: f32 = 0.5;
+
+    let structural_mutation_size: usize = 300;
 
     let mut population: Population<f32> =
         Population::new(population_size, input_size, output_size, mutation_probability);
 
-    println!("Init population:");
-    for i in 0..population.species.len() {
+    for _smi in 0..structural_mutation_size {
 
-        let mut specimen: &mut Specimen<f32> = &mut population.species[i];
-        specimen.fitness = thread_rng().gen_range(-100_i32, 101_i32) as f32;
+        // println!("Init population:");
+        for i in 0..population.species.len() {
 
-            if pretty_print {
-                println!("Specimen {}", i);
-                Network::pretty_print(&specimen.ann.genome);
+            let mut specimen: &mut Specimen<f32> = &mut population.species[i];
+            specimen.fitness = thread_rng().gen_range(-100_i32, 101_i32) as f32;
+
+                if pretty_print {
+                    println!("Specimen {}", i);
+                    Network::pretty_print(&specimen.ann.genome);
+                }
+                if export {
+                    let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
+                    let graph_name: &str = "initial";
+                    specimen.render(file_name, graph_name, print_weights);
+                }
+
             }
-            if export {
-                let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
-                let graph_name: &str = "initial";
-                specimen.render(file_name, graph_name, print_weights);
+            // println!();
+            //
+            // let lowest_fitness: f32 = *population.species
+            //     .iter()
+            //     .map(|s| s.fitness)
+            //     .collect::<Vec<f32>>()
+            //     .iter()
+            //     .min_by( |x, y| x.partial_cmp(y).unwrap() )
+            //     .unwrap_or(&0.0);
+            //
+            // population.sort_species_by_fitness();
+            // let sus_selected = &population.species;
+            // for i in 0..sus_selected.len() {
+            //     // println!(" {:>4} : {:<4}", *&mut population.species[i].fitness as i32, sus_selected[i].fitness as i32);
+            //     println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
+            // }
+
+            if _smi % 10 == 0 {
+                population.exploration();
             }
-
-        }
-        println!();
-
-        {
-        let lowest_fitness: f32 = *population.species
-            .iter()
-            .map(|s| s.fitness)
-            .collect::<Vec<f32>>()
-            .iter()
-            .min_by( |x, y| x.partial_cmp(y).unwrap() )
-            .unwrap_or(&0.0);
-
-        population.sort_species_by_fitness();
-        let sus_selected = &population.species;
-        for i in 0..sus_selected.len() {
-            // println!(" {:>4} : {:<4}", *&mut population.species[i].fitness as i32, sus_selected[i].fitness as i32);
-            println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
-        }
-        }
-        population.evolve();
+            population.evolve();
+    }
 
 }
 

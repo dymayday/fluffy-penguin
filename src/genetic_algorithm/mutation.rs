@@ -25,7 +25,8 @@ impl Distribution<StructuralMutation> for Standard {
         let mut weighted_available_structural_mutation = vec!(
             Weighted { weight: 1, item: StructuralMutation::SubNetworkAddition},
             Weighted { weight: 1, item: StructuralMutation::JumperAddition},
-            Weighted { weight: 1, item: StructuralMutation::ConnectionRemoval},);
+            Weighted { weight: 1, item: StructuralMutation::ConnectionRemoval},
+            );
         let weighted_choice = WeightedChoice::new(&mut weighted_available_structural_mutation);
 
         weighted_choice.sample(rng)
