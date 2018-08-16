@@ -134,6 +134,7 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
     let nbi: usize = 2;
     let mut specimen_origin: Specimen<f32> = Specimen::new_from_example();
     let mut gin: usize = 11;
+    let mut nn_id: usize = 4;
 
     // let nbi: usize = 16;
     // let mut specimen_origin: Specimen<f32> = Specimen::new(nbi, 9);
@@ -169,7 +170,9 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
 
     for i in 0..generation_size {
-        gin = specimen_mutated.structural_mutation(pm, gin).unwrap();
+        let (gin_tmp, nn_id_tmp) = specimen_mutated.structural_mutation(pm, gin, nn_id).unwrap();
+        gin = gin_tmp;
+        nn_id = nn_id_tmp;
 
         {
             if export {
@@ -242,11 +245,12 @@ fn _test_crossover() {
 
 
 fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: bool) {
+    use fluffy_penguin::cge::Allele;
     println!();
 
-    let population_size: usize = 5;
-    let input_size: usize = 6;
-    let output_size: usize = 3;
+    let population_size: usize = 2;
+    let input_size: usize = 2;
+    let output_size: usize = 1;
     let mutation_probability: f32 = 0.5;
 
     let mut population: Population<f32> =
@@ -267,7 +271,7 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
         }
         println!();
 
-    let structural_mutation_size: usize = 20;
+    let structural_mutation_size: usize = 5;
 
     for smi in 0..structural_mutation_size {
 
@@ -287,6 +291,10 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
         println!("\n\n\t///  Evolution {}  \\\\\\", smi + 1);
         for (i, offspring) in population.species.iter().enumerate() {
             println!("Offspring {}", i);
+
+            let mut neuron_list: Vec<usize> = offspring.ann.genome.iter().filter(|n| n.allele == Allele::Neuron).map(|n| n.id).collect();
+            neuron_list.sort();
+            println!("Neuron ids = {:?}", neuron_list);
 
             if pretty_print {
                 Network::pretty_print(&offspring.ann.genome);
@@ -309,15 +317,16 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
 
-    let population_size: usize = 32;
-    let input_size: usize = 8;
-    let output_size: usize = 9;
+    let population_size: usize = 5;
+    let input_size: usize = 2;
+    let output_size: usize = 1;
     let mutation_probability: f32 = 0.5;
 
-    let structural_mutation_size: usize = 300;
+    let structural_mutation_size: usize = 30;
 
     let mut population: Population<f32> =
-        Population::new(population_size, input_size, output_size, mutation_probability);
+        // Population::new(population_size, input_size, output_size, mutation_probability);
+        Population::new_from_example(population_size, mutation_probability);
 
     for _smi in 0..structural_mutation_size {
 

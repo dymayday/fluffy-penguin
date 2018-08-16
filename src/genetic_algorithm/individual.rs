@@ -112,14 +112,15 @@ impl Specimen<f32> {
     ///
     /// This method returns the updated GIN (Global Innovation Number) to keep track of all the new
     /// structures added by a round of structural mutation.
-    pub fn structural_mutation(&mut self, pm: f32, gin: usize) -> Result<usize, &str> {
+    pub fn structural_mutation(&mut self, pm: f32, gin: usize, new_neuron_id: usize) -> Result<(usize,usize), &str> {
         // Copy the value of the global innovation number to return its updated value by the number
         // of innovation that occured during this mutation cycle.
         let mut updated_gin: usize = gin;
 
         // Find the unique ID of a potential new Neuron added by the special mutation:
         // 'sub-network addition'.
-        let mut new_neuron_id: usize = self.ann.neuron_map.len();
+        // let mut new_neuron_id: usize = self.ann.neuron_map.len();
+        let mut new_neuron_id: usize = new_neuron_id;
 
         let mut mutated_genome: Vec<Node<f32>> = Vec::with_capacity(self.ann.genome.len());
 
@@ -157,6 +158,19 @@ impl Specimen<f32> {
                                 );
 
                                 updated_gin += subnetwork.len();
+
+                                // Add this new sub-network at the end of the the current Neuron
+                                // input sub-network.
+                                while node_index + 1 < genome_len {
+                                    if self.ann.genome[node_index + 1].allele == Allele::Neuron {
+                                        break;
+                                    } else {
+                                        // Add this Neuron's input back to the network.
+                                        node_index += 1;
+                                        let node = self.ann.genome[node_index].clone();
+                                        mutated_genome.push(node);
+                                    }
+                                }
                                 mutated_genome.append(&mut subnetwork);
 
                                 new_neuron_id += 1;
@@ -174,6 +188,19 @@ impl Specimen<f32> {
                                         node.iota -= 1;
                                         // Add the mutated neuron to the mutated genome.
                                         mutated_genome.push(node);
+
+                                        // Add this new sub-network at the end of the the current Neuron
+                                        // input sub-network.
+                                        while node_index + 1 < genome_len {
+                                            if self.ann.genome[node_index + 1].allele == Allele::Neuron {
+                                                break;
+                                            } else {
+                                                // Add this Neuron's input back to the network.
+                                                node_index += 1;
+                                                let node = self.ann.genome[node_index].clone();
+                                                mutated_genome.push(node);
+                                            }
+                                        }
 
                                         // Add the mutated a new jumper connection to the genome
                                         // connecting the current mutated Neuron.
@@ -246,9 +273,15 @@ impl Specimen<f32> {
         mutated_network.genome = mutated_genome;
         mutated_network.update();
 
+        // let mut neuron_list: Vec<usize> = mutated_network.genome.iter().filter(|n| n.allele == Allele::Neuron).map(|n| n.id).collect();
+        // neuron_list.sort();
+        // println!("Mutated Neuron ids = {:?}", neuron_list);
+        // println!("Mutated Genome:");
+        // Network::pretty_print(&mutated_network.genome);
+
         if mutated_network.is_valid() {
             self.ann = mutated_network;
-            Ok(updated_gin)
+            Ok((updated_gin, new_neuron_id))
         } else {
             Err("Structural Mutation Failure.")
         }

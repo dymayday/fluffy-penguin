@@ -16,6 +16,8 @@ pub struct Population<T> {
     pub pm: T,
     // Global Innovation Number.
     gin: usize,
+    // The unique ID of the next new Neuron added to the linear genome by structural mutation.
+    nn_id: usize,
 }
 
 impl Population<f32> {
@@ -39,6 +41,7 @@ impl Population<f32> {
             pm: mutation_probability,
             gin,
             // gin: input_size * output_size,
+            nn_id: output_size,
         }
     }
 
@@ -59,6 +62,7 @@ impl Population<f32> {
             current_generation: 0,
             pm: mutation_probability,
             gin: 11,
+            nn_id: 4,
         }
     }
 
@@ -80,11 +84,15 @@ impl Population<f32> {
     /// so as not to form(get) a new structure whose fitness value is less than its parent.
     pub fn exploration(&mut self) {
         let mut gin = self.gin;
+        let mut nn_id = self.nn_id;
 
         for mut specimen in &mut self.species {
-            gin = specimen.structural_mutation(self.pm, gin).unwrap_or(gin);
+            let (gin_tmp, nn_id_tmp) = specimen.structural_mutation(self.pm, gin, nn_id).unwrap_or((gin, nn_id));
+            gin = gin_tmp;
+            nn_id = nn_id_tmp;
         }
         self.gin = gin;
+        self.nn_id = nn_id;
     }
 
 

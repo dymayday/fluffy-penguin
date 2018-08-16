@@ -24,6 +24,7 @@ pub struct Network<T> {
     pub input_map: Vec<T>,
     // Neuron value processed by a `Transfer Function`.
     pub neuron_map: Vec<T>,
+    // pub neuron_value_map: HashMap<usize, T>,
     // Neuron index lookup table: <genome[i].id, index_location>
     neuron_indices_map: HashMap<usize, usize>,
     // Number of Input in this Network. It has to be a constant value.
@@ -83,6 +84,7 @@ impl Network<f32> {
         let shadow_genome = genome.clone();
         // let input_map: Vec<f32> = input_vec.clone();
         let neuron_map: Vec<f32> = vec![0.0_f32; omega_size];
+        // let neuron_value_map: HashMap<usize,f32> = HashMap::with_capacity(omega_size);
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
 
@@ -547,7 +549,18 @@ impl Network<f32> {
         self.shadow_genome = self.genome.clone();
         self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
 
-        self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
+        // self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
+        
+        let neuron_id_max: usize = 
+            *self.genome
+            .iter()
+            .filter(|n| n.allele == Allele::Neuron)
+            .map(|n| n.id)
+            .collect::<Vec<usize>>()
+            .iter()
+            .max()
+            .unwrap();
+        self.neuron_map = vec![0.0_f32; neuron_id_max + 1];
     }
 
 
@@ -716,11 +729,13 @@ impl Network<f32> {
         let output: Vec<f32> = self.evaluate();
 
         if output.len() != self.omega_size {
+            println!("output.len() {} != {} self.omega_size", output.len(), self.omega_size);
             return false;
         }
 
         let iota_sum: i32 = self.genome.iter().map(|n| n.iota).collect::<Vec<i32>>().iter().sum();
         if self.omega_size as i32 != iota_sum {
+            println!("iota_sum {} != {} self.omega_size", iota_sum, self.omega_size);
             return false;
         }
         true
@@ -967,18 +982,18 @@ impl Network<f32> {
         let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_2.genome, &network_1.genome);
 
 
-        // println!("ARN 1:");
-        // Network::pretty_print(&arn_1);
+        println!("ARN 1:");
+        Network::pretty_print(&arn_1);
 
-        // println!("ARN 2:");
-        // Network::pretty_print(&arn_2);
+        println!("ARN 2:");
+        Network::pretty_print(&arn_2);
 
         arn_2 = Network::sort_arn(&arn_1, &arn_2);
 
-        // println!("ARN 2 sorted:");
-        // Network::pretty_print(&arn_2);
+        println!("ARN 2 sorted:");
+        Network::pretty_print(&arn_2);
 
-        // println!();
+        println!();
 
         let arn_1_updated = Network::arn_update_iota(&arn_1, &arn_2);
         // println!();
@@ -998,8 +1013,15 @@ impl Network<f32> {
 
         // assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
         if network_1.omega_size as i32 != iota_sum_1 {
-            println!("iota and expected output length mismatch. {} != {}", network_1.omega_size as i32, iota_sum_1);
-            return Err(())
+            println!("\n\n");
+            println!("iota 1 and expected output length mismatch. {} != {}", network_1.omega_size as i32, iota_sum_1);
+            Network::pretty_print(&network_1.genome);
+            Network::pretty_print(&arn_1_updated);
+            Network::pretty_print(&arn_2_updated);
+            Network::pretty_print(&network_2.genome);
+            println!("\n\n");
+            // println!("Out = {:?}", arn_1.clone().evaluate());
+            // return Err(())
         }
 
         // println!("ARN 2 with updated iota values:");
@@ -1011,8 +1033,14 @@ impl Network<f32> {
 
         // assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
         if network_2.omega_size as i32 != iota_sum_2 {
-            println!("iota and expected output length mismatch. {} != {}", network_2.omega_size as i32, iota_sum_2);
-            return Err(())
+            println!("\n\n");
+            println!("iota 2 and expected output length mismatch. {} != {}", network_2.omega_size as i32, iota_sum_2);
+            Network::pretty_print(&network_1.genome);
+            Network::pretty_print(&arn_1_updated);
+            Network::pretty_print(&arn_2_updated);
+            Network::pretty_print(&network_2.genome);
+            println!("\n\n");
+            // return Err(())
         }
 
         // println!("\n");
@@ -1020,7 +1048,7 @@ impl Network<f32> {
         // assert_eq!(iota_1, iota_2, "Iota values between ARN diverge.");
         if iota_1 != iota_2 {
             println!("iota1 != iota2. {:?} != {:?}", iota_1, iota_2);
-            return Err(())
+            // return Err(())
         }
 
         let mut netw_1_aligned = network_1.clone();
