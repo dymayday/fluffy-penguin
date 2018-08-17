@@ -16,9 +16,6 @@ use std::io::Write;
 pub struct Network<T> {
     // The linear genome is represented by a vector of Node.
     pub genome: Vec<Node<T>>,
-    // Shadowing the genome is the only workaround to fix some immutable with mutable borrow issue.
-    // The sizes of the networks should not be an issue though.
-    pub shadow_genome: Vec<Node<T>>,
     // This let us map the values of all Input Node. Used during the evaluation phase.
     // Those values are processed by the ReLu transfert function during evaluation time.
     pub input_map: Vec<T>,
@@ -78,7 +75,6 @@ impl Network<f32> {
             }
         }
 
-        let shadow_genome = genome.clone();
         // let input_map: Vec<f32> = input_vec.clone();
         let neuron_map: Vec<f32> = vec![0.0_f32; output_size];
         // let neuron_value_map: HashMap<usize,f32> = HashMap::with_capacity(output_size);
@@ -87,7 +83,6 @@ impl Network<f32> {
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
@@ -118,7 +113,6 @@ impl Network<f32> {
 
         let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
 
-        let shadow_genome = genome.clone();
         let input_map: Vec<f32> = input_vec.clone();
         let neuron_map: Vec<f32> = vec![];
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
@@ -126,7 +120,6 @@ impl Network<f32> {
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
@@ -151,14 +144,12 @@ impl Network<f32> {
         let max_vector_size: usize = input_vec.len() * output_size;
 
         let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
-        let shadow_genome = genome.clone();
         let input_map: Vec<f32> = input_vec.iter().map(|i| i.relu()).collect();
         let neuron_map: Vec<f32> = vec![];
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
@@ -219,12 +210,10 @@ impl Network<f32> {
             ),
             Node::new(Allele::JumpRecurrent, 0, 11, 0.2, IOTA_INPUT_VALUE, 2),
         ];
-        let shadow_genome = genome.clone();
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
@@ -283,12 +272,10 @@ impl Network<f32> {
             ),
             Node::new(Allele::JumpRecurrent, 0, 12, 0.2, IOTA_INPUT_VALUE, 2),
         ];
-        let shadow_genome = genome.clone();
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
@@ -339,12 +326,10 @@ impl Network<f32> {
                 INPUT_NODE_DEPTH_VALUE,
             ),
         ];
-        let shadow_genome = genome.clone();
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
@@ -535,7 +520,6 @@ impl Network<f32> {
 
     /// Update the attributes of the network.
     pub fn update_network_attributes(&mut self) {
-        self.shadow_genome = self.genome.clone();
         self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
 
         // self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
@@ -583,17 +567,12 @@ impl Network<f32> {
 
     /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network
     /// without decoding it.
-    // fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Vec<f32> {
     fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Option<Vec<f32>> {
         let mut stack: Vec<f32> = Vec::with_capacity(input.len());
-
         let input_len: usize = input.len();
-        // println!("input_len = {}", input_len);
 
         for i in 0..input_len {
             let mut node: Node<f32> = input[input_len - i - 1].clone();
-            // println!("\n{:#?}", node);
-            // println!("Stack = {:#?}", stack);
 
             match node.allele {
                 Allele::Input => {
@@ -603,14 +582,7 @@ impl Network<f32> {
                     let neuron_input_len: usize = (1 - node.iota) as usize;
                     let mut neuron_output: f32 = 0.0;
                     for _ in 0..neuron_input_len {
-                        // [TODO]: Remove this expect for an unwrap_or maybe ?
-                        // neuron_output += stack.pop().expect("The evaluated stack is empty.");
-                        // neuron_output += stack.pop().unwrap_or(0.0_f32);
                         neuron_output += stack.pop()?;
-                        // neuron_output += match stack.pop() {
-                        //     Some(v) => v,
-                        //     _ => return Err("The evaluated stack is empty.")
-                        // };
                     }
 
                     node.value = neuron_output;
@@ -620,13 +592,9 @@ impl Network<f32> {
                             Some(v) => *v,
                             _ => return None,
                         };
-                        // .get(&node.id)
-                        // .expect(&format!("Fail to lookup the node id = {}", node.id));
                     self.genome[neuron_index].value = neuron_output;
 
-                    // let activated_neuron_value: f32 = node.isrlu(0.1);
                     let activated_neuron_value: f32 = node.relu();
-                    // let activated_neuron_value: f32 = node.sigmoids();
 
                     // Update the neuron value in the neuron_map with its activated value from its
                     // transfert function to be used by jumper connection nodes.
@@ -646,21 +614,14 @@ impl Network<f32> {
                             Some(v) => *v,
                             _ => return None,
                         };
-                        // .expect(&format!("Fail to lookup the node id = {}", node.id));
 
-                    let sub_genome_slice: Vec<Node<f32>> =
-                        self.shadow_genome[forwarded_node_index..].to_vec();
+                    let sub_genome_slice: Vec<Node<f32>> = (forwarded_node_index..self.genome.len())
+                        .map(|idx| self.genome[idx].clone())
+                        .collect();
 
                     let jf_slice: Vec<Node<f32>> =
                         Network::build_jf_slice(node.id, forwarded_node_index, &sub_genome_slice);
 
-                    // let mut activated_values: Vec<f32> = self.evaluate_slice(&jf_slice).iter().map(|x| x.isrlu(0.1) * node.w).collect();
-                    // let mut activated_values: Vec<f32> = self.evaluate_slice(&jf_slice).iter().map(|x| x.relu() * node.w).collect();
-                    // stack.append(&mut activated_values);
-
-                    // stack.append(&mut self.evaluate_slice(&jf_slice));
-                    // stack.push(self.evaluate_slice(&jf_slice)[0]);
-                    // let sum_value: f32 = self.evaluate_slice(&jf_slice).iter().sum::<f32>().isrlu(0.1);
                     stack.push(
                         self.evaluate_slice(&jf_slice)?
                             .iter()
@@ -670,7 +631,7 @@ impl Network<f32> {
                     );
                 }
                 Allele::NaN => {
-                    // Do nothing because the is Not a Node.
+                    // Do nothing because this Not a Node.
                 }
             }
         }
@@ -1476,7 +1437,7 @@ impl Network<f32> {
                 );
                 writer.write(msg.as_bytes())?;
 
-                for i in 0..self.output_size {
+                for i in 1..self.output_size {
                     let msg: String = format!("N{} ", i);
                     writer.write(msg.as_bytes())?;
                 }
