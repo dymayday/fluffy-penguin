@@ -21,65 +21,51 @@ pub struct Network<T> {
     pub input_map: Vec<T>,
     // Neuron value processed by a `Transfer Function`.
     pub neuron_map: Vec<T>,
-    // pub neuron_value_map: HashMap<usize, T>,
     // Neuron index lookup table: <genome[i].id, index_location>
     neuron_indices_map: HashMap<usize, usize>,
     // The number of Output in this Network. It's a constant value as well.
     output_size: usize,
 }
 
-
 impl Network<f32> {
     /// Generating the initial linear genome use the grow method by default.
-    pub fn new(input_size: usize, outpout_size: usize) -> Self {
-        Network::new_simple(input_size, outpout_size)
+    pub fn new(input_size: usize, output_size: usize) -> Self {
+        Network::new_simple(input_size, output_size)
     }
 
 
     /// Starting from simple initial structures is the way it is done by nature and most of the
     /// other evolutionary methods.
-    pub fn new_simple(input_size: usize, outpout_size: usize) -> Self {
-        // We gather the number of input from the size of the input vector.
-        let output_size: usize = outpout_size;
-        // And determine the approximate size of the vectors the network will use.
-        let max_vector_size: usize = input_size * outpout_size;
-
+    pub fn new_simple(input_size: usize, output_size: usize) -> Self {
         let input_map: Vec<f32> = vec![0.0_f32; input_size];
+        let mut genome: Vec<Node<f32>> = Vec::new();
 
-        let mut genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
+        // Global Innovation Number is used to keep track of the Nodes to enable crossover
+        // later during evolution.
+        let mut gin: usize = 1;
 
-        {
-            // Global Innovation Number is used to keep track of the Nodes to enable crossover
-            // later during evolution.
-            let mut gin: usize = 1;
+        let iota_for_each_neuron: i32 = 1 - input_size as i32;
+        for output in 0..output_size {
+            let mut input_node_vector: Vec<Node<f32>> =
+                Network::gen_input_node_vector(gin, &input_map);
 
-            let iota_for_each_neuron: i32 = 1 - input_size as i32;
-            for output in 0..(output_size as usize) {
-                let mut input_node_vector: Vec<Node<f32>> =
-                    Network::gen_input_node_vector(gin, &input_map);
+            let neuron: Node<f32> = Node::new(
+                Allele::Neuron,
+                output,
+                gin,
+                Node::random_weight(),
+                iota_for_each_neuron,
+                0,
+            );
+            genome.push(neuron);
+            gin += 1;
 
-                let neuron: Node<f32> = Node::new(
-                    Allele::Neuron,
-                    output,
-                    gin,
-                    Node::random_weight(),
-                    iota_for_each_neuron,
-                    0,
-                );
-                genome.push(neuron);
-                gin += 1;
-
-                genome.append(&mut input_node_vector);
-
-                gin += input_size;
-            }
+            genome.append(&mut input_node_vector);
+            gin += input_size;
         }
 
-        // let input_map: Vec<f32> = input_vec.clone();
         let neuron_map: Vec<f32> = vec![0.0_f32; output_size];
-        // let neuron_value_map: HashMap<usize,f32> = HashMap::with_capacity(output_size);
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
-
 
         Network {
             genome,
@@ -107,16 +93,10 @@ impl Network<f32> {
     /// * The order of the inputs is particularly important.
     /// * The weights of each input are randomly attributed.
     pub fn new_grow(input_vec: &Vec<f32>, output_size: usize) -> Self {
-        // We gather the number of input from the size of the input vector.
-        // And determine the approximate size of the vectors the network will use.
-        let max_vector_size: usize = (input_vec.len() * output_size) as usize;
-
-        let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
-
+        let genome: Vec<Node<f32>> = Vec::new();
         let input_map: Vec<f32> = input_vec.clone();
         let neuron_map: Vec<f32> = vec![];
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
-
 
         Network {
             genome,
@@ -126,7 +106,6 @@ impl Network<f32> {
             output_size,
         }
     }
-
 
     /// Builds and returns a Network from a list of input value using the `full` method.
     /// This method adds to the linear genome randomly generated neurons connected to all inputs
@@ -139,12 +118,10 @@ impl Network<f32> {
     /// * The order of the inputs is particularly important.
     /// * The weights of each input are randomly attributed.
     pub fn new_full(input_vec: &Vec<f32>, output_size: usize) -> Self {
-        // We gather the number of input from the size of the input vector.
-        // And determine the approximate size of the vectors the network will use.
-        let max_vector_size: usize = input_vec.len() * output_size;
-
-        let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
-        let input_map: Vec<f32> = input_vec.iter().map(|i| i.relu()).collect();
+        let genome: Vec<Node<f32>> = Vec::new();
+        let input_map: Vec<f32> = input_vec.iter()
+            .map(|i| i.relu())
+            .collect();
         let neuron_map: Vec<f32> = vec![];
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
@@ -220,6 +197,8 @@ impl Network<f32> {
             output_size: 1,
         }
     }
+    
+
     /// Builds and returns the parent 1's genome from the research papers we use to implement EANT2.
     pub fn _build_parent1_from_example() -> Self {
         let input_map = vec![1_f32, 1_f32];
@@ -336,8 +315,6 @@ impl Network<f32> {
             output_size: 1,
         }
     }
-
-
 
 
     /// Returns a sub-network composed of one Neuron Node followed by randomly selected
@@ -498,6 +475,7 @@ impl Network<f32> {
             .unwrap_or(0_u16)
     }
 
+
     /// Compute the indexes of the Neuron in the linear genome so we can find them easily during
     /// the evaluation process. This function is meant to be call only once at init time.
     fn compute_neuron_indices(genome: &Vec<Node<f32>>) -> HashMap<usize, usize> {
@@ -518,12 +496,11 @@ impl Network<f32> {
         self.update_network_attributes();
     }
 
+
     /// Update the attributes of the network.
     pub fn update_network_attributes(&mut self) {
         self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
 
-        // self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
-        
         let neuron_id_max: usize = 
             *self.genome
             .iter()
@@ -546,9 +523,6 @@ impl Network<f32> {
 
     /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
     pub fn evaluate(&mut self) -> Option<Vec<f32>> {
-    // pub fn evaluate(&mut self) -> Vec<f32> {
-        // println!("neuron_map: {:?}", self.neuron_map);
-        // println!("neuron_indices_map: {:#?}", self.neuron_indices_map);
         let g = self.genome.clone();
         let output: Vec<f32> = self.evaluate_slice(&g)?;
 
@@ -647,7 +621,6 @@ impl Network<f32> {
 
         let input_len: usize = input.len();
 
-
         for i in 0..input_len {
             let mut node: &Node<f32> = &input[input_len - i - 1];
 
@@ -666,12 +639,9 @@ impl Network<f32> {
                             None => return None,
                         }
                     }
-
                     stack.push(0.0);
                 }
                 _ => {}
-
-
             }
         }
 
