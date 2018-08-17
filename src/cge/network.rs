@@ -572,11 +572,12 @@ impl Network<f32> {
 
 
     /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
-    pub fn evaluate(&mut self) -> Vec<f32> {
+    pub fn evaluate(&mut self) -> Option<Vec<f32>> {
+    // pub fn evaluate(&mut self) -> Vec<f32> {
         // println!("neuron_map: {:?}", self.neuron_map);
         // println!("neuron_indices_map: {:#?}", self.neuron_indices_map);
         let g = self.genome.clone();
-        let output: Vec<f32> = self.evaluate_slice(&g);
+        let output: Vec<f32> = self.evaluate_slice(&g)?;
 
         // We test here if the evaluation worked smoothly by checking the expected number of
         // output spit out by our artificial neural network.
@@ -587,14 +588,14 @@ impl Network<f32> {
         //     output.len(),
         //     self.omega_size
         // );
-        output
+        Some(output)
     }
 
 
     /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network
     /// without decoding it.
-    fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Vec<f32> {
-    // fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Result<Vec<f32>, &str> {
+    // fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Vec<f32> {
+    fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Option<Vec<f32>> {
         let mut stack: Vec<f32> = Vec::with_capacity(input.len());
 
         let input_len: usize = input.len();
@@ -614,19 +615,24 @@ impl Network<f32> {
                     let mut neuron_output: f32 = 0.0;
                     for _ in 0..neuron_input_len {
                         // [TODO]: Remove this expect for an unwrap_or maybe ?
-                        neuron_output += stack.pop().expect("The evaluated stack is empty.");
+                        // neuron_output += stack.pop().expect("The evaluated stack is empty.");
                         // neuron_output += stack.pop().unwrap_or(0.0_f32);
-                        // let neuron_output += match stack.pop() {
-                        //     Ok(v) => v,
-                        //     Err(_) => return Err("The evaluated stack is empty.")
+                        neuron_output += stack.pop()?;
+                        // neuron_output += match stack.pop() {
+                        //     Some(v) => v,
+                        //     _ => return Err("The evaluated stack is empty.")
                         // };
                     }
 
                     node.value = neuron_output;
-                    let neuron_index: usize = *self
+                    let neuron_index: usize = match self
                         .neuron_indices_map
-                        .get(&node.id)
-                        .expect(&format!("Fail to lookup the node id = {}", node.id));
+                        .get(&node.id) {
+                            Some(v) => *v,
+                            _ => return None,
+                        };
+                        // .get(&node.id)
+                        // .expect(&format!("Fail to lookup the node id = {}", node.id));
                     self.genome[neuron_index].value = neuron_output;
 
                     // let activated_neuron_value: f32 = node.isrlu(0.1);
@@ -645,10 +651,13 @@ impl Network<f32> {
                 }
                 Allele::JumpForward => {
                     // We need to evaluate a slice of our linear genome in a different depth.
-                    let forwarded_node_index: usize = *self
+                    let forwarded_node_index: usize = match self
                         .neuron_indices_map
-                        .get(&node.id)
-                        .expect(&format!("Fail to lookup the node id = {}", node.id));
+                        .get(&node.id) {
+                            Some(v) => *v,
+                            _ => return None,
+                        };
+                        // .expect(&format!("Fail to lookup the node id = {}", node.id));
 
                     let sub_genome_slice: Vec<Node<f32>> =
                         self.shadow_genome[forwarded_node_index..].to_vec();
@@ -664,7 +673,7 @@ impl Network<f32> {
                     // stack.push(self.evaluate_slice(&jf_slice)[0]);
                     // let sum_value: f32 = self.evaluate_slice(&jf_slice).iter().sum::<f32>().isrlu(0.1);
                     stack.push(
-                        self.evaluate_slice(&jf_slice)
+                        self.evaluate_slice(&jf_slice)?
                             .iter()
                             .sum::<f32>()
                             .isrlu(0.1)
@@ -677,8 +686,8 @@ impl Network<f32> {
             }
         }
 
-        stack
-        // Ok(stack)
+        // stack
+        Some(stack)
     }
 
 
@@ -720,24 +729,41 @@ impl Network<f32> {
     }
 
 
+    /// Returns the maximum Global Innovation Number value of a Network.
+    pub fn get_max_gin(network: &Network<f32>) -> usize {
+        let max_gin: usize = *network.genome
+            .iter()
+            .map(|n| n.gin)
+            .collect::<Vec<usize>>()
+            .iter()
+            .max()
+            .unwrap();
+        max_gin
+    }
+
+
 
     /// Returns if a Network is considered valid.
     pub fn is_valid(&mut self) -> bool {
         let inputs: Vec<f32> = vec![1.0; self.input_map.len()];
 
-        self.update_input(&inputs);
-        let output: Vec<f32> = self.evaluate();
-
-        if output.len() != self.omega_size {
-            println!("output.len() {} != {} self.omega_size", output.len(), self.omega_size);
-            return false;
-        }
+        self.update();
 
         let iota_sum: i32 = self.genome.iter().map(|n| n.iota).collect::<Vec<i32>>().iter().sum();
         if self.omega_size as i32 != iota_sum {
             println!("iota_sum {} != {} self.omega_size", iota_sum, self.omega_size);
             return false;
         }
+
+        self.update_input(&inputs);
+        let output: Vec<f32> = self.evaluate().unwrap_or(vec![]);
+
+        if output.len() != self.omega_size {
+            println!("output.len() {} != {} self.omega_size", output.len(), self.omega_size);
+            return false;
+        }
+
+
         true
     }
 
@@ -976,27 +1002,48 @@ impl Network<f32> {
     pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> Result<(Network<f32>, Network<f32>), ()> {
     // pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> (Network<f32>, Network<f32>) {
 
-        println!("\n\n\n================================================   Aligning...   ================================================\n");
+        let debug: bool = false;
+        if debug {
+            println!("\n\n\n================================================   Aligning...   ================================================\n");
+        }
 
-        let arn_1: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_1.genome, &network_2.genome);
-        let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_2.genome, &network_1.genome);
+        // let arn_1: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_1.genome, &network_2.genome);
+        // let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&network_2.genome, &network_1.genome);
 
+        let net_1: &Network<f32>;
+        let net_2: &Network<f32>;
+        let n1_gin_max: usize = Network::get_max_gin(network_1);
+        let n2_gin_max: usize = Network::get_max_gin(network_2);
 
-        println!("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ARN 1:");
-        Network::pretty_print(&arn_1);
-        //
-        // println!("ARN 2:");
-        // Network::pretty_print(&arn_2);
+        if n1_gin_max < n2_gin_max {
+            net_1 = network_1;
+            net_2 = network_2;
+        } else {
+            net_1 = network_2;
+            net_2 = network_1;
+        }
+
+        let arn_1: Vec<Node<f32>> = Network::_compute_aligned_arn(&net_1.genome, &net_2.genome);
+        let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&net_2.genome, &net_1.genome);
+
+        if debug {
+            println!("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ARN 1:");
+            Network::pretty_print(&arn_1);
+
+            // println!("ARN 2:");
+            // Network::pretty_print(&arn_2);
+        }
 
         arn_2 = Network::sort_arn(&arn_1, &arn_2);
 
-        println!("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ARN 2 sorted:");
-        Network::pretty_print(&arn_2);
+        if debug {
+            println!("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ARN 2 sorted:");
+            Network::pretty_print(&arn_2);
 
-        println!();
+            println!();
+        }
 
         let arn_1_updated = Network::arn_update_iota(&arn_1, &arn_2);
-        println!();
         let arn_2_updated = Network::arn_update_iota(&arn_2, &arn_1);
 
 
@@ -1004,43 +1051,47 @@ impl Network<f32> {
         let iota_1: Vec<i32> = arn_1_updated.iter().map(|n| n.iota).collect();
         let iota_2: Vec<i32> = arn_2_updated.iter().map(|n| n.iota).collect();
 
-        println!("ARN 1 with updated iota values:");
-        Network::pretty_print(&arn_1_updated);
+        if debug {
+            println!("ARN 1 with updated iota values:");
+            Network::pretty_print(&arn_1_updated);
+        }
 
         let iota_sum_1: i32 = iota_1.iter().sum();
         // let out_1 = Network::pseudo_evaluate_slice(&arn_1_updated);
         // println!("Iota = {}, Output = {:?}", iota_sum_1, out_1);
 
         // assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
-        if network_1.omega_size as i32 != iota_sum_1 {
+        if net_1.omega_size as i32 != iota_sum_1 {
             // println!("\n\n");
-            println!("iota 1 and expected output length mismatch. {} != {}", network_1.omega_size as i32, iota_sum_1);
+            println!("iota 1 and expected output length mismatch. {} != {}", net_1.omega_size as i32, iota_sum_1);
             // Network::pretty_print(&network_1.genome);
             // Network::pretty_print(&arn_1_updated);
             // Network::pretty_print(&arn_2_updated);
             // Network::pretty_print(&network_2.genome);
             // println!("\n\n");
             // println!("Out = {:?}", arn_1.clone().evaluate());
-            // return Err(())
+            return Err(())
         }
 
-        println!("ARN 2 with updated iota values:");
-        Network::pretty_print(&arn_2_updated);
+        if debug {
+            println!("ARN 2 with updated iota values:");
+            Network::pretty_print(&arn_2_updated);
+        }
 
         let iota_sum_2: i32 = iota_2.iter().sum();
         // let out_2 = Network::pseudo_evaluate_slice(&arn_2_updated);
         // println!("Iota = {}, Output = {:?}", iota_sum_2, out_2);
 
         // assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
-        if network_2.omega_size as i32 != iota_sum_2 {
+        if net_2.omega_size as i32 != iota_sum_2 {
             // println!("\n\n");
-            println!("iota 2 and expected output length mismatch. {} != {}", network_2.omega_size as i32, iota_sum_2);
+            println!("iota 2 and expected output length mismatch. {} != {}", net_2.omega_size as i32, iota_sum_2);
             // Network::pretty_print(&network_1.genome);
             // Network::pretty_print(&arn_1_updated);
             // Network::pretty_print(&arn_2_updated);
             // Network::pretty_print(&network_2.genome);
             // println!("\n\n");
-            // return Err(())
+            return Err(())
         }
 
         // println!("\n");
@@ -1048,11 +1099,11 @@ impl Network<f32> {
         // assert_eq!(iota_1, iota_2, "Iota values between ARN diverge.");
         if iota_1 != iota_2 {
             println!("iota1 != iota2. {:?} != {:?}", iota_1, iota_2);
-            // return Err(())
+            return Err(())
         }
 
-        let mut netw_1_aligned = network_1.clone();
-        let mut netw_2_aligned = network_2.clone();
+        let mut netw_1_aligned = net_1.clone();
+        let mut netw_2_aligned = net_2.clone();
 
         netw_1_aligned.genome = arn_1_updated;
         netw_2_aligned.genome = arn_2_updated;
