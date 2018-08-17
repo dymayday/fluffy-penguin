@@ -21,7 +21,7 @@ pub struct Network<T> {
     pub input_map: Vec<T>,
     // Neuron value processed by a `Transfer Function`.
     pub neuron_map: Vec<T>,
-    // Neuron index lookup table: <genome[i].id, index_location>
+    // Neuron index lookup table: <genome[i].id, index in self.genome>
     neuron_indices_map: HashMap<usize, usize>,
     // The number of Output in this Network. It's a constant value as well.
     output_size: usize,
@@ -563,12 +563,7 @@ impl Network<f32> {
                     }
 
                     node.value = neuron_output;
-                    let neuron_index: usize = match self
-                        .neuron_indices_map
-                        .get(&node.id) {
-                            Some(v) => *v,
-                            _ => return None,
-                        };
+                    let neuron_index: usize = *self.neuron_indices_map.get(&node.id);
                     self.genome[neuron_index].value = neuron_output;
 
                     let activated_neuron_value: f32 = node.relu();
@@ -585,13 +580,7 @@ impl Network<f32> {
                 }
                 Allele::JumpForward => {
                     // We need to evaluate a slice of our linear genome in a different depth.
-                    let forwarded_node_index: usize = match self
-                        .neuron_indices_map
-                        .get(&node.id) {
-                            Some(v) => *v,
-                            _ => return None,
-                        };
-
+                    let forwarded_node_index: usize = *self.neuron_indices_map.get(&node.id)?;
                     let sub_genome_slice: Vec<Node<f32>> = (forwarded_node_index..self.genome.len())
                         .map(|idx| self.genome[idx].clone())
                         .collect();
