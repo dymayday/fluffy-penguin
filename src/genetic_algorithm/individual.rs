@@ -51,7 +51,8 @@ impl Specimen<f32> {
 
     /// Directly link to the ANN evaluation method.
     pub fn evaluate(&mut self) -> Vec<f32> {
-        self.ann.evaluate()
+    // pub fn evaluate(&mut self) -> Vec<f32> {
+        self.ann.evaluate().expect("Fail to evaluate this Individual.")
     }
 
     /// The exploitation phase researches the optimal weight of each Node in the current artificial
@@ -191,16 +192,16 @@ impl Specimen<f32> {
 
                                         // Add this new sub-network at the end of the the current Neuron
                                         // input sub-network.
-                                        while node_index + 1 < genome_len {
-                                            if self.ann.genome[node_index + 1].allele == Allele::Neuron {
-                                                break;
-                                            } else {
-                                                // Add this Neuron's input back to the network.
-                                                node_index += 1;
-                                                let node = self.ann.genome[node_index].clone();
-                                                mutated_genome.push(node);
-                                            }
-                                        }
+                                        // while node_index + 1 < genome_len {
+                                        //     if self.ann.genome[node_index + 1].allele == Allele::Neuron {
+                                        //         break;
+                                        //     } else {
+                                        //         // Add this Neuron's input back to the network.
+                                        //         node_index += 1;
+                                        //         let node = self.ann.genome[node_index].clone();
+                                        //         mutated_genome.push(node);
+                                        //     }
+                                        // }
 
                                         // Add the mutated a new jumper connection to the genome
                                         // connecting the current mutated Neuron.
