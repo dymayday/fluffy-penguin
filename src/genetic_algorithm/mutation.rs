@@ -23,7 +23,7 @@ impl Distribution<StructuralMutation> for Standard {
     /// weight is more likely.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> StructuralMutation {
         let mut weighted_available_structural_mutation = vec!(
-            Weighted { weight: 1, item: StructuralMutation::SubNetworkAddition},
+            // Weighted { weight: 1, item: StructuralMutation::SubNetworkAddition},
             Weighted { weight: 1, item: StructuralMutation::JumperAddition},
             Weighted { weight: 1, item: StructuralMutation::ConnectionRemoval},
             );

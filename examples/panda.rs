@@ -275,7 +275,7 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
             }
             println!();
 
-        let structural_mutation_size: usize = 20;
+        let structural_mutation_size: usize = 10;
 
         for smi in 0..structural_mutation_size {
 
@@ -388,6 +388,6 @@ fn main() {
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     // _test_crossover();
-    // _test_population_crossover(pretty_print, visualize, print_weights);
-    _test_population_selection(pretty_print, visualize, print_weights);
+    _test_population_crossover(pretty_print, visualize, print_weights);
+    // _test_population_selection(pretty_print, visualize, print_weights);
 }

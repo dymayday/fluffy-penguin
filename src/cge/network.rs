@@ -969,7 +969,8 @@ impl Network<f32> {
             // default_network = network_1.clone();
             default_network = &network_1;
         }
-        let (netw_1, netw_2) = Network::align(&network_1, &network_2).unwrap_or((default_network.clone(), default_network.clone()));
+        // let (netw_1, netw_2) = Network::align(&network_1, &network_2).unwrap_or((default_network.clone(), default_network.clone()));
+        let (netw_1, netw_2) = Network::align(&network_1, &network_2).expect("Fail to align");
 
         let mut netw_crossovered = netw_1.clone();
 

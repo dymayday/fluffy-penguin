@@ -237,6 +237,7 @@ impl Population<f32> {
                 if offspring.ann.is_valid() {
                     offspring_vector.push(offspring);
                 } else {
+                    panic!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
                     println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
                 }
             }
