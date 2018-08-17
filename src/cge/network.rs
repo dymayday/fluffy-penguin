@@ -542,11 +542,14 @@ impl Network<f32> {
     /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network
     /// without decoding it.
     fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Option<Vec<f32>> {
+        // a stack that represents the "data flow", from the input
+        // to the output of this sub-network
         let mut stack: Vec<f32> = Vec::with_capacity(input.len());
         let input_len: usize = input.len();
 
-        for i in 0..input_len {
-            let mut node: Node<f32> = input[input_len - i - 1].clone();
+        // iterate the nodes (in reverse)
+        for i in (0..input_len).rev() {
+            let mut node: Node<f32> = input[i].clone();
 
             match node.allele {
                 Allele::Input => {
@@ -682,7 +685,6 @@ impl Network<f32> {
             println!("output.len() {} != {} self.output_size", output.len(), self.output_size);
             return false;
         }
-
 
         true
     }
