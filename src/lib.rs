@@ -69,7 +69,9 @@ mod network {
 
     #[test]
     fn evaluation() {
-        assert_eq!(Network::build_from_example().evaluate(), [0.65220004]);
+        assert_eq!(
+            Network::build_from_example().evaluate().expect("Fail to compute output from Network's evaluation."),
+            [0.65220004]);
     }
 }
 
