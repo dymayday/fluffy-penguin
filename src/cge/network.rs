@@ -1058,7 +1058,7 @@ impl Network<f32> {
 
         let iota_sum_1: i32 = iota_1.iter().sum();
         // let out_1 = Network::pseudo_evaluate_slice(&arn_1_updated);
-        // println!("Iota = {}, Output = {:?}", iota_sum_1, out_1);
+        // //println!("Iota = {}, Output = {:?}", iota_sum_1, out_1);
 
         // assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
         if net_1.omega_size as i32 != iota_sum_1 {
@@ -1080,7 +1080,7 @@ impl Network<f32> {
 
         let iota_sum_2: i32 = iota_2.iter().sum();
         // let out_2 = Network::pseudo_evaluate_slice(&arn_2_updated);
-        // println!("Iota = {}, Output = {:?}", iota_sum_2, out_2);
+        // //println!("Iota = {}, Output = {:?}", iota_sum_2, out_2);
 
         // assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
         if net_2.omega_size as i32 != iota_sum_2 {
@@ -1094,7 +1094,7 @@ impl Network<f32> {
             return Err(())
         }
 
-        // println!("\n");
+        // //println!("\n");
 
         // assert_eq!(iota_1, iota_2, "Iota values between ARN diverge.");
         if iota_1 != iota_2 {

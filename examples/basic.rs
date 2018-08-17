@@ -122,6 +122,7 @@ fn main() {
 
     /* EVOLUTION */
     let mut generation_counter: i64 = 0;
+    let cycle_per_structure = 500;
     loop {
 
         /* SELECTION */
@@ -155,9 +156,14 @@ fn main() {
 
         /* MUTATION */
         // ann mutation
-        for specimen in population.species.iter_mut() {
-            specimen.parametric_mutation();
-        }
+        if generation_counter % cycle_per_structure == 0 {
+            for specimen in population.species.iter_mut() {
+                specimen.parametric_mutation();
+            }
+
+        } else {
+            population.exploration();
+        };
                                          
         println!("{:?}", scores);
         generation_counter += 1;
