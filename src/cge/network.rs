@@ -563,7 +563,7 @@ impl Network<f32> {
                     }
 
                     node.value = neuron_output;
-                    let neuron_index: usize = *self.neuron_indices_map.get(&node.id);
+                    let neuron_index: usize = *self.neuron_indices_map.get(&node.id)?;
                     self.genome[neuron_index].value = neuron_output;
 
                     let activated_neuron_value: f32 = node.relu();
