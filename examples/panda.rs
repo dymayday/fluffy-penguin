@@ -253,62 +253,67 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
     let output_size: usize = 1;
     let mutation_probability: f32 = 0.5;
 
-    let mut population: Population<f32> =
-        Population::new(population_size, input_size, output_size, mutation_probability);
+    loop {
 
-    println!("Init population:");
-    for (i, specimen) in population.species.iter().enumerate() {
-            if pretty_print {
+        let mut population: Population<f32> =
+            Population::new(population_size, input_size, output_size, mutation_probability);
+
+        println!("{:#^240}", "");
+        println!("{:#^240}", "    Init population:    ");
+        println!("{:#^240}", "");
+        for (i, specimen) in population.species.iter().enumerate() {
+                if pretty_print {
+                    println!("Specimen {}", i);
+                    Network::pretty_print(&specimen.ann.genome);
+                }
+                if export {
+                    let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
+                    let graph_name: &str = "initial";
+                    specimen.render(file_name, graph_name, print_weights);
+                }
+
+            }
+            println!();
+
+        let structural_mutation_size: usize = 20;
+
+        for smi in 0..structural_mutation_size {
+
+            population.exploration();
+
+            println!("~~~~~~~~~~~~ After Structural Mutation:");
+            for (i, specimen) in population.species.iter().enumerate() {
                 println!("Specimen {}", i);
                 Network::pretty_print(&specimen.ann.genome);
+                println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
             }
-            if export {
-                let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
-                let graph_name: &str = "initial";
-                specimen.render(file_name, graph_name, print_weights);
-            }
+            println!(":After Structural Mutation ~~~~~~~~~~~~");
+            println!("\n");
 
+            population.evolve();
+
+            println!("\n\n\t///  Evolution {}  \\\\\\", smi + 1);
+            for (i, offspring) in population.species.iter().enumerate() {
+                println!("Offspring {}", i);
+
+                let mut neuron_list: Vec<usize> = offspring.ann.genome.iter().filter(|n| n.allele == Allele::Neuron).map(|n| n.id).collect();
+                neuron_list.sort();
+                println!("Neuron ids = {:?}", neuron_list);
+
+                if pretty_print {
+                    Network::pretty_print(&offspring.ann.genome);
+                }
+                if export {
+                    let file_name: &str = &format!("examples/specimen-{:03}_evolved-{:03}.dot",i, smi);
+                    let graph_name: &str = "mutated";
+                    // export_visu(&specimen_mutated, file_name, graph_name);
+                    offspring.render(file_name, graph_name, print_weights);
+                }
+                println!("Output = {:?}", Network::pseudo_evaluate_slice(&offspring.ann.genome).unwrap());
+            }
+            println!("\t\\\\\\  Evolution {}  ///\n\n", smi + 1);
+            println!();
         }
-        println!();
-
-    let structural_mutation_size: usize = 5;
-
-    for smi in 0..structural_mutation_size {
-
-        population.exploration();
-
-        println!("~~~~~~~~~~~~ After Structural Mutation:");
-        for (i, specimen) in population.species.iter().enumerate() {
-            println!("Specimen {}", i);
-            Network::pretty_print(&specimen.ann.genome);
-            println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
-        }
-        println!(":After Structural Mutation ~~~~~~~~~~~~");
-        println!("\n");
-
-        population.evolve();
-
-        println!("\n\n\t///  Evolution {}  \\\\\\", smi + 1);
-        for (i, offspring) in population.species.iter().enumerate() {
-            println!("Offspring {}", i);
-
-            let mut neuron_list: Vec<usize> = offspring.ann.genome.iter().filter(|n| n.allele == Allele::Neuron).map(|n| n.id).collect();
-            neuron_list.sort();
-            println!("Neuron ids = {:?}", neuron_list);
-
-            if pretty_print {
-                Network::pretty_print(&offspring.ann.genome);
-            }
-            if export {
-                let file_name: &str = &format!("examples/specimen-{:03}_evolved-{:03}.dot",i, smi);
-                let graph_name: &str = "mutated";
-                // export_visu(&specimen_mutated, file_name, graph_name);
-                offspring.render(file_name, graph_name, print_weights);
-            }
-            println!("Output = {:?}", Network::pseudo_evaluate_slice(&offspring.ann.genome).unwrap());
-        }
-        println!("\t\\\\\\  Evolution {}  ///\n\n", smi + 1);
-        println!();
     }
 
 }
@@ -317,18 +322,18 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
 
-    let population_size: usize = 2;
-    let input_size: usize = 2;
-    let output_size: usize = 1;
-    let mutation_probability: f32 = 0.5;
+    let population_size: usize = 20;
+    let input_size: usize = 8;
+    let output_size: usize = 9;
+    let mutation_probability: f32 = 0.1;
 
-    let structural_mutation_size: usize = 5;
+    let mutation_size: usize = 4000;
 
     let mut population: Population<f32> =
         Population::new(population_size, input_size, output_size, mutation_probability);
         // Population::new_from_example(population_size, mutation_probability);
 
-    for _smi in 0..structural_mutation_size {
+    for _smi in 0..mutation_size {
 
         // println!("Init population:");
         for i in 0..population.species.len() {
@@ -364,7 +369,7 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
             //     println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
             // }
 
-            if _smi % 2 == 0 || true {
+            if _smi % 10 == 0 || true {
                 population.exploration();
             } else {
                 population.exploitation();
@@ -383,6 +388,6 @@ fn main() {
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     // _test_crossover();
-    _test_population_crossover(pretty_print, visualize, print_weights);
-    // _test_population_selection(pretty_print, visualize, print_weights);
+    // _test_population_crossover(pretty_print, visualize, print_weights);
+    _test_population_selection(pretty_print, visualize, print_weights);
 }
