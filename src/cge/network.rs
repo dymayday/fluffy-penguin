@@ -16,86 +16,63 @@ use std::io::Write;
 pub struct Network<T> {
     // The linear genome is represented by a vector of Node.
     pub genome: Vec<Node<T>>,
-    // Shadowing the genome is the only workaround to fix some immutable with mutable borrow issue.
-    // The sizes of the networks should not be an issue though.
-    pub shadow_genome: Vec<Node<T>>,
     // This let us map the values of all Input Node. Used during the evaluation phase.
     // Those values are processed by the ReLu transfert function during evaluation time.
     pub input_map: Vec<T>,
     // Neuron value processed by a `Transfer Function`.
     pub neuron_map: Vec<T>,
-    // pub neuron_value_map: HashMap<usize, T>,
-    // Neuron index lookup table: <genome[i].id, index_location>
+    // Neuron index lookup table: <genome[i].id, index in self.genome>
     neuron_indices_map: HashMap<usize, usize>,
-    // Number of Input in this Network. It has to be a constant value.
-    iota_size: usize,
     // The number of Output in this Network. It's a constant value as well.
-    omega_size: usize,
+    output_size: usize,
 }
-
 
 impl Network<f32> {
     /// Generating the initial linear genome use the grow method by default.
-    pub fn new(input_size: usize, outpout_size: usize) -> Self {
-        Network::new_simple(input_size, outpout_size)
+    pub fn new(input_size: usize, output_size: usize) -> Self {
+        Network::new_simple(input_size, output_size)
     }
 
 
     /// Starting from simple initial structures is the way it is done by nature and most of the
     /// other evolutionary methods.
-    pub fn new_simple(input_size: usize, outpout_size: usize) -> Self {
-        // We gather the number of input from the size of the input vector.
-        let iota_size: usize = input_size;
-        let omega_size: usize = outpout_size;
-        // And determine the approximate size of the vectors the network will use.
-        let max_vector_size: usize = iota_size * outpout_size;
-
+    pub fn new_simple(input_size: usize, output_size: usize) -> Self {
         let input_map: Vec<f32> = vec![0.0_f32; input_size];
+        let mut genome: Vec<Node<f32>> = Vec::new();
 
-        let mut genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
+        // Global Innovation Number is used to keep track of the Nodes to enable crossover
+        // later during evolution.
+        let mut gin: usize = 1;
 
-        {
-            // Global Innovation Number is used to keep track of the Nodes to enable crossover
-            // later during evolution.
-            let mut gin: usize = 1;
+        let iota_for_each_neuron: i32 = 1 - input_size as i32;
+        for output in 0..output_size {
+            let mut input_node_vector: Vec<Node<f32>> =
+                Network::gen_input_node_vector(gin, &input_map);
 
-            let iota_for_each_neuron: i32 = 1 - iota_size as i32;
-            for omega in 0..(omega_size as usize) {
-                let mut input_node_vector: Vec<Node<f32>> =
-                    Network::gen_input_node_vector(gin, &input_map);
+            let neuron: Node<f32> = Node::new(
+                Allele::Neuron,
+                output,
+                gin,
+                Node::random_weight(),
+                iota_for_each_neuron,
+                0,
+            );
+            genome.push(neuron);
+            gin += 1;
 
-                let neuron: Node<f32> = Node::new(
-                    Allele::Neuron,
-                    omega,
-                    gin,
-                    Node::random_weight(),
-                    iota_for_each_neuron,
-                    0,
-                );
-                genome.push(neuron);
-                gin += 1;
-
-                genome.append(&mut input_node_vector);
-
-                gin += input_size;
-            }
+            genome.append(&mut input_node_vector);
+            gin += input_size;
         }
 
-        let shadow_genome = genome.clone();
-        // let input_map: Vec<f32> = input_vec.clone();
-        let neuron_map: Vec<f32> = vec![0.0_f32; omega_size];
-        // let neuron_value_map: HashMap<usize,f32> = HashMap::with_capacity(omega_size);
+        let neuron_map: Vec<f32> = vec![0.0_f32; output_size];
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
-
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
-            iota_size,
-            omega_size,
+            output_size,
         }
     }
 
@@ -115,31 +92,20 @@ impl Network<f32> {
     /// There is two important thing to notice here:
     /// * The order of the inputs is particularly important.
     /// * The weights of each input are randomly attributed.
-    pub fn new_grow(input_vec: &Vec<f32>, omega_size: usize) -> Self {
-        // We gather the number of input from the size of the input vector.
-        let iota_size: usize = input_vec.len();
-        // And determine the approximate size of the vectors the network will use.
-        let max_vector_size: usize = (iota_size * omega_size) as usize;
-
-        let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
-
-        let shadow_genome = genome.clone();
+    pub fn new_grow(input_vec: &Vec<f32>, output_size: usize) -> Self {
+        let genome: Vec<Node<f32>> = Vec::new();
         let input_map: Vec<f32> = input_vec.clone();
         let neuron_map: Vec<f32> = vec![];
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
-
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
-            iota_size,
-            omega_size,
+            output_size,
         }
     }
-
 
     /// Builds and returns a Network from a list of input value using the `full` method.
     /// This method adds to the linear genome randomly generated neurons connected to all inputs
@@ -151,26 +117,20 @@ impl Network<f32> {
     /// There is two important thing to notice here:
     /// * The order of the inputs is particularly important.
     /// * The weights of each input are randomly attributed.
-    pub fn new_full(input_vec: &Vec<f32>, omega_size: usize) -> Self {
-        // We gather the number of input from the size of the input vector.
-        let iota_size: usize = input_vec.len();
-        // And determine the approximate size of the vectors the network will use.
-        let max_vector_size: usize = iota_size * omega_size;
-
-        let genome: Vec<Node<f32>> = Vec::with_capacity(max_vector_size);
-        let shadow_genome = genome.clone();
-        let input_map: Vec<f32> = input_vec.iter().map(|i| i.relu()).collect();
+    pub fn new_full(input_vec: &Vec<f32>, output_size: usize) -> Self {
+        let genome: Vec<Node<f32>> = Vec::new();
+        let input_map: Vec<f32> = input_vec.iter()
+            .map(|i| i.relu())
+            .collect();
         let neuron_map: Vec<f32> = vec![];
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
-            iota_size,
-            omega_size,
+            output_size,
         }
     }
 
@@ -227,19 +187,18 @@ impl Network<f32> {
             ),
             Node::new(Allele::JumpRecurrent, 0, 11, 0.2, IOTA_INPUT_VALUE, 2),
         ];
-        let shadow_genome = genome.clone();
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
-            iota_size: 2,
-            omega_size: 1,
+            output_size: 1,
         }
     }
+    
+
     /// Builds and returns the parent 1's genome from the research papers we use to implement EANT2.
     pub fn _build_parent1_from_example() -> Self {
         let input_map = vec![1_f32, 1_f32];
@@ -292,17 +251,14 @@ impl Network<f32> {
             ),
             Node::new(Allele::JumpRecurrent, 0, 12, 0.2, IOTA_INPUT_VALUE, 2),
         ];
-        let shadow_genome = genome.clone();
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
-            iota_size: 2,
-            omega_size: 1,
+            output_size: 1,
         }
     }
 
@@ -349,21 +305,16 @@ impl Network<f32> {
                 INPUT_NODE_DEPTH_VALUE,
             ),
         ];
-        let shadow_genome = genome.clone();
         let neuron_indices_map: HashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
             genome,
-            shadow_genome,
             input_map,
             neuron_map,
             neuron_indices_map,
-            iota_size: 2,
-            omega_size: 1,
+            output_size: 1,
         }
     }
-
-
 
 
     /// Returns a sub-network composed of one Neuron Node followed by randomly selected
@@ -524,6 +475,7 @@ impl Network<f32> {
             .unwrap_or(0_u16)
     }
 
+
     /// Compute the indexes of the Neuron in the linear genome so we can find them easily during
     /// the evaluation process. This function is meant to be call only once at init time.
     fn compute_neuron_indices(genome: &Vec<Node<f32>>) -> HashMap<usize, usize> {
@@ -544,13 +496,11 @@ impl Network<f32> {
         self.update_network_attributes();
     }
 
+
     /// Update the attributes of the network.
     pub fn update_network_attributes(&mut self) {
-        self.shadow_genome = self.genome.clone();
         self.neuron_indices_map = Network::compute_neuron_indices(&self.genome);
 
-        // self.neuron_map = vec![0.0_f32; self.neuron_indices_map.len()];
-        
         let neuron_id_max: usize = 
             *self.genome
             .iter()
@@ -573,9 +523,6 @@ impl Network<f32> {
 
     /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
     pub fn evaluate(&mut self) -> Option<Vec<f32>> {
-    // pub fn evaluate(&mut self) -> Vec<f32> {
-        // println!("neuron_map: {:?}", self.neuron_map);
-        // println!("neuron_indices_map: {:#?}", self.neuron_indices_map);
         let g = self.genome.clone();
         let output: Vec<f32> = self.evaluate_slice(&g)?;
 
@@ -583,10 +530,10 @@ impl Network<f32> {
         // output spit out by our artificial neural network.
         // assert_eq!(
         //     output.len(),
-        //     self.omega_size,
+        //     self.output_size,
         //     "Evaluated genome output length {} != Expected output length {}",
         //     output.len(),
-        //     self.omega_size
+        //     self.output_size
         // );
         Some(output)
     }
@@ -594,17 +541,15 @@ impl Network<f32> {
 
     /// Evaluate a sub-linear genome to compute the output of an artificial neural sub-network
     /// without decoding it.
-    // fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Vec<f32> {
     fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Option<Vec<f32>> {
+        // a stack that represents the "data flow", from the input
+        // to the output of this sub-network
         let mut stack: Vec<f32> = Vec::with_capacity(input.len());
-
         let input_len: usize = input.len();
-        // println!("input_len = {}", input_len);
 
-        for i in 0..input_len {
-            let mut node: Node<f32> = input[input_len - i - 1].clone();
-            // println!("\n{:#?}", node);
-            // println!("Stack = {:#?}", stack);
+        // iterate the nodes (in reverse)
+        for i in (0..input_len).rev() {
+            let mut node: Node<f32> = input[i].clone();
 
             match node.allele {
                 Allele::Input => {
@@ -614,30 +559,14 @@ impl Network<f32> {
                     let neuron_input_len: usize = (1 - node.iota) as usize;
                     let mut neuron_output: f32 = 0.0;
                     for _ in 0..neuron_input_len {
-                        // [TODO]: Remove this expect for an unwrap_or maybe ?
-                        // neuron_output += stack.pop().expect("The evaluated stack is empty.");
-                        // neuron_output += stack.pop().unwrap_or(0.0_f32);
                         neuron_output += stack.pop()?;
-                        // neuron_output += match stack.pop() {
-                        //     Some(v) => v,
-                        //     _ => return Err("The evaluated stack is empty.")
-                        // };
                     }
 
                     node.value = neuron_output;
-                    let neuron_index: usize = match self
-                        .neuron_indices_map
-                        .get(&node.id) {
-                            Some(v) => *v,
-                            _ => return None,
-                        };
-                        // .get(&node.id)
-                        // .expect(&format!("Fail to lookup the node id = {}", node.id));
+                    let neuron_index: usize = *self.neuron_indices_map.get(&node.id)?;
                     self.genome[neuron_index].value = neuron_output;
 
-                    // let activated_neuron_value: f32 = node.isrlu(0.1);
                     let activated_neuron_value: f32 = node.relu();
-                    // let activated_neuron_value: f32 = node.sigmoids();
 
                     // Update the neuron value in the neuron_map with its activated value from its
                     // transfert function to be used by jumper connection nodes.
@@ -651,27 +580,14 @@ impl Network<f32> {
                 }
                 Allele::JumpForward => {
                     // We need to evaluate a slice of our linear genome in a different depth.
-                    let forwarded_node_index: usize = match self
-                        .neuron_indices_map
-                        .get(&node.id) {
-                            Some(v) => *v,
-                            _ => return None,
-                        };
-                        // .expect(&format!("Fail to lookup the node id = {}", node.id));
-
-                    let sub_genome_slice: Vec<Node<f32>> =
-                        self.shadow_genome[forwarded_node_index..].to_vec();
+                    let forwarded_node_index: usize = *self.neuron_indices_map.get(&node.id)?;
+                    let sub_genome_slice: Vec<Node<f32>> = (forwarded_node_index..self.genome.len())
+                        .map(|idx| self.genome[idx].clone())
+                        .collect();
 
                     let jf_slice: Vec<Node<f32>> =
                         Network::build_jf_slice(node.id, forwarded_node_index, &sub_genome_slice);
 
-                    // let mut activated_values: Vec<f32> = self.evaluate_slice(&jf_slice).iter().map(|x| x.isrlu(0.1) * node.w).collect();
-                    // let mut activated_values: Vec<f32> = self.evaluate_slice(&jf_slice).iter().map(|x| x.relu() * node.w).collect();
-                    // stack.append(&mut activated_values);
-
-                    // stack.append(&mut self.evaluate_slice(&jf_slice));
-                    // stack.push(self.evaluate_slice(&jf_slice)[0]);
-                    // let sum_value: f32 = self.evaluate_slice(&jf_slice).iter().sum::<f32>().isrlu(0.1);
                     stack.push(
                         self.evaluate_slice(&jf_slice)?
                             .iter()
@@ -681,7 +597,7 @@ impl Network<f32> {
                     );
                 }
                 Allele::NaN => {
-                    // Do nothing because the is Not a Node.
+                    // Do nothing because this Not a Node.
                 }
             }
         }
@@ -696,7 +612,6 @@ impl Network<f32> {
         let mut stack: Vec<f32> = Vec::with_capacity(input.len());
 
         let input_len: usize = input.len();
-
 
         for i in 0..input_len {
             let mut node: &Node<f32> = &input[input_len - i - 1];
@@ -716,12 +631,9 @@ impl Network<f32> {
                             None => return None,
                         }
                     }
-
                     stack.push(0.0);
                 }
                 _ => {}
-
-
             }
         }
 
@@ -750,19 +662,18 @@ impl Network<f32> {
         self.update();
 
         let iota_sum: i32 = self.genome.iter().map(|n| n.iota).collect::<Vec<i32>>().iter().sum();
-        if self.omega_size as i32 != iota_sum {
-            println!("iota_sum {} != {} self.omega_size", iota_sum, self.omega_size);
+        if self.output_size as i32 != iota_sum {
+            println!("iota_sum {} != {} self.output_size", iota_sum, self.output_size);
             return false;
         }
 
         self.update_input(&inputs);
         let output: Vec<f32> = self.evaluate().unwrap_or(vec![]);
 
-        if output.len() != self.omega_size {
-            println!("output.len() {} != {} self.omega_size", output.len(), self.omega_size);
+        if output.len() != self.output_size {
+            println!("output.len() {} != {} self.output_size", output.len(), self.output_size);
             return false;
         }
-
 
         true
     }
@@ -1061,10 +972,10 @@ impl Network<f32> {
         // let out_1 = Network::pseudo_evaluate_slice(&arn_1_updated);
         // println!("Iota = {}, Output = {:?}", iota_sum_1, out_1);
 
-        // assert_eq!(network_1.omega_size as i32, iota_sum_1, "iota and expected output length mismatch.");
-        if net_1.omega_size as i32 != iota_sum_1 {
+        // assert_eq!(network_1.output_size as i32, iota_sum_1, "iota and expected output length mismatch.");
+        if net_1.output_size as i32 != iota_sum_1 {
             // println!("\n\n");
-            println!("iota 1 and expected output length mismatch. {} != {}", net_1.omega_size as i32, iota_sum_1);
+            println!("iota 1 and expected output length mismatch. {} != {}", net_1.output_size as i32, iota_sum_1);
             // Network::pretty_print(&network_1.genome);
             // Network::pretty_print(&arn_1_updated);
             // Network::pretty_print(&arn_2_updated);
@@ -1083,10 +994,10 @@ impl Network<f32> {
         // let out_2 = Network::pseudo_evaluate_slice(&arn_2_updated);
         // println!("Iota = {}, Output = {:?}", iota_sum_2, out_2);
 
-        // assert_eq!(network_2.omega_size as i32, iota_sum_2, "iota and expected output length mismatch.");
-        if net_2.omega_size as i32 != iota_sum_2 {
+        // assert_eq!(network_2.output_size as i32, iota_sum_2, "iota and expected output length mismatch.");
+        if net_2.output_size as i32 != iota_sum_2 {
             // println!("\n\n");
-            println!("iota 2 and expected output length mismatch. {} != {}", net_2.omega_size as i32, iota_sum_2);
+            println!("iota 2 and expected output length mismatch. {} != {}", net_2.output_size as i32, iota_sum_2);
             // Network::pretty_print(&network_1.genome);
             // Network::pretty_print(&arn_1_updated);
             // Network::pretty_print(&arn_2_updated);
@@ -1487,7 +1398,7 @@ impl Network<f32> {
                 );
                 writer.write(msg.as_bytes())?;
 
-                for i in 0..self.omega_size {
+                for i in 1..self.output_size {
                     let msg: String = format!("N{} ", i);
                     writer.write(msg.as_bytes())?;
                 }
