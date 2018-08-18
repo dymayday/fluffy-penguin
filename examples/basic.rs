@@ -110,7 +110,9 @@ fn compute_specimen_score(specimen: &Specimen<f32>) -> f32 {
 /// }
 ///
 ///
-fn main() {
+
+
+fn basic() {
     let population_size = 10;
     // build population
     let mut population = init_population(
@@ -156,18 +158,70 @@ fn main() {
 
         /* MUTATION */
         // ann mutation
-        if generation_counter % cycle_per_structure == 0 {
+        if generation_counter % cycle_per_structure == 0 && false {
             for specimen in population.species.iter_mut() {
                 specimen.parametric_mutation();
             }
 
         } else {
-            population.exploration();
+            // population.exploration();
+            population.exploitation();
         };
                                          
         println!("{:?}", scores);
         generation_counter += 1;
     }
+}
+
+
+/// Test the algorithm on a simple math equation to prove the correctness of our algorithm.
+fn test_exploitation_correctness_on_basic_equation() {
+    let population_size: usize = 100;
+    // build population
+    let mut population = init_population(
+        population_size, // size of population
+        2, // nb of input node in each ANN
+        1, // nb of output node in each ANN
+        0.5 // mutation probability
+    );
+
+    /* EVOLUTION */
+    let mut generation_counter: i64 = 0;
+
+    for _ in 0..1000 {
+        let scores: Vec<f32> = population.species.iter()
+            .map(|specimen| 100.0 * compute_specimen_score(specimen))
+            .collect();
+
+        // Update fitness of each specimen.
+        // High score needs to represent a better fitness.
+        for i in 0..population_size {
+            population.species[i].fitness = -scores[i];
+        }
+
+        // Selection phase.
+        population.evolve();
+
+        // Lookup for some better weights.
+        population.exploitation();
+
+
+        let best_score = scores.iter().min_by( |x, y| x.partial_cmp(y).unwrap() ).unwrap();
+        let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
+
+        generation_counter += 1;
+        println!("[{:>5}], best NRMSE = {:.6} %, mean = {:.6} %",generation_counter, best_score, mean_score);
+    }
+
+}
+
+
+
+fn main() {
+
+    test_exploitation_correctness_on_basic_equation();
+    basic();
+
 }
 
 
