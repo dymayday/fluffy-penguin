@@ -891,9 +891,15 @@ impl Network<f32> {
             let n2: &Node<f32> = &netw_2.genome[i];
 
             if n1.allele == n2.allele {
-                let pick_from: [f32; 2] = [n1.w, n2.w];
-                let rnd_weight_ref: &f32 = thread_rng().choose(&pick_from).unwrap_or(&n1.w);
-                netw_crossovered.genome[i].w = *rnd_weight_ref;
+                if fitness_1 > fitness_2 {
+                    netw_crossovered.genome[i] = n1.clone();
+                } else if fitness_2 > fitness_1 {
+                    netw_crossovered.genome[i] = n2.clone();
+                } else {
+                    let pick_from: [f32; 2] = [n1.w, n2.w];
+                    let rnd_weight_ref: &f32 = thread_rng().choose(&pick_from).unwrap_or(&n1.w);
+                    netw_crossovered.genome[i].w = *rnd_weight_ref;
+                }
 
             } else {
                 if n1.allele != Allele::NaN {
@@ -927,13 +933,16 @@ impl Network<f32> {
         let n1_gin_max: usize = Network::get_max_gin(network_1);
         let n2_gin_max: usize = Network::get_max_gin(network_2);
 
-        if n1_gin_max < n2_gin_max {
-            net_1 = network_1;
-            net_2 = network_2;
-        } else {
-            net_1 = network_2;
-            net_2 = network_1;
-        }
+        // if n1_gin_max < n2_gin_max {
+        //     net_1 = network_1;
+        //     net_2 = network_2;
+        // } else {
+        //     net_1 = network_2;
+        //     net_2 = network_1;
+        // }
+
+        net_1 = network_1;
+        net_2 = network_2;
 
         let arn_1: Vec<Node<f32>> = Network::_compute_aligned_arn(&net_1.genome, &net_2.genome);
         let mut arn_2: Vec<Node<f32>> = Network::_compute_aligned_arn(&net_2.genome, &net_1.genome);
