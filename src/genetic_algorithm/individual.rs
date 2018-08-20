@@ -138,7 +138,7 @@ impl Specimen<f32> {
             let mut node = self.ann.genome[node_index].clone();
 
             match node.allele {
-                Allele::Neuron => {
+                Allele::Neuron { id } => {
                     if Specimen::roll_the_mutation_wheel(pm) {
 
                         #[allow(unreachable_patterns)]
@@ -207,7 +207,7 @@ impl Specimen<f32> {
                                 // Connection addition mutation.
                                 // mutation_tracker.push("JumperAddition".to_string());
 
-                                let source_id: usize = node.id;
+                                let source_id: usize = id;
                                 let depth: u16 = node.depth;
                                 match self.ann.gen_random_jumper_connection(source_id, updated_gin, depth) {
                                     Some(jumper) => {

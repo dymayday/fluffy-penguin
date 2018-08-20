@@ -82,22 +82,22 @@ mod node_tests {
 
     #[test]
     fn neuron() {
-        Node::new(Allele::Neuron, 0 as usize, 0_usize, 0.3_f32, 1_i32, 0);
+        Node::new(Allele::Neuron { id: 0 }, 0_usize, 0.3_f32, 1_i32, 0);
     }
 
     #[test]
     fn input() {
-        Node::new(Allele::Input, 0 as usize, 0_usize, 0.3_f32, 1_i32, 99);
+        Node::new(Allele::Input { label: 0 }, 0_usize, 0.3_f32, 1_i32, 99);
     }
 
     #[test]
     fn forward_jumper_connection() {
-        Node::new(Allele::JumpForward, 0 as usize, 0_usize, 0.3_f32, 1_i32, 1);
+        Node::new(Allele::JumpForward { source_id: 0 }, 0_usize, 0.3_f32, 1_i32, 1);
     }
 
     #[test]
     fn recurrent_jumper_connection() {
-        Node::new(Allele::JumpRecurrent, 0 as usize, 0_usize, 0.3_f32, 1_i32, 1);
+        Node::new(Allele::JumpRecurrent { source_id: 0 }, 0_usize, 0.3_f32, 1_i32, 1);
     }
 
     #[test]
