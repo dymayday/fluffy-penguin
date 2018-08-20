@@ -189,7 +189,7 @@ fn test_exploitation_correctness_on_basic_equation() {
 
     /* EVOLUTION */
     let mut generation_counter: i64 = 0;
-    let cycle_per_structure = 50;
+    let cycle_per_structure = 100;
 
     for _ in 0..1000 {
         generation_counter += 1;

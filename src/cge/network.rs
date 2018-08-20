@@ -10,6 +10,20 @@ use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 use std::io::Write;
 
+#[macro_export]
+macro_rules! gin2vec {
+    ( $( $n:expr ),* ) => {
+        {
+            let mut v = Vec::new();
+            $(
+                // v.push( ($n.first().unwrap_or(&Node::new_nan(0_usize, 0_i32))).gin );
+                v.push( $n[0].gin );
+            )*
+            v
+        }
+    };
+}
+
 /// The representation of an Artificial Neural Network (ANN) using the Common Genetic Encoding
 /// (CGE) (http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.70.8729).
 #[derive(Clone, Debug, PartialEq)]
@@ -870,18 +884,57 @@ impl Network<f32> {
     }
 
 
+    /// Build a vector of GIN value from a slice.
+    pub fn build_ref_input_subnetwork<'a>(genome: &[&'a Node<f32>]) -> Vec<&'a Node<f32>> {
+
+        let genome_len: usize = genome.len();
+        let mut inputs: Vec<&Node<f32>> = Vec::with_capacity(genome_len);
+
+        let mut iota: i32 = genome[0].iota;
+        let mut i: usize = 1;
+
+
+        while iota != 1 && i < genome_len {
+
+            let node: &Node<f32> = &genome[i];
+
+            match node.allele {
+                Allele::Neuron => {
+                    i += 1;
+                    iota += 1;
+                    let mut inputs_tmp = Network::build_ref_input_subnetwork(&genome[i..]);
+
+                    i += inputs_tmp.len();
+                    // inputs.append(&mut inputs_tmp);
+                    inputs.push(node);
+                }
+                _ => {
+                    i += 1;
+                    iota += node.iota;
+                    inputs.push(node);
+                }
+            }
+
+        }
+
+        inputs
+    }
+
+
+
+
 
     /// Crossover.
     pub fn crossover(network_1: &Network<f32>, network_2: &Network<f32>, fitness_1: f32, fitness_2: f32) -> Network<f32> {
 
-        let default_network: &Network<f32>;
-        if fitness_2 > fitness_1 {
-            // default_network = network_2.clone();
-            default_network = &network_2;
-        } else {
-            // default_network = network_1.clone();
-            default_network = &network_1;
-        }
+        // let default_network: &Network<f32>;
+        // if fitness_2 > fitness_1 {
+        //     // default_network = network_2.clone();
+        //     default_network = &network_2;
+        // } else {
+        //     // default_network = network_1.clone();
+        //     default_network = &network_1;
+        // }
         // let (netw_1, netw_2) = Network::align(&network_1, &network_2).unwrap_or((default_network.clone(), default_network.clone()));
         let (netw_1, netw_2) = Network::align(&network_1, &network_2).expect("Fail to align");
 
@@ -1161,8 +1214,6 @@ impl Network<f32> {
         let mut stack_2: Vec<Node<f32>> = Vec::with_capacity(netw2_len);
         let mut skip_stack: Vec<usize> = Vec::with_capacity(netw1_len);
 
-        let mut common_counter: i32 = 0;
-
         let (mut i, mut j ): (usize, usize) = (0, 0);
         while i < netw1_len && j < netw2_len {
 
@@ -1177,21 +1228,24 @@ impl Network<f32> {
 
 
                 if n1.allele == Allele::Neuron {
-                    if debug {
-                        println!("Stack_1 = {:#?}", stack_1);
-                        println!("Stack_2 = {:#?}", stack_2);
-                        println!("Stack_1 = {:?}", stack_1.iter().map(|x| x.gin).collect::<Vec<usize>>());
-                        println!("Stack_2 = {:?}", stack_2.iter().map(|x| x.gin).collect::<Vec<usize>>());
-                    }
-                    // let common_node_count: i32 = Network::count_common_inputs(&stack_1, &stack_2);
-                    let common_node_count: i32 = common_counter;
-                    // let common_node_count: i32 = Network::count_common_inputs(&genome_1, &genome_2);
+
                     let nbi_1: i32 = 1 - n1.iota;
                     let nbi_2: i32 = 1 - n2.iota;
 
+                    let slice_1: Vec<&Node<f32>> = genome_1[netw1_len - 1 - i ..].iter().map(|n| n).collect();
+                    let slice_2: Vec<&Node<f32>> = genome_2[netw2_len - 1 - j ..].iter().map(|n| n).collect();
+
+
+                    let neuron_inputs_1 = Network::build_ref_input_subnetwork(&slice_1);
+                    let neuron_inputs_2 = Network::build_ref_input_subnetwork(&slice_2);
+
+
+                    let common_node_count: i32 = Network::count_common_inputs(&neuron_inputs_1, &neuron_inputs_2);
 
                     n.iota = 1 - (nbi_1 + nbi_2 - common_node_count);
                     if debug {
+                        println!("neuron_inputs_from_n1 = {:?}", neuron_inputs_1.iter().map(|x| x.gin).collect::<Vec<usize>>() );
+                        println!("neuron_inputs_from_n2 = {:?}", neuron_inputs_2.iter().map(|x| x.gin).collect::<Vec<usize>>() );
                         println!("iota = 1 - ({} + {} - {}) = {}", nbi_1, nbi_2, common_node_count, n.iota);
                     }
 
@@ -1201,16 +1255,12 @@ impl Network<f32> {
 
                     stack_1.clear();
                     stack_2.clear();
-                    common_counter = 0;
 
-                    // arn.push(n1.clone());
                     arn.push(n.clone());
                 } else {
 
                     skip_stack.push(n1.gin);
                     stack_1.push(n1.clone());
-                    common_counter += 1;
-                    // stack_2.push(n1.clone());
                 }
                 i += 1;
                 j += 1;
@@ -1232,7 +1282,6 @@ impl Network<f32> {
                         skip_stack.push(n1.gin);
                         stack_1.push(n1.clone());
                     }
-                    common_counter += 1;
                     i += 1;
                     // stack_1.push(n1.clone());
                     // panic!("else Nodes: n1 = {} , n2 = {}", n1.gin, n2.gin);
@@ -1467,7 +1516,7 @@ impl Network<f32> {
 
                     let vnr1: Vec<&Node<f32>> = stack_tmp_1.iter().map(|n| n).collect::<Vec<&Node<f32>>>();
                     let vnr2: Vec<&Node<f32>> = stack_tmp_2.iter().map(|n| n).collect::<Vec<&Node<f32>>>();
-                    let common_input_number: i32 = Network::count_common_input(&vnr1, &vnr2);
+                    let common_input_number: i32 = Network::count_common_inputs(&vnr1, &vnr2);
 
                     let in_1: i32 = 1 - n1.iota;
                     let in_2: i32 = 1 - n2.iota;
@@ -1582,7 +1631,7 @@ impl Network<f32> {
 
 
     /// Counts the number of inputs to a subnetwork.
-    fn count_common_input(arn_1: &[&Node<f32>], arn_2: &[&Node<f32>]) -> i32 {
+    fn count_common_inputs(arn_1: &[&Node<f32>], arn_2: &[&Node<f32>]) -> i32 {
         let mut accu: i32 = 0;
 
         let gin_v1: Vec<usize> = arn_1.iter().map(|n| n.gin).collect();
@@ -1598,7 +1647,7 @@ impl Network<f32> {
     }
 
     /// Counts the number of inputs to a subnetwork.
-    fn count_common_inputs(arn_1: &[Node<f32>], arn_2: &[Node<f32>]) -> i32 {
+    fn count_common_input_node(arn_1: &[Node<f32>], arn_2: &[Node<f32>]) -> i32 {
         let mut accu: i32 = 0;
 
         let gin_v1: Vec<usize> = arn_1.iter().map(|n| n.gin).collect();

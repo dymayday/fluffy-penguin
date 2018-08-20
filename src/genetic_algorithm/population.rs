@@ -222,8 +222,10 @@ impl Population<f32> {
             let mut shuffled_mating_pool_index_2: Vec<usize> = Vec::with_capacity(mating_pool_size);
 
             for i in 0..mating_pool_size {
-                shuffled_mating_pool_index_1.push(i);
-                shuffled_mating_pool_index_2.push(i);
+		if mating_pool[i].fitness.is_finite() {
+                    shuffled_mating_pool_index_1.push(i);
+                    shuffled_mating_pool_index_2.push(i);
+                }
             }
 
             thread_rng().shuffle(&mut shuffled_mating_pool_index_1);
@@ -233,15 +235,24 @@ impl Population<f32> {
                 if offspring_vector.len() == offspring_size {
                     break;
                 }
-                let father: &Specimen<f32> = &mating_pool[*i];
-                let mother: &Specimen<f32> = &mating_pool[*j];
+
+                let father: &Specimen<f32>;
+                let mother: &Specimen<f32>;
+
+                if mating_pool[*i].fitness >= mating_pool[*j].fitness {
+                    father = &mating_pool[*i];
+                    mother = &mating_pool[*j];
+                } else {
+                    father = &mating_pool[*j];
+                    mother = &mating_pool[*i];
+                }
+
 
                 let mut offspring: Specimen<f32> = Specimen::crossover(father, mother);
-                // if offspring.evaluate().len() == offspring.output_size {
                 if offspring.ann.is_valid() {
                     offspring_vector.push(offspring);
                 } else {
-                    panic!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
+                    // panic!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
                     // println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
                 }
             }

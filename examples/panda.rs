@@ -251,7 +251,7 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
     let population_size: usize = 2;
     let input_size: usize = 2;
     let output_size: usize = 1;
-    let mutation_probability: f32 = 0.1;
+    let mutation_probability: f32 = 0.5;
 
     loop {
 
@@ -275,7 +275,7 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
             }
             println!();
 
-        let structural_mutation_size: usize = 5;
+        let structural_mutation_size: usize = 20;
 
         for smi in 0..structural_mutation_size {
 
@@ -324,10 +324,10 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
 
-    let population_size: usize = 2;
+    let population_size: usize = 4;
     let input_size: usize = 2;
     let output_size: usize = 1;
-    let mutation_probability: f32 = 0.5;
+    let mutation_probability: f32 = 0.1;
 
     let mutation_size: usize = 500;
 
@@ -371,7 +371,7 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
             //     println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
             // }
 
-            if _smi % 10 == 0 {// || true {
+            if _smi % 50 == 0 {// || true {
                 population.exploration();
             } else {
                 population.exploitation();
@@ -390,6 +390,6 @@ fn main() {
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     // _test_crossover();
-    _test_population_crossover(pretty_print, visualize, print_weights);
-    // _test_population_selection(pretty_print, visualize, print_weights);
+    // _test_population_crossover(pretty_print, visualize, print_weights);
+    _test_population_selection(pretty_print, visualize, print_weights);
 }
