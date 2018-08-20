@@ -189,14 +189,18 @@ fn test_exploitation_correctness_on_basic_equation() {
 
     /* EVOLUTION */
     let mut generation_counter: i64 = 0;
-    let cycle_per_structure = 10;
+    let cycle_per_structure = 50;
 
     for _ in 0..1000 {
+        generation_counter += 1;
+
         let scores: Vec<f32> = population.species.iter()
-            .map(|specimen| {
-                let score: f32 = 100.0 * compute_specimen_score(specimen);
-                score
-            })
+            .map(|specimen| 100.0 * compute_specimen_score(specimen))
+            // .map(|specimen| {
+            //     let score: f32 = 100.0 * compute_specimen_score(specimen);
+            //     if score.is_finite() { score }
+            //     else { 999.0 }
+            // } )
             .collect();
 
         // Update fitness of each specimen.
@@ -218,12 +222,11 @@ fn test_exploitation_correctness_on_basic_equation() {
             population.exploitation();
         }
 
-        generation_counter += 1;
 
         let best_score = scores.iter().min_by( |x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater) ).unwrap();
-        // let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
-        let mean_score: f32 = 0.0;
-        println!("[{:>5}], best RMSE = {:.6} %, mean = {:.6} %",generation_counter, best_score, mean_score);
+        let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
+        // let mean_score: f32 = 0.0;
+        println!("[{:>5}], best RMSE = {:.6} , mean = {:.6}", generation_counter, best_score, mean_score);
     }
 
 }

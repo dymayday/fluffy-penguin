@@ -6,7 +6,8 @@ use rand::{thread_rng, Rng};
 /// Rank base selection parameter.
 /// The usual formula for calculating the selection probability for linear 
 /// ranking schemes is parameterised by a value s (1 < s ≤ 2).
-const RANK_S: f32 = 1.5;
+const RANK_S: f32 = 2.0;
+// const RANK_S: f32 = 1.5;
 
 #[derive(Debug)]
 pub struct Population<T> {
@@ -160,9 +161,11 @@ impl Population<f32> {
     /// we up each individual fitness in the population by the absolut value of the lowest fitness.
     fn clean_fitness(&mut self) {
         use std::cmp::Ordering;
+
         let lowest_fitness: f32 = *self.species
             .iter()
-            .map(|s| s.fitness)
+            // .map(|s| s.fitness)
+            .map(|s| if s.fitness.is_finite() {s.fitness} else {-999.0})
             .collect::<Vec<f32>>()
             .iter()
             .min_by( |x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater) )

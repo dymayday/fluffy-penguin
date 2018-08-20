@@ -329,8 +329,10 @@ impl Specimen<f32> {
     /// Returns the offspring of two Specimens.
     pub fn crossover(specimen_1: &Specimen<f32>, specimen_2: &Specimen<f32>) -> Specimen<f32> {
         let mut specimen = specimen_1.clone();
-        specimen.ann = Network::crossover(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness);
-        // specimen.ann = Network::crossover_2(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness);
+
+        // specimen.ann = Network::crossover(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness);
+        specimen.ann = Network::crossover_2(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness);
+
         specimen.update();
 
         // This is a brand new born offspring so its fitness is null.

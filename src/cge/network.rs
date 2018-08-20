@@ -922,7 +922,7 @@ impl Network<f32> {
     pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> Result<(Network<f32>, Network<f32>), ()> {
     // pub fn align(network_1: &Network<f32>, network_2: &Network<f32>) -> (Network<f32>, Network<f32>) {
 
-        let debug: bool = false;
+        let debug: bool = true;
         if debug {
             println!("\n\n\n================================================   Aligning...   ================================================\n");
         }
@@ -956,8 +956,8 @@ impl Network<f32> {
             println!("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ARN 1:");
             Network::pretty_print(&arn_1);
 
-            // println!("ARN 2:");
-            // Network::pretty_print(&arn_2);
+            println!("ARN 2:");
+            Network::pretty_print(&arn_2);
         }
 
         let arn_2_sorted = Network::sort_arn(&arn_1, &arn_2);
@@ -1076,33 +1076,33 @@ impl Network<f32> {
 
             } else {
 
-                if n1_gin_vector.contains(&n2.gin) {
-                    arn.push(n1.clone());
-                    // i += 1;
-                } else {
-                    arn.push(Node::new_nan(n2.gin, n2.iota));
+                // if n1_gin_vector.contains(&n2.gin) {
+                //     arn.push(n1.clone());
+                //     // i += 1;
+                // } else {
+                //     arn.push(Node::new_nan(n2.gin, n2.iota));
+                // }
+
+                if !n1_gin_vector.contains(&n2.gin) {
+                    while i < netw1_len && j < netw2_len - 1 {//}&& !common_gin_in_both_vector.contains(&n2.gin) {
+                        let n2: &Node<f32> = &genome_2[netw2_len - 1 - j];
+
+                        if !n1_gin_vector.contains(&n2.gin) {
+                            arn.push(
+                                Node::new_nan(n2.gin, n2.iota)
+                            );
+                        } else {
+                            break;
+                        }
+                        j += 1;
+
+                    }
                 }
 
-                // if !n1_gin_vector.contains(&n2.gin) {
-                //     while i < netw1_len && j < netw2_len - 1 {//}&& !common_gin_in_both_vector.contains(&n2.gin) {
-                //         let n2: &Node<f32> = &genome_2[netw2_len - 1 - j];
-                //
-                //         if !n1_gin_vector.contains(&n2.gin) {
-                //             arn.push(
-                //                 Node::new_nan(n2.gin, n2.iota)
-                //             );
-                //         } else {
-                //             break;
-                //         }
-                //         j += 1;
-                //
-                //     }
-                // }
-                //
-                // let n2: &Node<f32> = &genome_2[netw2_len - 1 - j];
-                // if n1.gin == n2.gin {
-                //     continue;
-                // }
+                let n2: &Node<f32> = &genome_2[netw2_len - 1 - j];
+                if n1.gin == n2.gin {
+                    continue;
+                }
 
                 if n2_gin_vector.contains(&n1.gin) {
                     // println!("{:#?}", n1);
@@ -1128,6 +1128,8 @@ impl Network<f32> {
 
     /// Compute an ARN properly this time
     fn _compute_aligned_arn_2(genome_1: &[Node<f32>], genome_2: &[Node<f32>]) -> Vec<Node<f32>> {
+        // let debug: bool = true;
+        let debug: bool = false;
 
         let netw1_len: usize = genome_1.len();
         let netw2_len: usize = genome_2.len();
@@ -1175,10 +1177,12 @@ impl Network<f32> {
 
 
                 if n1.allele == Allele::Neuron {
-                    println!("Stack_1 = {:#?}", stack_1);
-                    println!("Stack_2 = {:#?}", stack_2);
-                    println!("Stack_1 = {:?}", stack_1.iter().map(|x| x.gin).collect::<Vec<usize>>());
-                    println!("Stack_2 = {:?}", stack_2.iter().map(|x| x.gin).collect::<Vec<usize>>());
+                    if debug {
+                        println!("Stack_1 = {:#?}", stack_1);
+                        println!("Stack_2 = {:#?}", stack_2);
+                        println!("Stack_1 = {:?}", stack_1.iter().map(|x| x.gin).collect::<Vec<usize>>());
+                        println!("Stack_2 = {:?}", stack_2.iter().map(|x| x.gin).collect::<Vec<usize>>());
+                    }
                     // let common_node_count: i32 = Network::count_common_inputs(&stack_1, &stack_2);
                     let common_node_count: i32 = common_counter;
                     // let common_node_count: i32 = Network::count_common_inputs(&genome_1, &genome_2);
@@ -1187,7 +1191,9 @@ impl Network<f32> {
 
 
                     n.iota = 1 - (nbi_1 + nbi_2 - common_node_count);
-                    println!("iota = 1 - ({} + {} - {}) = {}", nbi_1, nbi_2, common_node_count, n.iota);
+                    if debug {
+                        println!("iota = 1 - ({} + {} - {}) = {}", nbi_1, nbi_2, common_node_count, n.iota);
+                    }
 
 
                     arn.append(&mut stack_2);
@@ -1219,7 +1225,7 @@ impl Network<f32> {
                 } else if !n1_gin_vector.contains(&n2.gin) {
                     skip_stack.push(n2.gin);
                     stack_1.push(Node::new_nan(n2.gin, n2.iota));
-                    stack_2.push(n2.clone());
+                    // stack_2.push(n2.clone());
                     j += 1;
                 } else {
                     if !skip_stack.contains(&n1.gin) {
@@ -1241,7 +1247,8 @@ impl Network<f32> {
     }
 
     pub fn crossover_2(network_1: &Network<f32>, network_2: &Network<f32>, fitness_1: f32, fitness_2: f32) -> Network<f32> {
-        let aligned_network = Network::align2(&network_1, &network_2).expect("Fail to align 2");
+
+        let aligned_network = Network::align_2(&network_1, &network_2).expect("Fail to align 2");
 
         let genome_1 = network_1.genome.clone();
         let genome_2 = network_2.genome.clone();
@@ -1308,8 +1315,9 @@ impl Network<f32> {
     }
 
 
-    pub fn align2(network_1: &Network<f32>, network_2: &Network<f32>) -> Result<Network<f32>, ()> {
-        let debug: bool = true;
+    pub fn align_2(network_1: &Network<f32>, network_2: &Network<f32>) -> Result<Network<f32>, ()> {
+        // let debug: bool = true;
+        let debug: bool = false;
         let arn: Vec<Node<f32>> = Network::_compute_aligned_arn_2(&network_1.genome, &network_2.genome);
 
 
