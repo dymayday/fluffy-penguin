@@ -89,6 +89,11 @@ impl Specimen<f32> {
             // Compute a new mutated connection weight.
             let mut w_p: f32 = node.w + sigma_p * nu_i;
 
+            // // Assign the new mutated learning rate value to the Node.
+            // node.sigma = sigma_p;
+            // // Assign the new mutated weight to the Node.
+            // node.w = w_p;
+
             // Curtaining the weight and sigma values.
             // if sigma_p < -10.0 || w_p < -10.0 || sigma_p > 10.0 || w_p > 10.0 {
             if w_p < -10.0 || w_p > 10.0 {
@@ -125,6 +130,8 @@ impl Specimen<f32> {
 
         let mut mutated_genome: Vec<Node<f32>> = Vec::with_capacity(self.ann.genome.len());
 
+        // let mut mutation_tracker: Vec<String> = Vec::with_capacity(self.ann.genome.len());
+
         let genome_len: usize = self.ann.genome.len();
         let mut node_index: usize = 0;
         while node_index < genome_len {
@@ -140,6 +147,9 @@ impl Specimen<f32> {
                             StructuralMutation::SubNetworkAddition => {
                                 // println!("~~~~~~~~~~~~  StructuralMutation::SubNetworkAddition  ~~~~~~~~~~~~");
                                 // Sub-network addition mutation.
+                                // mutation_tracker.push("SubNetworkAddition".to_string());
+
+                                let mut iota: i32 = node.iota;
 
                                 // let mut node = node.clone();
                                 // N.B.: to add an input connection to the current Neuron
@@ -159,19 +169,34 @@ impl Specimen<f32> {
                                 );
 
                                 updated_gin += subnetwork.len();
+                                // mutated_genome.append(&mut subnetwork);
+
+                                while node_index + 1 < genome_len {
+
+                                    node_index += 1;
+                                    let node = self.ann.genome[node_index].clone();
+                                    iota += node.iota;
+                                    mutated_genome.push(node);
+
+                                    if iota == 1 {
+                                        break;
+                                    }
+                                }
 
                                 // Add this new sub-network at the end of the the current Neuron
                                 // input sub-network.
-                                while node_index + 1 < genome_len {
-                                    if self.ann.genome[node_index + 1].allele == Allele::Neuron {
-                                        break;
-                                    } else {
-                                        // Add this Neuron's input back to the network.
-                                        node_index += 1;
-                                        let node = self.ann.genome[node_index].clone();
-                                        mutated_genome.push(node);
-                                    }
-                                }
+                                // while node_index + 1 < genome_len {
+                                //     
+                                //     if self.ann.genome[node_index + 1].allele == Allele::Neuron {
+                                //         break;
+                                //     } else {
+                                //         // Add this Neuron's input back to the network.
+                                //         node_index += 1;
+                                //         let node = self.ann.genome[node_index].clone();
+                                //         mutated_genome.push(node);
+                                //     }
+                                // }
+
                                 mutated_genome.append(&mut subnetwork);
 
                                 new_neuron_id += 1;
@@ -180,6 +205,7 @@ impl Specimen<f32> {
                             StructuralMutation::JumperAddition => {
                                 // println!("~~~~~~~~~~~~  StructuralMutation::JumperAddition  ~~~~~~~~~~~~");
                                 // Connection addition mutation.
+                                // mutation_tracker.push("JumperAddition".to_string());
 
                                 let source_id: usize = node.id;
                                 let depth: u16 = node.depth;
@@ -220,6 +246,8 @@ impl Specimen<f32> {
                             StructuralMutation::ConnectionRemoval => {
                                 // println!("~~~~~~~~~~~~  StructuralMutation::ConnectionRemoval  ~~~~~~~~~~~~");
                                 // Connection removal mutation
+                                // mutation_tracker.push("ConnectionRemoval".to_string());
+
                                 let sub_network_slice =
                                     &self.ann.genome[node_index..genome_len];
 
@@ -280,6 +308,8 @@ impl Specimen<f32> {
         // println!("Mutated Genome:");
         // Network::pretty_print(&mutated_network.genome);
 
+        // println!("Mutations : {:#?}", mutation_tracker);
+
         if mutated_network.is_valid() {
             self.ann = mutated_network;
             Ok((updated_gin, new_neuron_id))
@@ -299,7 +329,10 @@ impl Specimen<f32> {
     /// Returns the offspring of two Specimens.
     pub fn crossover(specimen_1: &Specimen<f32>, specimen_2: &Specimen<f32>) -> Specimen<f32> {
         let mut specimen = specimen_1.clone();
-        specimen.ann = Network::crossover(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness);
+
+        // specimen.ann = Network::crossover(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness);
+        specimen.ann = Network::crossover_2(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness);
+
         specimen.update();
 
         // This is a brand new born offspring so its fitness is null.

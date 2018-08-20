@@ -176,21 +176,31 @@ fn basic() {
 
 /// Test the algorithm on a simple math equation to prove the correctness of our algorithm.
 fn test_exploitation_correctness_on_basic_equation() {
+    use std::cmp::Ordering;
+
     let population_size: usize = 100;
     // build population
     let mut population = init_population(
         population_size, // size of population
         2, // nb of input node in each ANN
         1, // nb of output node in each ANN
-        0.5 // mutation probability
+        0.1 // mutation probability
     );
 
     /* EVOLUTION */
     let mut generation_counter: i64 = 0;
+    let cycle_per_structure = 100;
 
     for _ in 0..1000 {
+        generation_counter += 1;
+
         let scores: Vec<f32> = population.species.iter()
             .map(|specimen| 100.0 * compute_specimen_score(specimen))
+            // .map(|specimen| {
+            //     let score: f32 = 100.0 * compute_specimen_score(specimen);
+            //     if score.is_finite() { score }
+            //     else { 999.0 }
+            // } )
             .collect();
 
         // Update fitness of each specimen.
@@ -203,14 +213,20 @@ fn test_exploitation_correctness_on_basic_equation() {
         population.evolve();
 
         // Lookup for some better weights.
-        population.exploitation();
+        if generation_counter % cycle_per_structure == 0 {//}&& false {
+            // let best_score = scores.iter().min_by( |x, y| x.partial_cmp(y).unwrap() ).unwrap();
+            // let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
+            // println!("[{:>5}], best RMSE = {:.6} %, mean = {:.6} %",generation_counter, best_score, mean_score);
+            population.exploration();
+        } else {
+            population.exploitation();
+        }
 
 
-        let best_score = scores.iter().min_by( |x, y| x.partial_cmp(y).unwrap() ).unwrap();
+        let best_score = scores.iter().min_by( |x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater) ).unwrap();
         let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
-
-        generation_counter += 1;
-        println!("[{:>5}], best NRMSE = {:.6} %, mean = {:.6} %",generation_counter, best_score, mean_score);
+        // let mean_score: f32 = 0.0;
+        println!("[{:>5}], best RMSE = {:.6} , mean = {:.6}", generation_counter, best_score, mean_score);
     }
 
 }
@@ -220,7 +236,7 @@ fn test_exploitation_correctness_on_basic_equation() {
 fn main() {
 
     test_exploitation_correctness_on_basic_equation();
-    basic();
+    // basic();
 
 }
 

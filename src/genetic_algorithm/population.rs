@@ -6,7 +6,8 @@ use rand::{thread_rng, Rng};
 /// Rank base selection parameter.
 /// The usual formula for calculating the selection probability for linear 
 /// ranking schemes is parameterised by a value s (1 < s ≤ 2).
-const RANK_S: f32 = 1.5;
+const RANK_S: f32 = 2.0;
+// const RANK_S: f32 = 1.5;
 
 #[derive(Debug)]
 pub struct Population<T> {
@@ -159,12 +160,15 @@ impl Population<f32> {
     /// For good number of selection method in genetic algorithm, the fitness needs to be > 0, so
     /// we up each individual fitness in the population by the absolut value of the lowest fitness.
     fn clean_fitness(&mut self) {
+        use std::cmp::Ordering;
+
         let lowest_fitness: f32 = *self.species
             .iter()
-            .map(|s| s.fitness)
+            // .map(|s| s.fitness)
+            .map(|s| if s.fitness.is_finite() {s.fitness} else {-999.0})
             .collect::<Vec<f32>>()
             .iter()
-            .min_by( |x, y| x.partial_cmp(y).unwrap() )
+            .min_by( |x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater) )
             .unwrap_or(&0.0);
 
         if lowest_fitness < 0.0 {
@@ -218,8 +222,10 @@ impl Population<f32> {
             let mut shuffled_mating_pool_index_2: Vec<usize> = Vec::with_capacity(mating_pool_size);
 
             for i in 0..mating_pool_size {
-                shuffled_mating_pool_index_1.push(i);
-                shuffled_mating_pool_index_2.push(i);
+		if mating_pool[i].fitness.is_finite() {
+                    shuffled_mating_pool_index_1.push(i);
+                    shuffled_mating_pool_index_2.push(i);
+                }
             }
 
             thread_rng().shuffle(&mut shuffled_mating_pool_index_1);
@@ -229,16 +235,25 @@ impl Population<f32> {
                 if offspring_vector.len() == offspring_size {
                     break;
                 }
-                let father: &Specimen<f32> = &mating_pool[*i];
-                let mother: &Specimen<f32> = &mating_pool[*j];
+
+                let father: &Specimen<f32>;
+                let mother: &Specimen<f32>;
+
+                if mating_pool[*i].fitness >= mating_pool[*j].fitness {
+                    father = &mating_pool[*i];
+                    mother = &mating_pool[*j];
+                } else {
+                    father = &mating_pool[*j];
+                    mother = &mating_pool[*i];
+                }
+
 
                 let mut offspring: Specimen<f32> = Specimen::crossover(father, mother);
-                // if offspring.evaluate().len() == offspring.output_size {
                 if offspring.ann.is_valid() {
                     offspring_vector.push(offspring);
                 } else {
-                    panic!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
-                    println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
+                    // panic!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
+                    // println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
                 }
             }
 
