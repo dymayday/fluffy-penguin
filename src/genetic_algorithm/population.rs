@@ -159,12 +159,13 @@ impl Population<f32> {
     /// For good number of selection method in genetic algorithm, the fitness needs to be > 0, so
     /// we up each individual fitness in the population by the absolut value of the lowest fitness.
     fn clean_fitness(&mut self) {
+        use std::cmp::Ordering;
         let lowest_fitness: f32 = *self.species
             .iter()
             .map(|s| s.fitness)
             .collect::<Vec<f32>>()
             .iter()
-            .min_by( |x, y| x.partial_cmp(y).unwrap() )
+            .min_by( |x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater) )
             .unwrap_or(&0.0);
 
         if lowest_fitness < 0.0 {
@@ -238,7 +239,7 @@ impl Population<f32> {
                     offspring_vector.push(offspring);
                 } else {
                     panic!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
-                    println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
+                    // println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
                 }
             }
 
