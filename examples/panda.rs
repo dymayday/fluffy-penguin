@@ -235,7 +235,7 @@ fn _test_crossover() {
 
     // Network::align(&sp1.ann, &sp2.ann);
 
-    let mut offspring: Specimen<f32> = Specimen::crossover(&sp1, &sp2);
+    let mut offspring: Specimen<f32> = Specimen::crossover(&sp1, &sp2, false);
     println!("\n>> Offspring:");
     Network::pretty_print(&offspring.ann.genome);
 
@@ -330,61 +330,62 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
 
-    let population_size: usize = 4;
+    let population_size: usize = 20;
     let input_size: usize = 2;
     let output_size: usize = 1;
     let mutation_probability: f32 = 0.1;
 
-    let mutation_size: usize = 500;
+    let mutation_size: usize = 1000;
 
     let mut population: Population<f32> =
         Population::new(population_size, input_size, output_size, mutation_probability);
         // Population::new_from_example(population_size, mutation_probability);
 
-    for _smi in 0..mutation_size {
+    loop {
+        for _smi in 0..mutation_size {
 
-        // println!("Init population:");
-        for i in 0..population.species.len() {
+            // println!("Init population:");
+            for i in 0..population.species.len() {
 
-            let mut specimen: &mut Specimen<f32> = &mut population.species[i];
-            specimen.fitness = thread_rng().gen_range(-100_i32, 101_i32) as f32;
+                let mut specimen: &mut Specimen<f32> = &mut population.species[i];
+                specimen.fitness = thread_rng().gen_range(-100_i32, 101_i32) as f32;
 
-                if pretty_print {
-                    println!("Specimen {}", i);
-                    Network::pretty_print(&specimen.ann.genome);
+                    if pretty_print {
+                        println!("Specimen {}", i);
+                        Network::pretty_print(&specimen.ann.genome);
+                    }
+                    if export {
+                        let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
+                        let graph_name: &str = "initial";
+                        specimen.render(file_name, graph_name, print_weights);
+                    }
+
                 }
-                if export {
-                    let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
-                    let graph_name: &str = "initial";
-                    specimen.render(file_name, graph_name, print_weights);
+                // println!();
+                //
+                // let lowest_fitness: f32 = *population.species
+                //     .iter()
+                //     .map(|s| s.fitness)
+                //     .collect::<Vec<f32>>()
+                //     .iter()
+                //     .min_by( |x, y| x.partial_cmp(y).unwrap() )
+                //     .unwrap_or(&0.0);
+                //
+                // population.sort_species_by_fitness();
+                // let sus_selected = &population.species;
+                // for i in 0..sus_selected.len() {
+                //     // println!(" {:>4} : {:<4}", *&mut population.species[i].fitness as i32, sus_selected[i].fitness as i32);
+                //     println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
+                // }
+
+                if _smi % 10 == 0 {// || true {
+                    population.exploration();
+                } else {
+                    population.exploitation();
                 }
-
-            }
-            // println!();
-            //
-            // let lowest_fitness: f32 = *population.species
-            //     .iter()
-            //     .map(|s| s.fitness)
-            //     .collect::<Vec<f32>>()
-            //     .iter()
-            //     .min_by( |x, y| x.partial_cmp(y).unwrap() )
-            //     .unwrap_or(&0.0);
-            //
-            // population.sort_species_by_fitness();
-            // let sus_selected = &population.species;
-            // for i in 0..sus_selected.len() {
-            //     // println!(" {:>4} : {:<4}", *&mut population.species[i].fitness as i32, sus_selected[i].fitness as i32);
-            //     println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
-            // }
-
-            if _smi % 50 == 0 {// || true {
-                population.exploration();
-            } else {
-                population.exploitation();
-            }
-            population.evolve();
+                population.evolve();
+        }
     }
-
 }
 
 

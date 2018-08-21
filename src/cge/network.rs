@@ -421,6 +421,7 @@ impl Network<f32> {
     ) -> Option<Node<f32>> {
         let mut is_forward: bool;
         let mut potential_target_neuron_indices: Vec<usize>;
+
         match thread_rng().gen_range(0_usize, 2_usize) {
             0 => {
                 is_forward = true;
@@ -665,6 +666,9 @@ impl Network<f32> {
         let iota_sum: i32 = self.genome.iter().map(|n| n.iota).collect::<Vec<i32>>().iter().sum();
         if self.output_size as i32 != iota_sum {
             println!("iota_sum {} != {} self.output_size", iota_sum, self.output_size);
+            // println!("Test subject :");
+            // Network::pretty_print(&self.genome);
+            // panic!("iota_sum {} != {} self.output_size", iota_sum, self.output_size);
             return false;
         }
 
@@ -742,6 +746,7 @@ impl Network<f32> {
         neuron_index: usize,
         input_vec: &[Node<f32>],
     ) -> Vec<Node<f32>> {
+
         let input_len: usize = input_vec.len();
         let mut output_vec: Vec<Node<f32>> = Vec::with_capacity(input_len + 1);
 
@@ -762,15 +767,16 @@ impl Network<f32> {
 
             output_vec.push(node);
 
-            i += 1;
-            if i > input_len {
+            if i >= input_len {
                 println!(
                     "@build_jf_slice:\n\t>> Genome end reached. Looking for N{} at index {}, but we reached index {} and nothing.",
                     neuron_id, neuron_index, i
                 );
                 Network::pretty_print(input_vec);
+                panic!("@build_jf_slice:");
                 break;
             }
+            i += 1;
         }
 
         output_vec.shrink_to_fit();
@@ -887,13 +893,52 @@ impl Network<f32> {
 
             match node.allele {
                 Neuron { .. } => {
-                    i += 1;
-                    iota += 1;
-                    let mut inputs_tmp = Network::build_ref_input_subnetwork(&genome[i..]);
 
-                    i += inputs_tmp.len();
-                    // inputs.append(&mut inputs_tmp);
+
+                    let mut iota_tmp = node.iota;
                     inputs.push(node);
+
+                    i += 1;
+
+                    while iota_tmp != 1 && i < genome_len {
+
+
+                        let node: &Node<f32> = &genome[i];
+                        iota_tmp += node.iota;
+                        i += 1;
+
+
+                        // if node.is_neuron() {
+                        //     println!("is neuron = {}", node.gin);
+                        //     break;
+                        // } else {
+                        //     iota_tmp += 1;
+                        //     i += 1;
+                        // }
+                        // println!("NGIN {} is neuron ? | iota_tmp = {}", node.gin, iota_tmp);
+                    }
+                    iota += 1;
+
+                    //
+                    // // i += 1;
+                    // iota += 1;
+                    // let j: usize = i + (1 - node.iota) as usize;
+                    // let mut inputs_tmp;
+                    // if j < genome_len {
+                    //     inputs_tmp = Network::build_ref_input_subnetwork(&genome[j..]);
+                    //     i += 1 + inputs_tmp.len();
+                    // } else {
+                    //     inputs_tmp = Network::build_ref_input_subnetwork(&genome[i..]);
+                    //     i += 1;
+                    // }
+                    // // let mut inputs_tmp = Network::build_ref_input_subnetwork(&genome[j..]);
+                    // // i += 1 + inputs_tmp.len();
+                    //
+                    // // let mut inputs_tmp = Network::build_ref_input_subnetwork(&genome[i..]);
+                    // i += inputs_tmp.len();
+                    //
+                    // // inputs.append(&mut inputs_tmp);
+                    // inputs.push(node);
                 }
                 _ => {
                     i += 1;
@@ -904,6 +949,7 @@ impl Network<f32> {
 
         }
 
+        inputs.dedup_by(|a, b| a.gin.eq(&b.gin));
         inputs
     }
 
@@ -1167,9 +1213,9 @@ impl Network<f32> {
 
 
     /// Compute an ARN properly this time
-    fn _compute_aligned_arn_2(genome_1: &[Node<f32>], genome_2: &[Node<f32>]) -> Vec<Node<f32>> {
+    fn _compute_aligned_arn_2(genome_1: &[Node<f32>], genome_2: &[Node<f32>], debug: bool) -> Vec<Node<f32>> {
         // let debug: bool = true;
-        let debug: bool = false;
+        // let debug: bool = false;
 
         let netw1_len: usize = genome_1.len();
         let netw2_len: usize = genome_2.len();
@@ -1219,8 +1265,35 @@ impl Network<f32> {
                     let nbi_1: i32 = 1 - n1.iota;
                     let nbi_2: i32 = 1 - n2.iota;
 
+                    // let mut shadow_arn = arn.clone();
+
                     let slice_1: Vec<&Node<f32>> = genome_1[netw1_len - 1 - i ..].iter().map(|n| n).collect();
                     let slice_2: Vec<&Node<f32>> = genome_2[netw2_len - 1 - j ..].iter().map(|n| n).collect();
+
+                    // shadow_arn.reverse();
+                    // let mut shadow_arn_slice: Vec<&Node<f32>> = shadow_arn.iter().map(|n| n).collect();
+                    // shadow_arn_slice.append(&mut slice_1);
+                    // slice_1.append(&mut shadow_arn_slice.clone());
+                    // slice_1.sort_by(|a, b| a.gin.cmp(&b.gin));
+                    // slice_1.dedup_by(|a, b| a.gin.eq(&b.gin));
+
+
+
+
+                    // let neuron_inputs_1 = Network::build_ref_input_subnetwork(&slice_1);
+                    // let neuron_inputs_1 = Network::build_ref_input_subnetwork(&shadow_arn_slice);
+                    // if shadow_arn_slice.len() > 0 {
+                    //     neuron_inputs_1.append(&mut shadow_arn_slice.clone());
+                    //     neuron_inputs_1.sort_by(|a, b| a.gin.cmp(&b.gin));
+                    //     neuron_inputs_1.dedup_by(|a, b| a.gin.eq(&b.gin));
+                    // }
+
+                    // if shadow_arn_slice.len() > 0 {
+                    //     println!("Shadow ARN :");
+                    //     Network::pretty_print(&shadow_arn);
+                    //
+                    //     neuron_inputs_1 = Network::build_ref_input_subnetwork(&shadow_arn_slice);
+                    // }
 
 
                     let neuron_inputs_1 = Network::build_ref_input_subnetwork(&slice_1);
@@ -1231,9 +1304,18 @@ impl Network<f32> {
 
                     n.iota = 1 - (nbi_1 + nbi_2 - common_node_count);
                     if debug {
+
+                        if let Neuron {id} = n1.allele {
+                            println!("\nN{:<3} ({:^3}):", id, n1.gin);
+                        };
+
+                        // println!("arn = {:?}", arn.iter().map(|x| x.gin).collect::<Vec<usize>>() );
+                        // println!("shadow_arn = {:?}", shadow_arn.iter().map(|x| x.gin).collect::<Vec<usize>>() );
+                        // println!("shadow_arn_slice = {:?}", shadow_arn_slice.iter().map(|x| x.gin).collect::<Vec<usize>>() );
+                        // println!("slice_1 = {:?}", slice_1.iter().map(|x| x.gin).collect::<Vec<usize>>() );
                         println!("neuron_inputs_from_n1 = {:?}", neuron_inputs_1.iter().map(|x| x.gin).collect::<Vec<usize>>() );
                         println!("neuron_inputs_from_n2 = {:?}", neuron_inputs_2.iter().map(|x| x.gin).collect::<Vec<usize>>() );
-                        println!("iota = 1 - ({} + {} - {}) = {}", nbi_1, nbi_2, common_node_count, n.iota);
+                        println!("iota = 1 - ({} + {} - {}) = {}\n", nbi_1, nbi_2, common_node_count, n.iota);
                     }
 
 
@@ -1282,9 +1364,9 @@ impl Network<f32> {
         arn
     }
 
-    pub fn crossover_2(network_1: &Network<f32>, network_2: &Network<f32>, fitness_1: f32, fitness_2: f32) -> Network<f32> {
+    pub fn crossover_2(network_1: &Network<f32>, network_2: &Network<f32>, fitness_1: f32, fitness_2: f32, debug: bool) -> Network<f32> {
 
-        let aligned_network = Network::align_2(&network_1, &network_2).expect("Fail to align 2");
+        let aligned_network = Network::align_2(&network_1, &network_2, debug).expect("Fail to align 2");
 
         let genome_1 = network_1.genome.clone();
         let genome_2 = network_2.genome.clone();
@@ -1351,15 +1433,16 @@ impl Network<f32> {
     }
 
 
-    pub fn align_2(network_1: &Network<f32>, network_2: &Network<f32>) -> Result<Network<f32>, ()> {
+    pub fn align_2(network_1: &Network<f32>, network_2: &Network<f32>, debug: bool) -> Result<Network<f32>, ()> {
         // let debug: bool = true;
-        let debug: bool = false;
-        let arn: Vec<Node<f32>> = Network::_compute_aligned_arn_2(&network_1.genome, &network_2.genome);
+        // let debug: bool = false;
+        let arn: Vec<Node<f32>> = Network::_compute_aligned_arn_2(&network_1.genome, &network_2.genome, debug);
 
 
         if debug {
             println!("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   ARN:");
             Network::pretty_print(&arn);
+            println!("\n\n\n");
         }
 
 
