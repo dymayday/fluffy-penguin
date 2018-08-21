@@ -23,20 +23,20 @@ pub const INPUT_NODE_DEPTH_VALUE: u16 = 999;
 #[derive(Clone, Debug, PartialEq)]
 pub enum Allele {
     // A Neuron is the basic unit process of an artificial neural network.
-    Neuron,
+    Neuron { id: usize },
     // An Input gene (Node) encodes an input to the network (for example, a sensory signal).
     // Each Input corresponds to the inputs fed to our artificial neural network.
-    Input,
+    Input { label: usize },
     //  A jumper gene encoding a forward connection represents a connection starting from a neuron at
     //  a higher depth and ending at a neuron at a lower depth. The depth of a neuron node in a linear
     //  genome is the minimal number of neuron nodes that must be traversed to get from the output
     //  neuron to the neuron node, where the output neuron and the neuron node
     //  lie within the same sub-network that starts from the output neuron.
-    JumpForward,
+    JumpForward { source_id: usize },
     //  On the other hand, a jumper gene encoding a recurrent connection represents a connection
     //  between neurons having the same depth, or a connection starting
     //  from a neuron at a lower depth and ending at a neuron at a higher depth.
-    JumpRecurrent,
+    JumpRecurrent { source_id: usize },
     // Not a Node special kind of Allele, used during crossover operation to align the common parts
     // of two genomes.
     NaN,
@@ -54,8 +54,6 @@ pub struct Node<T> {
     // This is the specific form a gene can take. Possible values are contained in
     // the 'Allele' enum: Neuron, Input, JumpForward, JumpRecurrent.
     pub allele: Allele,
-    // Unique global identification number. This is used especially by jumper connections.
-    pub id: usize,
     // Global Innovation Number represents a chronology of every gene in the system.
     pub gin: usize,
     // The weight encodes the synaptic strength of the connection between the Node
@@ -76,11 +74,10 @@ pub struct Node<T> {
 
 
 impl Node<f32> {
-    pub fn new(allele: Allele, id: usize, gin: usize, w: f32, iota: i32, depth: u16) -> Self {
+    pub fn new(allele: Allele, gin: usize, w: f32, iota: i32, depth: u16) -> Self {
         use genetic_algorithm::individual::LEARNING_RATE_THRESHOLD;
         Node {
             allele,
-            id,
             gin,
             w,
             sigma: LEARNING_RATE_THRESHOLD as f32,
@@ -95,7 +92,6 @@ impl Node<f32> {
     pub fn new_nan(gin: usize, iota: i32) -> Self {
         Node {
             allele: Allele::NaN,
-            id: 0,
             gin,
             w: 0.0,
             sigma: 0.0,
@@ -105,16 +101,14 @@ impl Node<f32> {
         }
     }
 
-
     /// Returns a proper random weight in the space: [0.0, 1.0], with one decimal value.
     pub fn random_weight() -> f32 {
-        // thread_rng().gen_range(0_i32, 11_i32) as f32 / 10.0_f32
         thread_rng().gen_range(0_f32, 1_f32)
     }
 
-    /// Returns wether or not 2 alleles are considered as common part during alignment process.
-    pub fn is_common(&self, other: &Node<f32>) -> bool {
-        self.allele == other.allele && self.id == other.id 
+    /// Returns either or not self.allele is a Neuron
+    pub fn is_neuron(&self) -> bool {
+        if let Allele::Neuron { .. } = self.allele { true }  else { false }
     }
 }
 

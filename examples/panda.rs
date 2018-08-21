@@ -296,7 +296,13 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
             for (i, offspring) in population.species.iter().enumerate() {
                 println!("Offspring {}", i);
 
-                let mut neuron_list: Vec<usize> = offspring.ann.genome.iter().filter(|n| n.allele == Allele::Neuron).map(|n| n.id).collect();
+                let mut neuron_list: Vec<usize> = offspring.ann.genome.iter()
+                    .filter_map(|n| {
+                        if let Allele::Neuron { id } = n.allele {
+                            Some(id)
+                        } else { None }
+                    })
+                    .collect();
                 neuron_list.sort();
                 println!("Neuron ids = {:?}", neuron_list);
 
