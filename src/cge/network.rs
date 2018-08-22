@@ -37,9 +37,9 @@ pub struct Network<T> {
     // Neuron value processed by a `Transfer Function`.
     pub neuron_map: Vec<T>,
     // Neuron index lookup table: <genome[i].id, index in self.genome>
-    neuron_indices_map: HashMap<usize, usize>,
+    pub neuron_indices_map: HashMap<usize, usize>,
     // The number of Output in this Network. It's a constant value as well.
-    output_size: usize,
+    pub output_size: usize,
 }
 
 impl Network<f32> {
@@ -609,11 +609,12 @@ impl Network<f32> {
                 neuron_id_to_idx.insert(id, i);
             }
         }
-        let mut last_evaluated_node_idx: Option<usize> = None;
         let mut nodes_indices_to_process: Vec<usize> = (0..self.genome.len()).collect();
+        // store the neuron ids we want to evaluate for JumpForwards
+        let mut forward_in_process: Vec<usize> = Vec::new();
         'node_eval: while let Some(node_idx) = nodes_indices_to_process.pop() {
             let node = &self.genome[node_idx];
-            println!("{} {:?}", &node_idx, &node);
+            println!("{} {:?}", &node_idx, &node.allele);
             match &node.allele {
                 Input { label } => { 
                     let input_value = self.input_map[*label].relu() * node.w;
@@ -649,18 +650,21 @@ impl Network<f32> {
                             }
                             // append them to the node to evaluate list
                             nodes_indices_to_process.extend(sub_network_indices.iter());
-                            // keep history up to date
-                            last_evaluated_node_idx = Some(node_idx);
+                            // keep track of the current forward process
+                            forward_in_process.push(*source_id);
                             continue 'node_eval;
                         },
                         Some(neuron_value) => {
                             // at this point, either the neuron was already evalutated,
                             // or we just evaluated it for this node
                             // If we did, we must un-pop the stack for it
-                            if let Some(last_node_idx) = last_evaluated_node_idx {
-                                if last_node_idx == *neuron_id_to_idx.get(&source_id)? {
-                                    let t = neuron_input_stack.pop()?;
-                                }
+                            let mut must_pop_stack = false;
+                            if let Some(neuron_id) = forward_in_process.last() {
+                                must_pop_stack = neuron_id == source_id;
+                            }
+                            if must_pop_stack {
+                                let _ = neuron_input_stack.pop()?;
+                                let _ = forward_in_process.pop()?;
                             }
                             // now we can process it
                             let mut value = node.w * neuron_value.isrlu(0.1);
@@ -686,8 +690,6 @@ impl Network<f32> {
                 },
                 _Nan => {},
             }
-            // update the history of the evaluation process
-            last_evaluated_node_idx = Some(node_idx);
         }
         Some(neuron_input_stack)
     }
