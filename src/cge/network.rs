@@ -524,20 +524,9 @@ impl Network<f32> {
 
 
     /// Evaluate the linear genome to compute the output of the artificial neural network without decoding it.
-    pub fn evaluate(&mut self) -> Option<Vec<f32>> {
+    pub fn old_evaluate(&mut self) -> Option<Vec<f32>> {
         let g = self.genome.clone();
-        let output: Vec<f32> = self.evaluate_slice(&g)?;
-
-        // We test here if the evaluation worked smoothly by checking the expected number of
-        // output spit out by our artificial neural network.
-        // assert_eq!(
-        //     output.len(),
-        //     self.output_size,
-        //     "Evaluated genome output length {} != Expected output length {}",
-        //     output.len(),
-        //     self.output_size
-        // );
-        Some(output)
+        self.evaluate_slice(&g)
     }
 
 
@@ -546,11 +535,10 @@ impl Network<f32> {
     fn evaluate_slice(&mut self, input: &[Node<f32>]) -> Option<Vec<f32>> {
         // a stack that represents the "data flow", from the input
         // to the output of this sub-network
-        let mut stack: Vec<f32> = Vec::with_capacity(input.len());
-        let input_len: usize = input.len();
+        let mut stack: Vec<f32> = Vec::new();
 
         // iterate the nodes (in reverse)
-        for i in (0..input_len).rev() {
+        for i in (0..input.len()).rev() {
             let mut node: Node<f32> = input[i].clone();
 
             match node.allele {
@@ -595,7 +583,7 @@ impl Network<f32> {
                             .iter()
                             .sum::<f32>()
                             .isrlu(0.1)
-                            * node.w,
+                            * node.w
                     );
                 }
                 NaN => {
@@ -606,6 +594,102 @@ impl Network<f32> {
 
         // stack
         Some(stack)
+    }
+
+    /// Evaluate a genome, using the values from `self.inputs`
+    /// returns the associated outputs
+    pub fn evaluate(&self) -> Option<Vec<f32>> {
+        let mut neuron_input_stack: Vec<f32> = Vec::new();
+        // map any neuron ID to its computed output
+        let mut neuron_id_to_value: HashMap<usize, f32> = HashMap::new();
+        // build a lookup table: Neuron ID to neuron index in self.genome
+        let mut neuron_id_to_idx: HashMap<usize, usize> = HashMap::new();
+        for (i, node) in self.genome.iter().enumerate() {
+            if let Neuron { id } = node.allele {
+                neuron_id_to_idx.insert(id, i);
+            }
+        }
+        let mut last_evaluated_node_idx: Option<usize> = None;
+        let mut nodes_indices_to_process: Vec<usize> = (0..self.genome.len()).collect();
+        'node_eval: while let Some(node_idx) = nodes_indices_to_process.pop() {
+            let node = &self.genome[node_idx];
+            println!("{} {:?}", &node_idx, &node);
+            match &node.allele {
+                Input { label } => { 
+                    let input_value = self.input_map[*label].relu() * node.w;
+                    neuron_input_stack.push(input_value);
+                },
+                JumpRecurrent { source_id } => {
+                    // fetch the output value of the neuron, it must has been computed
+                    // by now
+                    let value = node.w * neuron_id_to_value.get(&source_id).unwrap_or(&0.);
+                    neuron_input_stack.push(value);
+                },
+                JumpForward { source_id } => {
+                    // fetch the ouput of the neuron source,
+                    // if it's been alredy computed, use it,
+                    // otherwise first compute it by:
+                    //  - moving the stack machine to the subnetwork
+                    //  needed to compute the neuron output
+                    //  - re-try to evaluate this node
+                    match neuron_id_to_value.get(&source_id) {
+                        None => {
+                            // un-pop the current node, because we can not evaluate
+                            // it right now
+                            nodes_indices_to_process.push(node_idx);
+                            // figure out wich node to evaluate before evaluating the
+                            // current node.
+                            let mut sub_network_indices: Vec<usize> = Vec::new();
+                            let mut iota: i32 = 0;
+                            let mut idx = *neuron_id_to_idx.get(&source_id)?;
+                            while iota != 1 && idx < self.genome.len() {
+                                iota += self.genome[idx].iota;
+                                sub_network_indices.push(idx);
+                                idx += 1;
+                            }
+                            // append them to the node to evaluate list
+                            nodes_indices_to_process.extend(sub_network_indices.iter());
+                            // keep history up to date
+                            last_evaluated_node_idx = Some(node_idx);
+                            continue 'node_eval;
+                        },
+                        Some(neuron_value) => {
+                            // at this point, either the neuron was already evalutated,
+                            // or we just evaluated it for this node
+                            // If we did, we must un-pop the stack for it
+                            if let Some(last_node_idx) = last_evaluated_node_idx {
+                                if last_node_idx == *neuron_id_to_idx.get(&source_id)? {
+                                    let t = neuron_input_stack.pop()?;
+                                }
+                            }
+                            // now we can process it
+                            let mut value = node.w * neuron_value.isrlu(0.1);
+                            //// comply with old evaluation process, feels wrong to me
+                            //let source_node_weight = self.genome[*neuron_id_to_idx.get(&source_id)?].w;
+                            //value *= source_node_weight;
+                            neuron_input_stack.push(value);
+                        },
+                    }
+                },
+                Neuron { id } => {
+                    // Compute the output of this neuron
+                    let mut neuron_value: f32 = 0.;
+                    let input_len = 1 - node.iota;
+                    for _ in 0..input_len {
+                        neuron_value += neuron_input_stack.pop()?;
+                    }
+                    neuron_value = neuron_value.relu();
+                    // stores it for jumping connection
+                    neuron_id_to_value.insert(*id, neuron_value);
+                    // store it as an input to the rest ro the genome
+                    neuron_input_stack.push(neuron_value * node.w);
+                },
+                _Nan => {},
+            }
+            // update the history of the evaluation process
+            last_evaluated_node_idx = Some(node_idx);
+        }
+        Some(neuron_input_stack)
     }
 
 
