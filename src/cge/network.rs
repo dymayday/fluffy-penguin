@@ -478,7 +478,8 @@ impl Network<f32> {
 
     /// Compute the indexes of the Neuron in the linear genome so we can find them easily during
     /// the evaluation process. This function is meant to be call only once at init time.
-    fn compute_neuron_indices(genome: &Vec<Node<f32>>) -> HashMap<usize, usize> {
+    fn compute_neuron_indices(genome: &[Node<f32>]) -> HashMap<usize, usize> {
+        // The initial capacity of the HashMap is totally arbitrary.
         let mut neuron_indices_hashmap: HashMap<usize, usize> =
             HashMap::with_capacity(genome.len() / 2 as usize);
         for i in 0..genome.len() {
@@ -488,6 +489,22 @@ impl Network<f32> {
         }
         neuron_indices_hashmap.shrink_to_fit();
         neuron_indices_hashmap
+    }
+
+
+    /// Compute the indices of each Neuron gin into a HashMap lookup table.
+    pub fn compute_neurons_gin_indices_map(genome: &[Node<f32>]) -> HashMap<usize, usize> {
+        // The initial capacity of the HashMap is totally arbitrary.
+        let mut neurons_gin_indices_hashmap: HashMap<usize, usize> =
+            HashMap::with_capacity(genome.len() / 2 as usize);
+
+        for i in 0..genome.len() {
+            if let Neuron { id } = genome[i].allele {
+                neurons_gin_indices_hashmap.insert(genome[i].gin, i);
+            }
+        }
+        neurons_gin_indices_hashmap.shrink_to_fit();
+        neurons_gin_indices_hashmap
     }
 
 
@@ -665,9 +682,9 @@ impl Network<f32> {
 
         let iota_sum: i32 = self.genome.iter().map(|n| n.iota).collect::<Vec<i32>>().iter().sum();
         if self.output_size as i32 != iota_sum {
-            println!("iota_sum {} != {} self.output_size", iota_sum, self.output_size);
-            // println!("Test subject :");
-            // Network::pretty_print(&self.genome);
+            println!("\n>> iota_sum {} != {} self.output_size", iota_sum, self.output_size);
+            println!("Test subject :");
+            Network::pretty_print(&self.genome);
             // panic!("iota_sum {} != {} self.output_size", iota_sum, self.output_size);
             return false;
         }
@@ -1364,6 +1381,48 @@ impl Network<f32> {
         arn
     }
 
+
+    /// Compute an ARN properly this time
+    fn _compute_aligned_arn_3(genome_1: &[Node<f32>], genome_2: &[Node<f32>], debug: bool) -> Vec<Node<f32>> {
+
+        let netw1_len: usize = genome_1.len();
+        let netw2_len: usize = genome_2.len();
+        let max_genome_size: usize = netw1_len + netw2_len;
+
+        let mut arn: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
+
+        let n1_gin_vector: Vec<usize> = genome_1.iter().map(|n| n.gin).collect();
+        let n2_gin_vector: Vec<usize> = genome_2.iter().map(|n| n.gin).collect();
+
+        let mut n1_gin_node_map: HashMap<usize, &Node<f32>> = HashMap::with_capacity(max_genome_size);
+        let mut n2_gin_node_map: HashMap<usize, &Node<f32>> = HashMap::with_capacity(max_genome_size);
+
+        // Init genome_1's HashMap.
+        for i in 0..netw1_len {
+            let n: &Node<f32> = &genome_1[i];
+            n1_gin_node_map.insert(n.gin, n);
+        }
+
+        // Init genome_2's HashMap.
+        for i in 0..netw2_len {
+            let n: &Node<f32> = &genome_2[i];
+            n2_gin_node_map.insert(n.gin, n);
+        }
+
+
+        let mut stack_1: Vec<Node<f32>> = Vec::with_capacity(netw1_len);
+        let mut stack_2: Vec<Node<f32>> = Vec::with_capacity(netw2_len);
+        let mut skip_stack: Vec<usize> = Vec::with_capacity(netw1_len);
+
+        let (mut i, mut j ): (usize, usize) = (0, 0);
+
+
+
+        arn.reverse();
+        arn
+    }
+
+
     pub fn crossover_2(network_1: &Network<f32>, network_2: &Network<f32>, fitness_1: f32, fitness_2: f32, debug: bool) -> Network<f32> {
 
         let aligned_network = Network::align_2(&network_1, &network_2, debug).expect("Fail to align 2");
@@ -1490,6 +1549,121 @@ impl Network<f32> {
         }
 
         arn_sorted
+    }
+
+
+    /// Sort the second genome according to the order of the first one.
+    pub fn sort_genome(network_1: &Network<f32>, network_2: &Network<f32>) -> (Network<f32>, Network<f32>) {
+    // pub fn sort_genome(genome_1: &[Node<f32>], genome_2: &[Node<f32>]) -> (Vec<Node<f32>>, Vec<Node<f32>>) {
+        
+        let genome_1 = &network_1.genome;
+        let genome_2 = &network_2.genome;
+
+        let genome_1_len: usize = genome_1.len();
+        let genome_2_len: usize = genome_2.len();
+
+        let mut genome_sorted: Vec<Node<f32>> = Vec::with_capacity(genome_1_len + genome_2_len);
+
+        // Let's build a vector containing the GIN of each the Neurons in each genome.
+        let n1_gin_vector: Vec<usize> = genome_1.iter().filter_map(|n| {
+            if let Neuron { .. } = n.allele {
+                Some(n.gin)
+            } else { None }
+        }).collect();
+
+        let n2_gin_vector: Vec<usize> = genome_2.iter().filter_map(|n| {
+            if let Neuron { .. } = n.allele {
+                Some(n.gin)
+            } else { None }
+        }).collect();
+
+
+        let ref_network;
+        let mut other_network;
+
+        let ref_genome;
+        let other_genome;
+
+        let mut ref_gin_v: Vec<usize>;
+        let other_gin_v: Vec<usize>;
+
+        let ref_neuron_gin_map: HashMap<usize, usize>;
+        let other_neuron_gin_map: HashMap<usize, usize>;
+
+        if n1_gin_vector.len() >= n2_gin_vector.len() {
+            ref_network = network_1;
+            other_network = network_2.clone();
+
+            ref_genome = genome_1;
+            other_genome = genome_2;
+
+            ref_gin_v = n1_gin_vector;
+            other_gin_v = n2_gin_vector;
+
+            ref_neuron_gin_map = Network::compute_neurons_gin_indices_map(genome_1);
+            other_neuron_gin_map = Network::compute_neurons_gin_indices_map(genome_2);
+        } else {
+            ref_network = network_2;
+            other_network = network_1.clone();
+
+            ref_genome = genome_2;
+            other_genome = genome_1;
+
+            ref_gin_v = n2_gin_vector;
+            other_gin_v = n1_gin_vector;
+
+            ref_neuron_gin_map = Network::compute_neurons_gin_indices_map(genome_2);
+            other_neuron_gin_map = Network::compute_neurons_gin_indices_map(genome_1);
+        }
+
+        ref_gin_v.reverse();
+        // other_gin_v.reverse();
+
+
+        let mut slice: Vec<Node<f32>>;
+
+
+        for ref_neuron_gin in ref_gin_v {
+            let mut gin_already_sorted: Vec<usize> = genome_sorted.iter().filter_map(|n| {
+                    if let Neuron { .. } = n.allele {
+                        Some(n.gin)
+                    } else { None }
+                }).collect();
+
+            if other_gin_v.contains(&ref_neuron_gin) && !gin_already_sorted.contains(&ref_neuron_gin) {
+
+                let neuron_idx: usize = *other_neuron_gin_map.get(&ref_neuron_gin)
+                        .expect("\n@sort_genome:\n\t>> Fail to lookup ref_neuron_gin.");
+
+                if gin_already_sorted.len() == 0 {
+
+                    slice = other_genome[neuron_idx..].to_vec();
+                    genome_sorted.append(&mut slice);
+
+                } else {
+                    let end_idx: usize = *other_neuron_gin_map.get(&gin_already_sorted[0])
+                        .expect("\n@sort_genome:\n\t>> Fail to lookup ref_neuron_gin in a non empty sorted genome.");
+
+                    slice = other_genome[neuron_idx..end_idx].to_vec();
+                    slice.append(&mut genome_sorted);
+                    genome_sorted = slice;
+                }
+            }
+
+
+        }
+
+        println!("\n\n");
+        println!("  Ref Genome:");
+        Network::pretty_print(&ref_genome);
+        println!("Sorted Genome:");
+        Network::pretty_print(&genome_sorted);
+        println!("\n\n");
+
+
+        other_network.genome = genome_sorted;
+
+        (ref_network.clone(), other_network)
     }
 
 
@@ -1789,7 +1963,7 @@ impl Network<f32> {
                 );
                 writer.write(msg.as_bytes())?;
 
-                for i in 1..self.output_size {
+                for i in 0..self.output_size {
                     let msg: String = format!("N{} ", i);
                     writer.write(msg.as_bytes())?;
                 }

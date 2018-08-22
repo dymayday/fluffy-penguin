@@ -253,16 +253,23 @@ impl Population<f32> {
                     offspring_vector.push(offspring);
                 } else {
 
-                    // use cge::Network;
-                    // println!("\n\n\n\nFather:");
-                    // Network::pretty_print(&father.ann.genome);
-                    // println!("Mother:");
-                    // Network::pretty_print(&mother.ann.genome);
-                    //
-                    // offspring.ann.is_valid();
-                    // let mut offspring: Specimen<f32> = Specimen::crossover(father, mother, false);
+                    use cge::Network;
+                    println!("\n\n\n\nFather:");
+                    Network::pretty_print(&father.ann.genome);
+                    father.render(&format!("tmp/father_{:.4}.dot", (father.fitness * 10_000.0) as f32), "Father", false);
 
-                    // panic!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
+                    println!("Mother:");
+                    Network::pretty_print(&mother.ann.genome);
+                    mother.render(&format!("tmp/mother_{:.4}.dot", (mother.fitness * 10_000.0) as f32), "Mother", false);
+
+                    println!("Offspring:");
+                    Network::pretty_print(&offspring.ann.genome);
+                    // offspring.ann.render_to_dot("tmp/offspring.dot", "Offspring", false);
+
+                    offspring.ann.is_valid();
+                    let mut offspring: Specimen<f32> = Specimen::crossover(father, mother, true);
+
+                    panic!("father {} and mother {} failed to reproduce.", father.fitness * 10_000.0, mother.fitness * 10_000.0);
                     println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
                 }
             }

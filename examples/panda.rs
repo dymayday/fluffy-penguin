@@ -7,6 +7,8 @@ use fluffy_penguin::cge::Network;
 use fluffy_penguin::genetic_algorithm::individual::Specimen;
 use fluffy_penguin::genetic_algorithm::Population;
 use rand::{thread_rng, Rng};
+use std::fs;
+use std::path::Path;
 // use std::process::Command;
 
 
@@ -330,34 +332,45 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
 
-    let population_size: usize = 20;
+    let population_size: usize = 10;
     let input_size: usize = 2;
     let output_size: usize = 1;
     let mutation_probability: f32 = 0.1;
 
-    let mutation_size: usize = 1000;
+    let mutation_size: usize = 100;
 
-    let mut population: Population<f32> =
-        Population::new(population_size, input_size, output_size, mutation_probability);
+    // let mut population: Population<f32> =
+        // Population::new(population_size, input_size, output_size, mutation_probability);
         // Population::new_from_example(population_size, mutation_probability);
 
+
     loop {
+
+        let mut file_to_remove: Vec<String> = Vec::with_capacity(population_size);
+        let mut population: Population<f32> =
+            Population::new(population_size, input_size, output_size, mutation_probability);
+
         for _smi in 0..mutation_size {
+            println!();
 
             // println!("Init population:");
             for i in 0..population.species.len() {
 
                 let mut specimen: &mut Specimen<f32> = &mut population.species[i];
-                specimen.fitness = thread_rng().gen_range(-100_i32, 101_i32) as f32;
+                specimen.fitness = thread_rng().gen_range(0_i32, 101_i32) as f32;
 
                     if pretty_print {
                         println!("Specimen {}", i);
                         Network::pretty_print(&specimen.ann.genome);
                     }
+
                     if export {
-                        let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
+                        let file_name: String = format!("tmp/specimen-{:04}.dot", specimen.fitness);
+
                         let graph_name: &str = "initial";
-                        specimen.render(file_name, graph_name, print_weights);
+                        specimen.render(&file_name, graph_name, print_weights);
+
+                        file_to_remove.push(file_name);
                     }
 
                 }
@@ -385,13 +398,28 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
                 }
                 population.evolve();
         }
+
+        if export {
+            file_to_remove.sort();
+            file_to_remove.dedup();
+
+            for file_name in file_to_remove {
+
+                let file_path = Path::new(&file_name);
+                fs::remove_file(&file_path).expect(&format!("Fail to remove {:?}", file_path));
+
+                let svg_file_name: String = file_name.replace(".dot", ".svg");
+                let file_path = Path::new(&svg_file_name);
+                fs::remove_file(&file_path).expect(&format!("Fail to remove {}", svg_file_name));
+            }
+        }
     }
 }
 
 
 
 fn main() {
-    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (true, false, false);
+    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, true, false);
     // _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();

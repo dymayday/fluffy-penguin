@@ -2,6 +2,7 @@ use cge::{Allele, Network, Node};
 use genetic_algorithm::mutation::StructuralMutation;
 use rand::distributions::StandardNormal;
 use rand::{self, thread_rng, Rng};
+use std::collections::HashMap;
 
 pub const LEARNING_RATE_THRESHOLD: f32 = 0.01;
 
@@ -331,7 +332,14 @@ impl Specimen<f32> {
         let mut specimen = specimen_1.clone();
 
         // specimen.ann = Network::crossover(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness);
-        specimen.ann = Network::crossover_2(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness, debug);
+
+
+        // let (father, mother) = Network::sort_genome(&specimen_1.ann, &specimen_2.ann);
+        let (father, mother) = Specimen::sort_specimens_genome(&specimen_1, &specimen_2, false);
+        println!("Crossover between: {} x {}", father.fitness, mother.fitness);
+        specimen.ann = Network::crossover_2(&father.ann, &mother.ann, father.fitness, mother.fitness, debug);
+
+        // specimen.ann = Network::crossover_2(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness, debug);
 
         specimen.update();
 
@@ -339,6 +347,134 @@ impl Specimen<f32> {
         specimen.fitness = 0.0;
 
         specimen
+    }
+
+
+    /// Sort the second genome according to the order of the first one.
+    pub fn sort_specimens_genome(specimen_1: &Specimen<f32>, specimen_2: &Specimen<f32>, debug: bool) -> (Specimen<f32>, Specimen<f32>) {
+        use cge::Allele::Neuron;
+
+        let genome_1 = &specimen_1.ann.genome;
+        let genome_2 = &specimen_2.ann.genome;
+
+        let genome_1_len: usize = genome_1.len();
+        let genome_2_len: usize = genome_2.len();
+
+        let mut genome_sorted: Vec<Node<f32>> = Vec::with_capacity(genome_1_len + genome_2_len);
+
+        // Let's build a vector containing the GIN of each the Neurons in each genome.
+        let n1_gin_vector: Vec<usize> = genome_1.iter().filter_map(|n| {
+            if let Neuron { .. } = n.allele {
+                Some(n.gin)
+            } else { None }
+        }).collect();
+
+        let n2_gin_vector: Vec<usize> = genome_2.iter().filter_map(|n| {
+            if let Neuron { .. } = n.allele {
+                Some(n.gin)
+            } else { None }
+        }).collect();
+
+
+        let ref_specimen;
+        let mut other_specimen;
+
+        let ref_genome;
+        let other_genome;
+
+        let mut ref_gin_v: Vec<usize>;
+        let other_gin_v: Vec<usize>;
+
+        let ref_neuron_gin_map: HashMap<usize, usize>;
+        let other_neuron_gin_map: HashMap<usize, usize>;
+
+        if n1_gin_vector.len() >= n2_gin_vector.len() {
+            ref_specimen = specimen_1;
+            other_specimen = specimen_2.clone();
+
+            ref_genome = genome_1;
+            other_genome = genome_2;
+
+            ref_gin_v = n1_gin_vector;
+            other_gin_v = n2_gin_vector;
+
+            ref_neuron_gin_map = Network::compute_neurons_gin_indices_map(&genome_1);
+            other_neuron_gin_map = Network::compute_neurons_gin_indices_map(&genome_2);
+        } else {
+            ref_specimen = specimen_2;
+            other_specimen = specimen_1.clone();
+
+            ref_genome = genome_2;
+            other_genome = genome_1;
+
+            ref_gin_v = n2_gin_vector;
+            other_gin_v = n1_gin_vector;
+
+            ref_neuron_gin_map = Network::compute_neurons_gin_indices_map(&genome_2);
+            other_neuron_gin_map = Network::compute_neurons_gin_indices_map(&genome_1);
+        }
+
+        ref_gin_v.reverse();
+        // other_gin_v.reverse();
+
+
+        let mut slice: Vec<Node<f32>>;
+
+
+        for ref_neuron_gin in ref_gin_v {
+            if debug {
+                println!("ref_neuron_gin = {}", ref_neuron_gin);
+            }
+
+            let mut gin_already_sorted: Vec<usize> = genome_sorted.iter().filter_map(|n| {
+                    if let Neuron { .. } = n.allele {
+                        Some(n.gin)
+                    } else { None }
+                }).collect();
+
+            if other_gin_v.contains(&ref_neuron_gin) && !gin_already_sorted.contains(&ref_neuron_gin) {
+
+                let neuron_idx: usize = *other_neuron_gin_map.get(&ref_neuron_gin)
+                        .expect("\n@sort_genome:\n\t>> Fail to lookup ref_neuron_gin.");
+
+                if gin_already_sorted.len() == 0 {
+
+                    slice = other_genome[neuron_idx..].to_vec();
+                    genome_sorted.append(&mut slice);
+
+                } else {
+                    let end_idx: usize = *other_neuron_gin_map.get(&gin_already_sorted[0])
+                        .expect("\n@sort_genome:\n\t>> Fail to lookup ref_neuron_gin in a non empty sorted genome.");
+
+                    slice = other_genome[neuron_idx..end_idx].to_vec();
+                    slice.append(&mut genome_sorted);
+                    genome_sorted = slice;
+                }
+            }
+
+            if debug {
+                println!("Slice :");
+                Network::pretty_print(&genome_sorted);
+            }
+
+
+        }
+
+        if debug {
+            println!("\n\n");
+            println!("  Ref Genome:");
+            Network::pretty_print(&ref_genome);
+            println!("Sorted Genome:");
+            Network::pretty_print(&genome_sorted);
+            println!("Other Genome:");
+            Network::pretty_print(&other_genome);
+            println!("\n\n");
+        }
+
+        other_specimen.ann.genome = genome_sorted;
+        assert!(other_specimen.ann.is_valid());
+
+        (ref_specimen.clone(), other_specimen)
     }
 
 

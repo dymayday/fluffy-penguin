@@ -178,8 +178,12 @@ fn basic() {
 /// Test the algorithm on a simple math equation to prove the correctness of our algorithm.
 fn test_exploitation_correctness_on_basic_equation() {
     use std::cmp::Ordering;
+    use std::{fs, path::Path};
 
-    let population_size: usize = 100;
+    let export: bool = true;
+    let export: bool = false;
+
+    let population_size: usize = 50;
     // build population
     let mut population = init_population(
         population_size, // size of population
@@ -190,9 +194,10 @@ fn test_exploitation_correctness_on_basic_equation() {
 
     /* EVOLUTION */
     let mut generation_counter: i64 = 0;
-    let cycle_per_structure = 10;
+    let cycle_per_structure = 5;
 
-    for _ in 0..1000 {
+    for _ in 0..100 {
+        let mut file_to_remove: Vec<String> = Vec::with_capacity(population_size);
         generation_counter += 1;
 
         let scores: Vec<f32> = population.species.iter()
@@ -208,6 +213,17 @@ fn test_exploitation_correctness_on_basic_equation() {
         // High score needs to represent a better fitness.
         for i in 0..population_size {
             population.species[i].fitness = -scores[i];
+
+            if export {
+                let file_name: String = format!("tmp/specimen_{:04}.dot", (population.species[i].fitness * 10_000.0) as f32 );
+
+                let graph_name: &str = "initial";
+                population.species[i].render(&file_name, graph_name, false);
+
+                file_to_remove.push(file_name);
+            }
+
+
         }
 
         // Selection phase.
@@ -227,7 +243,23 @@ fn test_exploitation_correctness_on_basic_equation() {
         let best_score = scores.iter().min_by( |x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater) ).unwrap();
         let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
         // let mean_score: f32 = 0.0;
-        println!("[{:>5}], best RMSE = {:.6} , mean = {:.6}\n\n", generation_counter, best_score, mean_score);
+        println!("[{:>5}], best RMSE = {:.6} , mean = {:.6}", generation_counter, best_score, mean_score);
+
+        if export {
+            file_to_remove.sort();
+            file_to_remove.dedup();
+
+            for file_name in file_to_remove {
+
+                let file_path = Path::new(&file_name);
+                fs::remove_file(&file_path).expect(&format!("Fail to remove {:?}", file_path));
+
+                let svg_file_name: String = file_name.replace(".dot", ".svg");
+                let file_path = Path::new(&svg_file_name);
+                fs::remove_file(&file_path).expect(&format!("Fail to remove {}", svg_file_name));
+            }
+        }
+
     }
 
 }
