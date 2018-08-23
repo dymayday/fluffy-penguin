@@ -417,6 +417,29 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
 }
 
 
+/// To concentrate on a bug fix we need to focus on specimens that do fuckup instead of waiting for
+/// a random bug to appear.
+fn _test_on_defective_specimens() {
+
+    let father: Specimen<f32> = Specimen::load_from_file("tmp/father.bc");
+    let mother: Specimen<f32> = Specimen::load_from_file("tmp/mother.bc");
+
+    // let father: Specimen<f32> = Specimen::load_from_file("tmp/father-father.bc");
+    // let mother: Specimen<f32> = Specimen::load_from_file("tmp/mother-mother.bc");
+
+    println!("Failed Grand-Father:");
+    Network::pretty_print(&father.parents[0].ann.genome);
+    println!("Failed Grand-Mother:");
+    Network::pretty_print(&father.parents[1].ann.genome);
+    println!("Failed Parent:");
+    Network::pretty_print(&father.ann.genome);
+    Specimen::crossover(&father.parents[0], &father.parents[1], true);
+
+
+    let offspring = Specimen::crossover(&father, &mother, true);
+
+}
+
 
 fn main() {
     let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, true, false);
@@ -426,5 +449,6 @@ fn main() {
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     // _test_crossover();
     // _test_population_crossover(pretty_print, visualize, print_weights);
-    _test_population_selection(pretty_print, visualize, print_weights);
+    // _test_population_selection(pretty_print, visualize, print_weights);
+    _test_on_defective_specimens();
 }

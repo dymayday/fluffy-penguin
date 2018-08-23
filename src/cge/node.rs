@@ -2,6 +2,8 @@
 
 use activation::TransferFunctionTrait;
 use rand::{thread_rng, Rng};
+// use serde_derive::Serialize;
+
 
 /// This value is used to check the completeness of the linear genome and sub-linear genomes
 /// (sub-Networks).
@@ -20,7 +22,7 @@ pub const INPUT_NODE_DEPTH_VALUE: u16 = 999;
 /// The jumper genes are introduced by structural mutation along the evolution path.
 /// This enum is used during the 'evaluation' process when we compute the output of the artificial
 /// neural network without decoding it.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Allele {
     // A Neuron is the basic unit process of an artificial neural network.
     Neuron { id: usize },
@@ -49,7 +51,7 @@ pub enum Allele {
 ///
 /// A genome in EANT is a linear genome consisting of genes (nodes) that can take different forms (alleles),
 /// symbolized by the [`Allele`] enum.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Node<T> {
     // This is the specific form a gene can take. Possible values are contained in
     // the 'Allele' enum: Neuron, Input, JumpForward, JumpRecurrent.

@@ -8,7 +8,7 @@ pub const LEARNING_RATE_THRESHOLD: f32 = 0.01;
 
 
 /// A Specimen regroups all the attributes needed by the genetic algorithm of an individual.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Specimen<T> {
     pub input_size: usize,
     pub output_size: usize,
@@ -16,6 +16,7 @@ pub struct Specimen<T> {
     pub ann: Network<T>,
     /// Symbolizes how well an individual solves a problem.
     pub fitness: T,
+    pub parents: Vec<Specimen<T>>,
 }
 
 impl Specimen<f32> {
@@ -25,6 +26,7 @@ impl Specimen<f32> {
             output_size,
             ann: Network::<f32>::new(input_size, output_size),
             fitness: 0.0,
+            parents: vec![],
         }
     }
 
@@ -36,6 +38,7 @@ impl Specimen<f32> {
             output_size: 2_usize,
             ann: Network::<f32>::build_from_example(),
             fitness: 0.0,
+            parents: vec![],
         }
     }
 
@@ -336,8 +339,13 @@ impl Specimen<f32> {
 
         // let (father, mother) = Network::sort_genome(&specimen_1.ann, &specimen_2.ann);
         let (father, mother) = Specimen::sort_specimens_genome(&specimen_1, &specimen_2, false);
-        println!("Crossover between: {} x {}", father.fitness, mother.fitness);
+        // println!("Crossover between: {} x {}", father.fitness, mother.fitness);
         specimen.ann = Network::crossover_2(&father.ann, &mother.ann, father.fitness, mother.fitness, debug);
+
+        specimen.parents = vec![
+            father.clone(),
+            mother.clone(),
+        ];
 
         // specimen.ann = Network::crossover_2(&specimen_1.ann, &specimen_2.ann, specimen_1.fitness, specimen_2.fitness, debug);
 
@@ -494,5 +502,46 @@ impl Specimen<f32> {
             .output()
             .expect(&format!("Fail to render Specimen to dot/svg file: {}", file_name));
             // .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
+    }
+
+
+    /// Dump a Specimen into a file using 'Bincode' serialization.
+    /// https://github.com/TyOverby/bincode
+    pub fn save_to_file(&self, file_name: &str) {
+        use std::fs::File;
+        use std::io::BufWriter;
+        use bincode::serialize_into;
+        use utils::create_parent_directory;
+
+
+        create_parent_directory(file_name)
+            .expect(&format!("Fail to create the directory tree of: '{:?}'", file_name));
+        let mut stream = BufWriter::new(
+            File::create(file_name)
+                .expect(&format!("Fail to create file: '{:?}'", file_name))
+            );
+
+
+        serialize_into(stream, &self)
+            .expect("Fail to serialize a Specimen into Bincode file.");
+    }
+
+
+    /// Load a Specimen from a Bincode file.
+    /// https://github.com/TyOverby/bincode
+    pub fn load_from_file(file_name: &str) -> Self {
+        use std::fs::File;
+        use std::io::BufReader;
+        use bincode::deserialize_from;
+
+        let mut stream = BufReader::new(
+            File::open(file_name)
+                .expect(&format!("Fail to open file: '{:?}'", file_name))
+            );
+
+        let specimen: Specimen<f32> = deserialize_from(stream)
+            .expect("Fail to deserialize a Specimen from Bincode file.");
+
+        specimen
     }
 }

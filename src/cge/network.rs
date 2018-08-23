@@ -27,7 +27,7 @@ macro_rules! gin2vec {
 
 /// The representation of an Artificial Neural Network (ANN) using the Common Genetic Encoding
 /// (CGE) (http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.70.8729).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Network<T> {
     // The linear genome is represented by a vector of Node.
     pub genome: Vec<Node<T>>,
@@ -1381,46 +1381,46 @@ impl Network<f32> {
         arn
     }
 
-
-    /// Compute an ARN properly this time
-    fn _compute_aligned_arn_3(genome_1: &[Node<f32>], genome_2: &[Node<f32>], debug: bool) -> Vec<Node<f32>> {
-
-        let netw1_len: usize = genome_1.len();
-        let netw2_len: usize = genome_2.len();
-        let max_genome_size: usize = netw1_len + netw2_len;
-
-        let mut arn: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
-
-        let n1_gin_vector: Vec<usize> = genome_1.iter().map(|n| n.gin).collect();
-        let n2_gin_vector: Vec<usize> = genome_2.iter().map(|n| n.gin).collect();
-
-        let mut n1_gin_node_map: HashMap<usize, &Node<f32>> = HashMap::with_capacity(max_genome_size);
-        let mut n2_gin_node_map: HashMap<usize, &Node<f32>> = HashMap::with_capacity(max_genome_size);
-
-        // Init genome_1's HashMap.
-        for i in 0..netw1_len {
-            let n: &Node<f32> = &genome_1[i];
-            n1_gin_node_map.insert(n.gin, n);
-        }
-
-        // Init genome_2's HashMap.
-        for i in 0..netw2_len {
-            let n: &Node<f32> = &genome_2[i];
-            n2_gin_node_map.insert(n.gin, n);
-        }
-
-
-        let mut stack_1: Vec<Node<f32>> = Vec::with_capacity(netw1_len);
-        let mut stack_2: Vec<Node<f32>> = Vec::with_capacity(netw2_len);
-        let mut skip_stack: Vec<usize> = Vec::with_capacity(netw1_len);
-
-        let (mut i, mut j ): (usize, usize) = (0, 0);
-
-
-
-        arn.reverse();
-        arn
-    }
+    //
+    // /// Compute an ARN properly this time
+    // fn _compute_aligned_arn_3(genome_1: &[Node<f32>], genome_2: &[Node<f32>], debug: bool) -> Vec<Node<f32>> {
+    //
+    //     let netw1_len: usize = genome_1.len();
+    //     let netw2_len: usize = genome_2.len();
+    //     let max_genome_size: usize = netw1_len + netw2_len;
+    //
+    //     let mut arn: Vec<Node<f32>> = Vec::with_capacity(max_genome_size);
+    //
+    //     let n1_gin_vector: Vec<usize> = genome_1.iter().map(|n| n.gin).collect();
+    //     let n2_gin_vector: Vec<usize> = genome_2.iter().map(|n| n.gin).collect();
+    //
+    //     let mut n1_gin_node_map: HashMap<usize, &Node<f32>> = HashMap::with_capacity(max_genome_size);
+    //     let mut n2_gin_node_map: HashMap<usize, &Node<f32>> = HashMap::with_capacity(max_genome_size);
+    //
+    //     // Init genome_1's HashMap.
+    //     for i in 0..netw1_len {
+    //         let n: &Node<f32> = &genome_1[i];
+    //         n1_gin_node_map.insert(n.gin, n);
+    //     }
+    //
+    //     // Init genome_2's HashMap.
+    //     for i in 0..netw2_len {
+    //         let n: &Node<f32> = &genome_2[i];
+    //         n2_gin_node_map.insert(n.gin, n);
+    //     }
+    //
+    //
+    //     let mut stack_1: Vec<Node<f32>> = Vec::with_capacity(netw1_len);
+    //     let mut stack_2: Vec<Node<f32>> = Vec::with_capacity(netw2_len);
+    //     let mut skip_stack: Vec<usize> = Vec::with_capacity(netw1_len);
+    //
+    //     let (mut i, mut j ): (usize, usize) = (0, 0);
+    //
+    //
+    //
+    //     arn.reverse();
+    //     arn
+    // }
 
 
     pub fn crossover_2(network_1: &Network<f32>, network_2: &Network<f32>, fitness_1: f32, fitness_2: f32, debug: bool) -> Network<f32> {

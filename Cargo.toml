@@ -6,3 +6,6 @@ authors = ["meidhy <dymayday@gmail.com>"]
 [dependencies]
 rand = ""
 rayon = ""
+serde = ""
+serde_derive = ""
+bincode = ""

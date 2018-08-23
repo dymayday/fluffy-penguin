@@ -9,7 +9,7 @@ use rand::{thread_rng, Rng};
 const RANK_S: f32 = 2.0;
 // const RANK_S: f32 = 1.5;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Population<T> {
     pub species: Vec<Specimen<T>>,
     pub current_generation: usize,
@@ -256,13 +256,33 @@ impl Population<f32> {
                     use cge::Network;
                     println!("\n\n\n\nFather:");
                     Network::pretty_print(&father.ann.genome);
-                    father.render(&format!("tmp/father_{:.4}.dot", (father.fitness * 10_000.0) as f32), "Father", false);
+                    father.render("tmp/father.dot", "Father", false);
+                    father.save_to_file("tmp/father.bc");
 
-                    println!("Mother:");
+                    println!("Father's Father:");
+                    Network::pretty_print(&father.parents[0].ann.genome);
+                    father.parents[0].render("tmp/father-father.dot", "Father_Father", false);
+                    father.parents[0].save_to_file("tmp/father-father.bc");
+                    println!("Father's Mother:");
+                    Network::pretty_print(&father.parents[1].ann.genome);
+                    father.parents[1].render("tmp/father-mother.dot", "Father_Mother", false);
+                    father.parents[1].save_to_file("tmp/father-mother.bc");
+
+                    println!("\n\nMother:");
                     Network::pretty_print(&mother.ann.genome);
-                    mother.render(&format!("tmp/mother_{:.4}.dot", (mother.fitness * 10_000.0) as f32), "Mother", false);
+                    mother.render("tmp/mother.dot", "Mother", false);
+                    mother.save_to_file("tmp/mother.bc");
 
-                    println!("Offspring:");
+                    println!("Mother's Father:");
+                    Network::pretty_print(&mother.parents[0].ann.genome);
+                    mother.parents[0].render("tmp/mother-father.dot", "Mother_Father", false);
+                    mother.parents[0].save_to_file("tmp/mother-father.bc");
+                    println!("Mother's Mother:");
+                    Network::pretty_print(&mother.parents[1].ann.genome);
+                    mother.parents[1].render("tmp/mother-mother.dot", "Mother_Mother", false);
+                    mother.parents[1].save_to_file("tmp/mother-mother.bc");
+
+                    println!("\n\nOffspring:");
                     Network::pretty_print(&offspring.ann.genome);
                     // offspring.ann.render_to_dot("tmp/offspring.dot", "Offspring", false);
 
