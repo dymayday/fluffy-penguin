@@ -89,8 +89,9 @@ mod network {
     }
 
     #[test]
-    fn evaluation_stack() {
-        //N0   -1 N1   -1 N3   -1 I0   1  I1   1  I1   1  N2   -3 JF3   1  I0   1  I1   1  JR0   1 
+    /// This tests the evaluation of a network which contains
+    /// A JF node right after the its source Neuron.
+    fn evaluation_jump_forward_after_Neuron() {
         use cge::{Allele::*, Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
         use std::collections::HashMap;
         let genome: Vec<Node<f32>> = vec![
@@ -115,9 +116,7 @@ mod network {
             neuron_indices_map: HashMap::new(),
             output_size: 1,
         };
-        net.render_to_dot("here.dot", "graph_name", true);
         let output = net.evaluate().unwrap();
-        println!("{:?}", output);
         assert_eq!(output.len(), 1)
         
     }
