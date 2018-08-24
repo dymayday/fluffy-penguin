@@ -11,3 +11,9 @@ Cargo.lock
 
 # Rust implementation of CTags
 rusty-tags.vi
+
+# From intelliJ Idea
+.idea/
+
+# Directory where we store the visualisation of the ANN's structures.
+/tmp/
