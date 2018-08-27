@@ -12,8 +12,3 @@ mod node;
 
 pub use self::network::Network;
 pub use self::node::{Allele, Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
-
-pub enum NodeType<T> {
-    Node(Node<T>),
-    NaN,
-}
