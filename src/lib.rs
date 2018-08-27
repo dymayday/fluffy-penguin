@@ -7,13 +7,14 @@
 extern crate rand;
 extern crate rayon;
 extern crate serde;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate serde_derive;
 extern crate bincode;
 
-pub mod utils;
 pub mod activation;
 pub mod cge;
 pub mod genetic_algorithm;
+pub mod utils;
 
 
 #[cfg(test)]
@@ -53,7 +54,9 @@ mod specimen {
         let mut gin: usize = specimen_origin.ann.genome.len() * 2;
         let mut nn_id: usize = specimen_origin.ann.genome.len();
         for _ in 0..30 {
-            let (gin_tmp, nn_id_tmp) = specimen_mutated.structural_mutation(0.5, gin, nn_id).unwrap();
+            let (gin_tmp, nn_id_tmp) = specimen_mutated
+                .structural_mutation(0.5, gin, nn_id)
+                .unwrap();
             gin = gin_tmp;
             nn_id = nn_id_tmp;
             specimen_mutated.update_input(&input_vector);
@@ -74,8 +77,11 @@ mod network {
     #[test]
     fn evaluation() {
         assert_eq!(
-            Network::build_from_example().evaluate().expect("Fail to compute output from Network's evaluation."),
-            [0.65220004]);
+            Network::build_from_example()
+                .evaluate()
+                .expect("Fail to compute output from Network's evaluation."),
+            [0.65220004]
+        );
     }
 }
 
@@ -96,12 +102,24 @@ mod node_tests {
 
     #[test]
     fn forward_jumper_connection() {
-        Node::new(Allele::JumpForward { source_id: 0 }, 0_usize, 0.3_f32, 1_i32, 1);
+        Node::new(
+            Allele::JumpForward { source_id: 0 },
+            0_usize,
+            0.3_f32,
+            1_i32,
+            1,
+        );
     }
 
     #[test]
     fn recurrent_jumper_connection() {
-        Node::new(Allele::JumpRecurrent { source_id: 0 }, 0_usize, 0.3_f32, 1_i32, 1);
+        Node::new(
+            Allele::JumpRecurrent { source_id: 0 },
+            0_usize,
+            0.3_f32,
+            1_i32,
+            1,
+        );
     }
 
     #[test]

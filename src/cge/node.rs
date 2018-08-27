@@ -14,9 +14,9 @@ pub const INPUT_NODE_DEPTH_VALUE: u16 = 999;
 
 /// This enum describes the forms that can be taken by a gene.
 ///
-/// A gene can either be: 
+/// A gene can either be:
 ///  * a neuron,
-///  * an input to the neural network, 
+///  * an input to the neural network,
 ///  * a jumper connecting two neurons.
 ///
 /// The jumper genes are introduced by structural mutation along the evolution path.
@@ -110,10 +110,13 @@ impl Node<f32> {
 
     /// Returns either or not self.allele is a Neuron
     pub fn is_neuron(&self) -> bool {
-        if let Allele::Neuron { .. } = self.allele { true }  else { false }
+        if let Allele::Neuron { .. } = self.allele {
+            true
+        } else {
+            false
+        }
     }
 }
-
 
 
 // use std::fmt;

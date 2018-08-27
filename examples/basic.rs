@@ -7,8 +7,8 @@ fn init_population(
     population_size: usize,
     input_size: usize,
     output_size: usize,
-    mutation_probability: f32
-    ) -> Population<f32> {
+    mutation_probability: f32,
+) -> Population<f32> {
     let mut population: Population<f32> = Population::new(
         population_size,
         input_size,
@@ -25,16 +25,16 @@ fn n_argmin(data: &Vec<f32>, n: usize) -> Vec<usize> {
     let mut indices: Vec<usize> = Vec::with_capacity(n);
     let mut last_min = f32::NEG_INFINITY;
     for i in 0..n {
-        let (idx, value) = data.iter().enumerate().fold(
-            (0, 100.),
-            | (min_idx, min_value), (idx, value) | {
-                if *value < min_value && *value > last_min { 
-                    (idx, *value) 
-                } else {
-                    (min_idx, min_value)
-                }
-            }
-        );
+        let (idx, value) =
+            data.iter()
+                .enumerate()
+                .fold((0, 100.), |(min_idx, min_value), (idx, value)| {
+                    if *value < min_value && *value > last_min {
+                        (idx, *value)
+                    } else {
+                        (min_idx, min_value)
+                    }
+                });
         last_min = value;
         indices.push(idx);
     }
@@ -46,20 +46,20 @@ fn model_to_fit(a: f32, b: f32) -> f32 {
     assert!(a >= -1. && a <= 1.);
     assert!(b >= -1. && b <= 1.);
     (a.powf(2.) + b.powf(2.)).abs() / 2_f32
-} 
+}
 
-/// test specimen on 100 data point, and return the mean squared 
+/// test specimen on 100 data point, and return the mean squared
 /// error of the result
 fn compute_specimen_score(specimen: &Specimen<f32>) -> f32 {
     let mut specimen = specimen.clone();
     let dataset_size: usize = 100;
     // Build a simple dataset for both inputs
-    let dataset_a: Vec<f32> = (0..dataset_size).map(
-            |i| (i as f32 + 0.5) * (2. / dataset_size as f32) - 1.
-        ).collect();
-    let dataset_b: Vec<f32> = (0..dataset_size).map(
-            |i| 1. - (i as f32 + 0.5) * (2. / dataset_size as f32)
-        ).collect();
+    let dataset_a: Vec<f32> = (0..dataset_size)
+        .map(|i| (i as f32 + 0.5) * (2. / dataset_size as f32) - 1.)
+        .collect();
+    let dataset_b: Vec<f32> = (0..dataset_size)
+        .map(|i| 1. - (i as f32 + 0.5) * (2. / dataset_size as f32))
+        .collect();
     // compute the squared difference between the spcimen ANN output and the model to fit
     // for each data point
     let mut squared_errors: Vec<f32> = Vec::with_capacity(dataset_size);
@@ -71,7 +71,7 @@ fn compute_specimen_score(specimen: &Specimen<f32>) -> f32 {
         squared_errors.push((model_output - specimen_output).powf(2.));
     }
     // return the RMSE
-    let error_sum = squared_errors.iter().fold(0., |sum, err|  sum + err );
+    let error_sum = squared_errors.iter().fold(0., |sum, err| sum + err);
     error_sum / (dataset_size as f32)
 }
 
@@ -117,25 +117,26 @@ fn basic() {
     // build population
     let mut population = init_population(
         population_size, // size of population
-        2, // nb of input node in each ANN
-        1, // nb of output node in each ANN
-        0.5 // mutation probability
+        2,               // nb of input node in each ANN
+        1,               // nb of output node in each ANN
+        0.1,             // mutation probability
     );
 
     /* EVOLUTION */
     let mut generation_counter: i64 = 0;
     let cycle_per_structure = 500;
     loop {
-
         /* SELECTION */
-        // Evalute each specimen against test data and then compute the fitness 
+        // Evalute each specimen against test data and then compute the fitness
         // score of each specimen
-        let scores: Vec<f32> = population.species.iter()
+        let scores: Vec<f32> = population
+            .species
+            .iter()
             .map(|specimen| compute_specimen_score(specimen))
             .collect();
 
         // select the best half of the population
-        let mut bests: Vec<Specimen<f32>> = n_argmin(&scores, population_size /2)
+        let mut bests: Vec<Specimen<f32>> = n_argmin(&scores, population_size / 2)
             .iter()
             .map(|idx| population.species[*idx].clone())
             .collect();
@@ -144,14 +145,8 @@ fn basic() {
         // build new set
         let mut new_specimens: Vec<Specimen<f32>> = Vec::new();
         for i in 0..bests.len() {
-            for j in (i+1)..bests.len() {
-               new_specimens.push(
-                   Specimen::crossover(
-                       &bests[i],
-                       &bests[j],
-                       false
-                   )
-               ); 
+            for j in (i + 1)..bests.len() {
+                new_specimens.push(Specimen::crossover(&bests[i], &bests[j], false));
             }
         }
         // drop old set of individuals, and replace it by their offspring
@@ -163,12 +158,11 @@ fn basic() {
             for specimen in population.species.iter_mut() {
                 specimen.parametric_mutation();
             }
-
         } else {
             // population.exploration();
             population.exploitation();
         };
-                                         
+
         println!("{:?}", scores);
         generation_counter += 1;
     }
@@ -183,20 +177,20 @@ fn test_exploitation_correctness_on_basic_equation() {
     // let export: bool = true;
     let export: bool = false;
 
-    let population_size: usize = 50;
+    let population_size: usize = 100;
     // build population
     let mut population = init_population(
         population_size, // size of population
-        2, // nb of input node in each ANN
-        1, // nb of output node in each ANN
-        0.1 // mutation probability
+        2,               // nb of input node in each ANN
+        1,               // nb of output node in each ANN
+        0.1,             // mutation probability
     );
 
     /* EVOLUTION */
     let mut generation_counter: i64 = 0;
-    let cycle_per_structure = 5;
+    let cycle_per_structure = 50;
 
-    for _ in 0..100 {
+    for _ in 0..1000 {
         let mut file_to_remove: Vec<String> = Vec::with_capacity(population_size);
         generation_counter += 1;
 
@@ -215,22 +209,24 @@ fn test_exploitation_correctness_on_basic_equation() {
             population.species[i].fitness = -scores[i];
 
             if export {
-                let file_name: String = format!("tmp/specimen_{:04}.dot", (population.species[i].fitness * 10_000.0) as f32 );
+                let file_name: String = format!(
+                    "tmp/specimen_{:04}.dot",
+                    (population.species[i].fitness * 10_000.0) as f32
+                );
 
                 let graph_name: &str = "initial";
                 population.species[i].render(&file_name, graph_name, false);
 
                 file_to_remove.push(file_name);
             }
-
-
         }
 
         // Selection phase.
         population.evolve();
 
         // Lookup for some better weights.
-        if generation_counter % cycle_per_structure == 0 {//}&& false {
+        if generation_counter % cycle_per_structure == 0 {
+            //}&& false {
             // let best_score = scores.iter().min_by( |x, y| x.partial_cmp(y).unwrap() ).unwrap();
             // let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
             // println!("[{:>5}], best RMSE = {:.6} %, mean = {:.6} %",generation_counter, best_score, mean_score);
@@ -240,17 +236,22 @@ fn test_exploitation_correctness_on_basic_equation() {
         }
 
 
-        let best_score = scores.iter().min_by( |x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater) ).unwrap();
+        let best_score = scores
+            .iter()
+            .min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
+            .unwrap();
         let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
         // let mean_score: f32 = 0.0;
-        println!("[{:>5}], best RMSE = {:.6} , mean = {:.6}", generation_counter, best_score, mean_score);
+        println!(
+            "[{:>5}], best RMSE = {:.6} , mean = {:.6}",
+            generation_counter, best_score, mean_score
+        );
 
         if export {
             file_to_remove.sort();
             file_to_remove.dedup();
 
             for file_name in file_to_remove {
-
                 let file_path = Path::new(&file_name);
                 fs::remove_file(&file_path).expect(&format!("Fail to remove {:?}", file_path));
 
@@ -259,18 +260,11 @@ fn test_exploitation_correctness_on_basic_equation() {
                 fs::remove_file(&file_path).expect(&format!("Fail to remove {}", svg_file_name));
             }
         }
-
     }
-
 }
-
 
 
 fn main() {
-
     test_exploitation_correctness_on_basic_equation();
     // basic();
-
 }
-
-

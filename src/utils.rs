@@ -1,7 +1,7 @@
 //! Utility repository.
 
-use std::{fs, path::Path};
 use std::io::Error;
+use std::{fs, path::Path};
 
 /// Create the all the missing directory tree of file path if it does not exist.
 /// Recursively create all of the parent components of a file if they are missing.

@@ -4,7 +4,7 @@ use genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng};
 
 /// Rank base selection parameter.
-/// The usual formula for calculating the selection probability for linear 
+/// The usual formula for calculating the selection probability for linear
 /// ranking schemes is parameterised by a value s (1 < s ≤ 2).
 const RANK_S: f32 = 2.0;
 // const RANK_S: f32 = 1.5;
@@ -34,24 +34,19 @@ impl Population<f32> {
             species.push(Specimen::new(input_size, output_size));
         }
         let gin: usize = species[0].ann.genome.last().unwrap().gin;
-        // println!("Init GIN = {}", gin);
 
         Population {
             species,
             current_generation: 0,
             pm: mutation_probability,
             gin,
-            // gin: input_size * output_size,
             nn_id: output_size,
         }
     }
 
 
     /// New population of only specimen from the example.
-    pub fn new_from_example(
-        population_size: usize,
-        mutation_probability: f32,
-    ) -> Self {
+    pub fn new_from_example(population_size: usize, mutation_probability: f32) -> Self {
         let mut species: Vec<Specimen<f32>> = Vec::with_capacity(population_size);
 
         for _ in 0..population_size {
@@ -88,7 +83,9 @@ impl Population<f32> {
         let mut nn_id = self.nn_id;
 
         for mut specimen in &mut self.species {
-            let (gin_tmp, nn_id_tmp) = specimen.structural_mutation(self.pm, gin, nn_id).unwrap_or((gin, nn_id));
+            let (gin_tmp, nn_id_tmp) = specimen
+                .structural_mutation(self.pm, gin, nn_id)
+                .unwrap_or((gin, nn_id));
             gin = gin_tmp;
             nn_id = nn_id_tmp;
         }
@@ -99,7 +96,6 @@ impl Population<f32> {
 
     /// Apply evolution to our population by selection and reproduction.
     pub fn evolve(&mut self) {
-
         &self.clean_fitness();
         &self.sort_species_by_fitness();
 
@@ -117,21 +113,22 @@ impl Population<f32> {
     /// Stochastic Universal Sampling is a simple, single phase, O(N) sampling algorithm. It is
     /// zero biased, has Minimum Spread and will achieve all N sanples in a single traversal.
     /// However, the algorithm is strictly sequential.
-    pub fn stochastic_universal_sampling_selection(species: &[Specimen<f32>]) -> Vec<Specimen<f32>> {
-
+    pub fn stochastic_universal_sampling_selection(
+        species: &[Specimen<f32>],
+    ) -> Vec<Specimen<f32>> {
         let lambda: usize = species.len();
         // let lambda: usize = species.len() / 2_usize;
         // let lambda: usize = species.len() * 2_usize;
 
         let ranking_vector: Vec<f32> = Population::ranking_selection(&species);
 
-        let mut cumulative_probability_distribution: Vec<f32> = Vec::with_capacity(ranking_vector.len());
+        let mut cumulative_probability_distribution: Vec<f32> =
+            Vec::with_capacity(ranking_vector.len());
         let mut cumsum: f32 = 0.0;
         for rank in ranking_vector {
             cumsum += rank;
             cumulative_probability_distribution.push(cumsum);
         }
-        // println!("cumulative_probability_distribution = {:?}", cumulative_probability_distribution);
 
         let mut specimen_index: usize = 0;
         let mut i: usize = 0;
@@ -141,7 +138,6 @@ impl Population<f32> {
 
         while specimen_index < lambda {
             while r <= cumulative_probability_distribution[i] {
-
                 mating_pool.push(species[i].clone());
                 r += 1.0 / lambda as f32;
                 specimen_index += 1;
@@ -150,10 +146,7 @@ impl Population<f32> {
             i += 1;
         }
 
-        // let mating_pool_fitness: Vec<f32> = mating_pool.iter().map(|s| s.fitness).collect();
-        // println!("mating_pool_fitness = {:?}", mating_pool_fitness);
-
-       mating_pool
+        mating_pool
     }
 
 
@@ -162,13 +155,18 @@ impl Population<f32> {
     fn clean_fitness(&mut self) {
         use std::cmp::Ordering;
 
-        let lowest_fitness: f32 = *self.species
+        let lowest_fitness: f32 = *self
+            .species
             .iter()
-            // .map(|s| s.fitness)
-            .map(|s| if s.fitness.is_finite() {s.fitness} else {-999.0})
-            .collect::<Vec<f32>>()
+            .map(|s| {
+                if s.fitness.is_finite() {
+                    s.fitness
+                } else {
+                    -999.0
+                }
+            }).collect::<Vec<f32>>()
             .iter()
-            .min_by( |x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater) )
+            .min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
             .unwrap_or(&0.0);
 
         if lowest_fitness < 0.0 {
@@ -181,13 +179,12 @@ impl Population<f32> {
 
     /// Sort Specimen by their fitness value.
     pub fn sort_species_by_fitness(&mut self) {
-        &self.species.sort_by_key( |k| k.fitness as i32 );
+        &self.species.sort_by_key(|k| k.fitness as i32);
     }
 
 
     /// Ranking Selection.
     fn ranking_selection(species: &[Specimen<f32>]) -> Vec<f32> {
-
         // This parameter controls wether or not the worst Specimen should have a chance to be in
         // the mating pool. s = 2 means a really low chance.
         let s: f32 = RANK_S;
@@ -197,10 +194,9 @@ impl Population<f32> {
         let mut ranking_vector: Vec<f32> = Vec::with_capacity(population_size);
 
         for i in 0..population_size {
-            ranking_vector.push(( (2.0 - s) / mu ) + ( (2.0 * i as f32 * (s - 1.0)) / (mu * ( mu - 1.0)) ));
+            ranking_vector
+                .push(((2.0 - s) / mu) + ((2.0 * i as f32 * (s - 1.0)) / (mu * (mu - 1.0))));
         }
-
-        // println!("Ranking vector = {:?}, sum = {}", ranking_vector, ranking_vector.iter().sum::<f32>());
 
         ranking_vector
     }
@@ -208,7 +204,6 @@ impl Population<f32> {
 
     /// Crossover is the main method of reproduction of our genetic algorithm.
     fn crossover(&mut self, mating_pool: &[Specimen<f32>]) {
-
         let offspring_size: usize = self.species.len();
         let mut offspring_vector: Vec<Specimen<f32>> = Vec::with_capacity(offspring_size);
 
@@ -217,12 +212,11 @@ impl Population<f32> {
         let mating_pool_size: usize = mating_pool.len();
 
         while offspring_vector.len() < offspring_size {
-
             let mut shuffled_mating_pool_index_1: Vec<usize> = Vec::with_capacity(mating_pool_size);
             let mut shuffled_mating_pool_index_2: Vec<usize> = Vec::with_capacity(mating_pool_size);
 
             for i in 0..mating_pool_size {
-		if mating_pool[i].fitness.is_finite() {
+                if mating_pool[i].fitness.is_finite() {
                     shuffled_mating_pool_index_1.push(i);
                     shuffled_mating_pool_index_2.push(i);
                 }
@@ -231,7 +225,10 @@ impl Population<f32> {
             thread_rng().shuffle(&mut shuffled_mating_pool_index_1);
             thread_rng().shuffle(&mut shuffled_mating_pool_index_2);
 
-            for (i, j) in shuffled_mating_pool_index_1.iter().zip(shuffled_mating_pool_index_2.iter()) {
+            for (i, j) in shuffled_mating_pool_index_1
+                .iter()
+                .zip(shuffled_mating_pool_index_2.iter())
+            {
                 if offspring_vector.len() == offspring_size {
                     break;
                 }
@@ -252,7 +249,6 @@ impl Population<f32> {
                 if offspring.ann.is_valid() {
                     offspring_vector.push(offspring);
                 } else {
-
                     use cge::Network;
                     println!("\n\n\n\nFather:");
                     Network::pretty_print(&father.ann.genome);
@@ -289,15 +285,20 @@ impl Population<f32> {
                     offspring.ann.is_valid();
                     let mut offspring: Specimen<f32> = Specimen::crossover(father, mother, true);
 
-                    panic!("father {} and mother {} failed to reproduce.", father.fitness * 10_000.0, mother.fitness * 10_000.0);
-                    println!("father {} and mother {} failed to reproduce.", father.fitness, mother.fitness);
+                    panic!(
+                        "father {} and mother {} failed to reproduce.",
+                        father.fitness * 10_000.0,
+                        mother.fitness * 10_000.0
+                    );
+                    println!(
+                        "father {} and mother {} failed to reproduce.",
+                        father.fitness, mother.fitness
+                    );
                 }
             }
-
         }
 
         self.species = offspring_vector;
-
     }
 
 

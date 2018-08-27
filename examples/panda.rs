@@ -53,21 +53,19 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_weights: bool) {
     // );
 
     let input_vector: Vec<f32> = vec![1.0; 2];
-    let mut pop: Population<f32> = Population::new_from_example(
-        population_size,
-        mutation_probability,
-    );
+    let mut pop: Population<f32> =
+        Population::new_from_example(population_size, mutation_probability);
 
     let mut gen: u32 = 0;
     for _ in 0..structural_mutation_size {
         for i in 0..pop.species.len() {
             let mut specimen: &mut Specimen<f32> = &mut pop.species[i];
 
-        // if visualize {
-        //     // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);
-        //     let file_name: &str = &format!("examples/Speciment{:02}_Gen{:03}.dot", i, gen);
-        //     specimen.render(file_name, "", print_weights);
-        // }
+            // if visualize {
+            //     // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);
+            //     let file_name: &str = &format!("examples/Speciment{:02}_Gen{:03}.dot", i, gen);
+            //     specimen.render(file_name, "", print_weights);
+            // }
 
             println!("Gen{:03}: speciment{:02}", gen, i);
             if pretty_print {
@@ -172,7 +170,9 @@ fn _test_specimen_mutation(pretty_print: bool, export: bool, print_weights: bool
     let mut spec_vec: Vec<Specimen<f32>> = Vec::with_capacity(generation_size);
 
     for i in 0..generation_size {
-        let (gin_tmp, nn_id_tmp) = specimen_mutated.structural_mutation(pm, gin, nn_id).unwrap();
+        let (gin_tmp, nn_id_tmp) = specimen_mutated
+            .structural_mutation(pm, gin, nn_id)
+            .unwrap();
         gin = gin_tmp;
         nn_id = nn_id_tmp;
 
@@ -256,38 +256,42 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
     let mutation_probability: f32 = 0.5;
 
     loop {
-
-        let mut population: Population<f32> =
-            Population::new(population_size, input_size, output_size, mutation_probability);
+        let mut population: Population<f32> = Population::new(
+            population_size,
+            input_size,
+            output_size,
+            mutation_probability,
+        );
 
         println!("{:#^240}", "");
         println!("{:#^240}", "    Init population:    ");
         println!("{:#^240}", "");
         for (i, specimen) in population.species.iter().enumerate() {
-                if pretty_print {
-                    println!("Specimen {}", i);
-                    Network::pretty_print(&specimen.ann.genome);
-                }
-                if export {
-                    let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
-                    let graph_name: &str = "initial";
-                    specimen.render(file_name, graph_name, print_weights);
-                }
-
+            if pretty_print {
+                println!("Specimen {}", i);
+                Network::pretty_print(&specimen.ann.genome);
             }
-            println!();
+            if export {
+                let file_name: &str = &format!("examples/specimen-{:03}_aaa.dot", i);
+                let graph_name: &str = "initial";
+                specimen.render(file_name, graph_name, print_weights);
+            }
+        }
+        println!();
 
         let structural_mutation_size: usize = 20;
 
         for smi in 0..structural_mutation_size {
-
             population.exploration();
 
             println!("~~~~~~~~~~~~ After Structural Mutation:");
             for (i, specimen) in population.species.iter().enumerate() {
                 println!("Specimen {}", i);
                 Network::pretty_print(&specimen.ann.genome);
-                println!("Output = {:?}", Network::pseudo_evaluate_slice(&specimen.ann.genome));
+                println!(
+                    "Output = {:?}",
+                    Network::pseudo_evaluate_slice(&specimen.ann.genome)
+                );
             }
             println!(":After Structural Mutation ~~~~~~~~~~~~");
             println!("\n");
@@ -298,13 +302,17 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
             for (i, offspring) in population.species.iter().enumerate() {
                 println!("Offspring {}", i);
 
-                let mut neuron_list: Vec<usize> = offspring.ann.genome.iter()
+                let mut neuron_list: Vec<usize> = offspring
+                    .ann
+                    .genome
+                    .iter()
                     .filter_map(|n| {
                         if let Allele::Neuron { id } = n.allele {
                             Some(id)
-                        } else { None }
-                    })
-                    .collect();
+                        } else {
+                            None
+                        }
+                    }).collect();
                 neuron_list.sort();
                 println!("Neuron ids = {:?}", neuron_list);
 
@@ -312,12 +320,16 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
                     Network::pretty_print(&offspring.ann.genome);
                 }
                 if export {
-                    let file_name: &str = &format!("examples/specimen-{:03}_evolved-{:03}.dot",i, smi);
+                    let file_name: &str =
+                        &format!("examples/specimen-{:03}_evolved-{:03}.dot", i, smi);
                     let graph_name: &str = "mutated";
                     // export_visu(&specimen_mutated, file_name, graph_name);
                     offspring.render(file_name, graph_name, print_weights);
                 }
-                println!("Output = {:?}", Network::pseudo_evaluate_slice(&offspring.ann.genome).unwrap());
+                println!(
+                    "Output = {:?}",
+                    Network::pseudo_evaluate_slice(&offspring.ann.genome).unwrap()
+                );
             }
             println!("\t\\\\\\  Evolution {}  ///\n\n", smi + 1);
             println!();
@@ -325,78 +337,79 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_weights: b
 
         println!("\n\n\n");
     }
-
 }
 
 
-
 fn _test_population_selection(pretty_print: bool, export: bool, print_weights: bool) {
-
-    let population_size: usize = 10;
-    let input_size: usize = 2;
-    let output_size: usize = 1;
+    let population_size: usize = 32;
+    let input_size: usize = 8;
+    let output_size: usize = 9;
     let mutation_probability: f32 = 0.1;
 
     let mutation_size: usize = 100;
 
     // let mut population: Population<f32> =
-        // Population::new(population_size, input_size, output_size, mutation_probability);
-        // Population::new_from_example(population_size, mutation_probability);
+    // Population::new(population_size, input_size, output_size, mutation_probability);
+    // Population::new_from_example(population_size, mutation_probability);
 
 
+    let mut loop_counter: usize = 0;
     loop {
-
         let mut file_to_remove: Vec<String> = Vec::with_capacity(population_size);
-        let mut population: Population<f32> =
-            Population::new(population_size, input_size, output_size, mutation_probability);
+        let mut population: Population<f32> = Population::new(
+            population_size,
+            input_size,
+            output_size,
+            mutation_probability,
+        );
 
         for _smi in 0..mutation_size {
-            println!();
+            loop_counter += 1;
+            println!("Loop counter = {:>6}", loop_counter);
 
             // println!("Init population:");
             for i in 0..population.species.len() {
-
                 let mut specimen: &mut Specimen<f32> = &mut population.species[i];
                 specimen.fitness = thread_rng().gen_range(0_i32, 101_i32) as f32;
 
-                    if pretty_print {
-                        println!("Specimen {}", i);
-                        Network::pretty_print(&specimen.ann.genome);
-                    }
-
-                    if export {
-                        let file_name: String = format!("tmp/specimen-{:04}.dot", specimen.fitness);
-
-                        let graph_name: &str = "initial";
-                        specimen.render(&file_name, graph_name, print_weights);
-
-                        file_to_remove.push(file_name);
-                    }
-
+                if pretty_print {
+                    println!("Specimen {}", i);
+                    Network::pretty_print(&specimen.ann.genome);
                 }
-                // println!();
-                //
-                // let lowest_fitness: f32 = *population.species
-                //     .iter()
-                //     .map(|s| s.fitness)
-                //     .collect::<Vec<f32>>()
-                //     .iter()
-                //     .min_by( |x, y| x.partial_cmp(y).unwrap() )
-                //     .unwrap_or(&0.0);
-                //
-                // population.sort_species_by_fitness();
-                // let sus_selected = &population.species;
-                // for i in 0..sus_selected.len() {
-                //     // println!(" {:>4} : {:<4}", *&mut population.species[i].fitness as i32, sus_selected[i].fitness as i32);
-                //     println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
-                // }
 
-                if _smi % 10 == 0 {// || true {
-                    population.exploration();
-                } else {
-                    population.exploitation();
+                if export {
+                    let file_name: String = format!("tmp/specimen-{:04}.dot", specimen.fitness);
+
+                    let graph_name: &str = "initial";
+                    specimen.render(&file_name, graph_name, print_weights);
+
+                    file_to_remove.push(file_name);
                 }
-                population.evolve();
+            }
+            // println!();
+            //
+            // let lowest_fitness: f32 = *population.species
+            //     .iter()
+            //     .map(|s| s.fitness)
+            //     .collect::<Vec<f32>>()
+            //     .iter()
+            //     .min_by( |x, y| x.partial_cmp(y).unwrap() )
+            //     .unwrap_or(&0.0);
+            //
+            // population.sort_species_by_fitness();
+            // let sus_selected = &population.species;
+            // for i in 0..sus_selected.len() {
+            //     // println!(" {:>4} : {:<4}", *&mut population.species[i].fitness as i32, sus_selected[i].fitness as i32);
+            //     println!(" {:>4} : {:<4}", "", sus_selected[i].fitness + lowest_fitness.abs());
+            // }
+
+            if _smi % 10 == 0 {
+                // || true {
+                population.exploration();
+            } else {
+                population.exploitation();
+            }
+            population.evolve();
         }
 
         if export {
@@ -404,7 +417,6 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
             file_to_remove.dedup();
 
             for file_name in file_to_remove {
-
                 let file_path = Path::new(&file_name);
                 fs::remove_file(&file_path).expect(&format!("Fail to remove {:?}", file_path));
 
@@ -420,35 +432,87 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_weights: b
 /// To concentrate on a bug fix we need to focus on specimens that do fuckup instead of waiting for
 /// a random bug to appear.
 fn _test_on_defective_specimens() {
-
     let father: Specimen<f32> = Specimen::load_from_file("tmp/father.bc");
     let mother: Specimen<f32> = Specimen::load_from_file("tmp/mother.bc");
 
     // let father: Specimen<f32> = Specimen::load_from_file("tmp/father-father.bc");
     // let mother: Specimen<f32> = Specimen::load_from_file("tmp/mother-mother.bc");
 
-    println!("Failed Grand-Father:");
+    println!("Failed Father's Grand-Father:");
     Network::pretty_print(&father.parents[0].ann.genome);
-    println!("Failed Grand-Mother:");
+    println!("Failed Father's Grand-Mother:");
     Network::pretty_print(&father.parents[1].ann.genome);
     println!("Failed Parent:");
     Network::pretty_print(&father.ann.genome);
-    Specimen::crossover(&father.parents[0], &father.parents[1], true);
+
+    let father_bis = Specimen::crossover(&father.parents[0], &father.parents[1], true);
+    println!("Father BIS:");
+    Network::pretty_print(&father_bis.ann.genome);
+    father_bis.render("tmp/father_bis.dot", "father", false);
 
 
-    let offspring = Specimen::crossover(&father, &mother, true);
+    // father.render("tmp/father.dot", "father", false);
+    // mother.render("tmp/mother.dot", "mother", false);
+    // father.parents[0].render("tmp/father-father.dot", "father_father", false);
+    // father.parents[1].render("tmp/father-mother.dot", "father_mother", false);
+    // mother.parents[0].render("tmp/mother-father.dot", "mother_father", false);
+    // mother.parents[1].render("tmp/mother-mother.dot", "mother_mother", false);
 
+
+    let mut offspring = Specimen::crossover(&father, &mother, true);
+    println!("Failed Offspring:");
+    Network::pretty_print(&offspring.ann.genome);
+    println!("Offspring is valid ? {}", offspring.ann.is_valid());
+}
+
+
+fn _test_crossover3_on_defective_specimens() {
+    let father: Specimen<f32> = Specimen::load_from_file("tmp/father.bc");
+    let mother: Specimen<f32> = Specimen::load_from_file("tmp/mother.bc");
+
+    println!("Failed Father's Grand-Father:");
+    Network::pretty_print(&father.parents[0].ann.genome);
+    println!("Failed Father's Grand-Mother:");
+    Network::pretty_print(&father.parents[1].ann.genome);
+    println!("Failed Parent:");
+    Network::pretty_print(&father.ann.genome);
+
+    println!(
+        "\n{:^120}",
+        "µµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµ\n"
+    );
+
+    // let father_bis = Specimen::crossover(&father.parents[0], &father.parents[1], true);
+    let father_bis_network = Network::crossover_3(
+        &father.parents[0].ann,
+        &father.parents[1].ann,
+        father.parents[0].fitness,
+        father.parents[1].fitness,
+        true,
+    );
+    println!("Father BIS:");
+    Network::pretty_print(&father_bis_network.genome);
+    let mut father_bis = father.clone();
+    father_bis.ann = father_bis_network;
+    father_bis.render("tmp/father_bis.dot", "father", false);
+
+
+    // let mut offspring = Specimen::crossover(&father, &mother, true);
+    // println!("Failed Offspring:");
+    // Network::pretty_print(&offspring.ann.genome);
+    // println!("Offspring is valid ? {}", offspring.ann.is_valid());
 }
 
 
 fn main() {
-    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, true, false);
+    let (pretty_print, visualize, print_weights): (bool, bool, bool) = (false, false, false);
     // _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();
     // _test_specimen_mutation(pretty_print, visualize, print_weights);
     // _test_crossover();
     // _test_population_crossover(pretty_print, visualize, print_weights);
-    // _test_population_selection(pretty_print, visualize, print_weights);
-    _test_on_defective_specimens();
+    _test_population_selection(pretty_print, visualize, print_weights);
+    // _test_on_defective_specimens();
+    // _test_crossover3_on_defective_specimens();
 }
