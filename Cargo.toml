@@ -1,0 +1,14 @@
+[package]
+name = "fluffy-penguin"
+version = "0.2.0"
+authors = ["meidhy <dymayday@gmail.com>"]
+
+[dependencies]
+rand = ""
+rayon = ""
+tokio-threadpool = ""
+futures = ""
+serde = ""
+serde_derive = ""
+bincode = ""
+fnv = ""
