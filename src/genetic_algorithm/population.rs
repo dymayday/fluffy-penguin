@@ -4,7 +4,8 @@ use rayon::prelude::*;
 use genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng};
 
-/// The number of concurrent process during the visualisation export phase to SVG.
+
+/// The number of concurrent process used during the visualisation export phase to SVG.
 const EXPORT_CPU_COUNT: usize = 4;
 
 /// Rank base selection parameter.
@@ -18,7 +19,7 @@ const S_RANK: f32 = 2.0;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Population<T> {
     pub species: Vec<Specimen<T>>,
-    pub current_generation: usize,
+    pub generation_counter: usize,
     // The structural mutation probability 'pm', which is usually set between 5 and 10%.
     pub pm: T,
     // Global Innovation Number.
@@ -48,7 +49,7 @@ impl Population<f32> {
 
         Population {
             species,
-            current_generation: 0,
+            generation_counter: 0,
             pm: mutation_probability,
             gin,
             nn_id: output_size,
@@ -67,7 +68,7 @@ impl Population<f32> {
 
         Population {
             species,
-            current_generation: 0,
+            generation_counter: 0,
             pm: mutation_probability,
             gin: 11,
             nn_id: 4,
@@ -177,7 +178,7 @@ impl Population<f32> {
 
     /// Apply evolution to our population by selection and reproduction.
     pub fn evolve(&mut self) {
-        self.current_generation += 1;
+        self.generation_counter += 1;
         &self.clean_fitness();
         &self.sort_species_by_fitness();
 
@@ -428,7 +429,7 @@ impl Population<f32> {
 
         // Specimen rendering are done in parallele using a thread pool.
         for (i, specimen) in self.species.clone().into_iter().enumerate() {
-            let file_name: String = format!("Specimen_{:03}_g{:0>4}.dot", i, self.current_generation);
+            let file_name: String = format!("Specimen_{:03}_g{:0>4}.dot", i, self.generation_counter);
             let file_path = Path::new(root_path).join(&file_name);
             let file_path: String = file_path.to_string_lossy().to_string();
 
@@ -464,7 +465,6 @@ impl Population<f32> {
                 .expect(&format!("Fail to create file: '{:?}'", file_name)),
         );
 
-
         serialize_into(stream, &self)
             .expect("Fail to serialize a Population into Bincode file.");
     }
@@ -472,20 +472,15 @@ impl Population<f32> {
 
     /// Load a Specimen from a Bincode file.
     /// https://github.com/TyOverby/bincode
-    pub fn load_from_file(file_name: &str) -> Self {
+    pub fn load_from_file(file_name: &str) -> Result<Self, failure::Error> {
         use bincode::deserialize_from;
         use std::fs::File;
         use std::io::BufReader;
 
         let stream = BufReader::new(
-            File::open(file_name)
-                .expect(&format!("Fail to open file: '{:?}'", file_name)),
+            File::open(file_name)?
         );
 
-        let population: Population<f32> =
-            deserialize_from(stream)
-                .expect("Fail to deserialize a Population from Bincode file.");
-
-        population
+        Ok(deserialize_from(stream)?)
     }
 }

@@ -13,6 +13,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate bincode;
 extern crate fnv;
+extern crate failure;
 
 pub mod activation;
 pub mod cge;
@@ -57,8 +58,10 @@ mod population {
 
         let file_name = "/tmp/pop_test.bc";
         let population = Population::new(10, 2, 1, 0.10);
+
         population.save_to_file(file_name);
-        Population::load_from_file(file_name);
+        Population::load_from_file(file_name)
+            .expect("Fail to load Population from file.");
 
         fs::remove_file(file_name)
             .expect("Failed to remove temporary test file.");
