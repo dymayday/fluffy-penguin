@@ -3,6 +3,7 @@
 use rayon::prelude::*;
 use genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng};
+use error::*;
 
 
 /// The number of concurrent process used during the visualisation export phase to SVG.
@@ -449,30 +450,27 @@ impl Population<f32> {
 
     /// Save a Population to a file using 'Bincode' serialization
     /// https://github.com/TyOverby/bincode
-    pub fn save_to_file(&self, file_name: &str) {
+    pub fn save_to_file(&self, file_name: &str) -> GenResult<()> {
         use bincode::serialize_into;
         use std::fs::File;
         use std::io::BufWriter;
         use utils::create_parent_directory;
 
 
-        create_parent_directory(file_name).expect(&format!(
-            "Fail to create the directory tree of: '{:?}'",
-            file_name
-        ));
-        let stream = BufWriter::new(
-            File::create(file_name)
-                .expect(&format!("Fail to create file: '{:?}'", file_name)),
-        );
+        create_parent_directory(file_name)?;
 
-        serialize_into(stream, &self)
-            .expect("Fail to serialize a Population into Bincode file.");
+        let stream = BufWriter::new(
+            File::create(file_name)?
+        );
+        serialize_into(stream, &self)?;
+
+        Ok(())
     }
 
 
     /// Load a Specimen from a Bincode file.
     /// https://github.com/TyOverby/bincode
-    pub fn load_from_file(file_name: &str) -> Result<Self, failure::Error> {
+    pub fn load_from_file(file_name: &str) -> GenResult<Self> {
         use bincode::deserialize_from;
         use std::fs::File;
         use std::io::BufReader;
