@@ -12,3 +12,8 @@ serde = ""
 serde_derive = ""
 bincode = ""
 fnv = ""
+
+[dev-dependencies]
+reqwest = ""
+mnist = ""
+rulinalg = ""
