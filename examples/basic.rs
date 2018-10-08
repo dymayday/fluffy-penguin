@@ -221,7 +221,7 @@ fn test_exploitation_correctness_on_basic_equation() {
 
         // Update fitness of each specimen.
         // High score needs to represent a better fitness.
-        for (specimen, score) in population.species.iter_mut().zip(&scores)) {
+        for (specimen, score) in population.species.iter_mut().zip(&scores) {
             specimen.fitness = -score;
         }
 
