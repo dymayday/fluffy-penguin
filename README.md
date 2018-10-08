@@ -52,3 +52,4 @@ cargo run --example mnist --release
 - [ ] Implement the EANT2 pruning method of unnecessary connections during neuro-evolution.
 - [ ] Improve API documentation.
 - [ ] Limit the number of concurrent renderer process and put it in a non blocking thread.
+- [ ] Fix dependdencies versions when hitting first beta.
