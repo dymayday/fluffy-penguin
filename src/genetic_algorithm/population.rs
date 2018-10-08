@@ -1,9 +1,9 @@
 //! Population doc string.
 
-use rayon::prelude::*;
+use error::*;
 use genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng};
-use error::*;
+use rayon::prelude::*;
 
 
 /// The number of concurrent process used during the visualisation export phase to SVG.
@@ -42,7 +42,6 @@ impl Population<f32> {
         output_size: usize,
         mutation_probability: f32,
     ) -> Self {
-
         let species: Vec<Specimen<f32>> = (0..population_size)
             .map(|_| Specimen::new(input_size, output_size))
             .collect();
@@ -62,7 +61,6 @@ impl Population<f32> {
 
     /// New population of only specimen from the example.
     pub fn new_from_example(population_size: usize, mutation_probability: f32) -> Self {
-
         let species: Vec<Specimen<f32>> = (0..population_size)
             .map(|_| Specimen::new_from_example())
             .collect();
@@ -101,7 +99,6 @@ impl Population<f32> {
     /// Warning: shrinking the population after an evolution process has occured will result in a
     /// duplication of some specimen if the new population size is smaller than the previous one.
     pub fn shrink_to(mut self, population_size: usize) -> Self {
-
         // If there is enought blood to feed our needs, we just cut through some species from the population.
         if population_size <= self.species.len() {
             self.species = self.species[..population_size].to_vec();
@@ -116,11 +113,11 @@ impl Population<f32> {
                         .next()
                         .expect("Fail to cycle through the vector of Panda.")
                         .to_owned()
-                }).collect();
+                })
+                .collect();
         }
         self
     }
-
 
 
     /// Modify the default Rank base selection parameter.
@@ -140,7 +137,10 @@ impl Population<f32> {
     /// This determines how many individuals will take part in the mating pool
     /// and should be <= population size.
     pub fn set_lambda(&mut self, lamba: usize) -> &mut Self {
-        assert!(lamba <= self.species.len(), "lamba should be <= population size.");
+        assert!(
+            lamba <= self.species.len(),
+            "lamba should be <= population size."
+        );
         self.lambda = lamba;
         self
     }
@@ -183,7 +183,8 @@ impl Population<f32> {
         &self.clean_fitness();
         &self.sort_species_by_fitness();
 
-        let mating_pool: Vec<Specimen<f32>> = Population::selection(&self.species, self.lambda, self.s_rank);
+        let mating_pool: Vec<Specimen<f32>> =
+            Population::selection(&self.species, self.lambda, self.s_rank);
 
         // self.crossover(&mating_pool);
         self.par_crossover(&mating_pool);
@@ -203,7 +204,6 @@ impl Population<f32> {
         lambda: usize,
         s_rank: f32,
     ) -> Vec<Specimen<f32>> {
-
         let ranking_vector: Vec<f32> = Population::ranking_selection(&species, s_rank);
 
         let mut cumulative_probability_distribution: Vec<f32> =
@@ -248,7 +248,8 @@ impl Population<f32> {
                 } else {
                     -999.0
                 }
-            }).collect::<Vec<f32>>()
+            })
+            .collect::<Vec<f32>>()
             .iter()
             .min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
             .unwrap_or(&0.0);
@@ -331,11 +332,12 @@ impl Population<f32> {
                 if offspring.ann.is_valid() {
                     offspring_vector.push(offspring);
                 } else {
-                    use std::io::{Write, stderr};
+                    use std::io::{stderr, Write};
                     writeln!(
                         stderr(),
                         "father {} and mother {} failed to reproduce.",
-                        father.fitness, mother.fitness
+                        father.fitness,
+                        mother.fitness
                     );
                 }
             }
@@ -368,43 +370,43 @@ impl Population<f32> {
             thread_rng().shuffle(&mut shuffled_mating_pool_index_1);
             thread_rng().shuffle(&mut shuffled_mating_pool_index_2);
 
-            let mut offspring_vector_tmp: Vec< Specimen<f32> > = shuffled_mating_pool_index_1
+            let mut offspring_vector_tmp: Vec<Specimen<f32>> = shuffled_mating_pool_index_1
                 .par_iter()
                 .zip(shuffled_mating_pool_index_2.par_iter())
-                .map(|(i, j)|
-            {
-                if offspring_vector.len() == offspring_size {
-                    return None
-                } else {
-
-                    let father: &Specimen<f32>;
-                    let mother: &Specimen<f32>;
-
-                    if mating_pool[*i].fitness >= mating_pool[*j].fitness {
-                        father = &mating_pool[*i];
-                        mother = &mating_pool[*j];
+                .map(|(i, j)| {
+                    if offspring_vector.len() == offspring_size {
+                        return None;
                     } else {
-                        father = &mating_pool[*j];
-                        mother = &mating_pool[*i];
-                    }
+                        let father: &Specimen<f32>;
+                        let mother: &Specimen<f32>;
 
-                    let mut offspring: Specimen<f32> = Specimen::crossover(father, mother);
+                        if mating_pool[*i].fitness >= mating_pool[*j].fitness {
+                            father = &mating_pool[*i];
+                            mother = &mating_pool[*j];
+                        } else {
+                            father = &mating_pool[*j];
+                            mother = &mating_pool[*i];
+                        }
 
-                    if offspring.ann.is_valid() {
-                        return Some(offspring)
-                    } else {
-                        use std::io::{Write, stderr};
-                        writeln!(
-                            stderr(),
-                            "father {} and mother {} failed to reproduce.",
-                            father.fitness, mother.fitness
-                        );
-                        return None
+                        let mut offspring: Specimen<f32> = Specimen::crossover(father, mother);
+
+                        if offspring.ann.is_valid() {
+                            return Some(offspring);
+                        } else {
+                            use std::io::{stderr, Write};
+                            writeln!(
+                                stderr(),
+                                "father {} and mother {} failed to reproduce.",
+                                father.fitness,
+                                mother.fitness
+                            );
+                            return None;
+                        }
                     }
-                }
-            }).collect::<Vec< Option<Specimen<f32>> >>()
+                })
+                .collect::<Vec<Option<Specimen<f32>>>>()
                 .iter()
-                .filter_map(|s| s.to_owned() )
+                .filter_map(|s| s.to_owned())
                 .collect();
 
             offspring_vector.append(&mut offspring_vector_tmp);
@@ -418,8 +420,8 @@ impl Population<f32> {
     /// Visualisation of the artificial neural network of each specimen of our population with
     /// GraphViz.
     pub fn render(&self, root_path: &str, print_jumper: bool, print_weights: bool) {
+        use futures::future::{lazy, Future};
         use tokio_threadpool::Builder;
-        use futures::future::{Future, lazy};
         // use std::time::Duration;
         use std::path::Path;
 
@@ -430,14 +432,20 @@ impl Population<f32> {
 
         // Specimen rendering are done in parallele using a thread pool.
         for (i, specimen) in self.species.clone().into_iter().enumerate() {
-            let file_name: String = format!("Specimen_{:03}_g{:0>4}.dot", i, self.generation_counter);
+            let file_name: String =
+                format!("Specimen_{:03}_g{:0>4}.dot", i, self.generation_counter);
             let file_path = Path::new(root_path).join(&file_name);
             let file_path: String = file_path.to_string_lossy().to_string();
 
             pool.spawn(lazy(move || {
-                match specimen.render(&file_path, &format!("Specimen_{:03}", i), print_jumper, print_weights) {
+                match specimen.render(
+                    &file_path,
+                    &format!("Specimen_{:03}", i),
+                    print_jumper,
+                    print_weights,
+                ) {
                     Some(_) => Ok(()),
-                    None => panic!(format!("Fail to render Specimen {}.", i))
+                    None => panic!(format!("Fail to render Specimen {}.", i)),
                 }
             }));
         }
@@ -459,9 +467,7 @@ impl Population<f32> {
 
         create_parent_directory(file_name)?;
 
-        let stream = BufWriter::new(
-            File::create(file_name)?
-        );
+        let stream = BufWriter::new(File::create(file_name)?);
         serialize_into(stream, &self)?;
 
         Ok(())
@@ -475,9 +481,7 @@ impl Population<f32> {
         use std::fs::File;
         use std::io::BufReader;
 
-        let stream = BufReader::new(
-            File::open(file_name)?
-        );
+        let stream = BufReader::new(File::open(file_name)?);
 
         Ok(deserialize_from(stream)?)
     }

@@ -119,19 +119,19 @@ impl Node<f32> {
 }
 
 
- use std::fmt;
- impl fmt::Display for Node<f32> {
-     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-         let msg: String = match &self.allele {
-             Allele::Input { label } => format!("I{:<3}", label),
-             Allele::Neuron { id } => format!("N{:<3}", id),
-             Allele::JumpForward { source_id } => format!("JF{:<3}", source_id),
-             Allele::JumpRecurrent { source_id } => format!("JR{:<3}", source_id),
-             Allele::NaN => format!("X{:<3}", 'x'),
-         };
-         write!(f, "{:^3}", &msg)
-     }
- }
+use std::fmt;
+impl fmt::Display for Node<f32> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg: String = match &self.allele {
+            Allele::Input { label } => format!("I{:<3}", label),
+            Allele::Neuron { id } => format!("N{:<3}", id),
+            Allele::JumpForward { source_id } => format!("JF{:<3}", source_id),
+            Allele::JumpRecurrent { source_id } => format!("JR{:<3}", source_id),
+            Allele::NaN => format!("X{:<3}", 'x'),
+        };
+        write!(f, "{:^3}", &msg)
+    }
+}
 
 
 impl TransferFunctionTrait<f32> for Node<f32> {

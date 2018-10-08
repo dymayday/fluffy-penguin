@@ -1,8 +1,8 @@
 extern crate fluffy_penguin;
 extern crate rayon;
-use rayon::prelude::*;
 use fluffy_penguin::genetic_algorithm::individual::Specimen;
 use fluffy_penguin::genetic_algorithm::Population;
+use rayon::prelude::*;
 
 fn init_population(
     population_size: usize,
@@ -196,7 +196,6 @@ fn test_exploitation_correctness_on_basic_equation() {
 
 
     for cycle in 0..cycle_stop {
-
         // Lookup for some better weights.
         if generation_counter % cycle_per_structure == 0 {
             population.exploration();
@@ -206,13 +205,18 @@ fn test_exploitation_correctness_on_basic_equation() {
 
         generation_counter += 1;
 
-        let scores: Vec<f32> = population.species.par_iter()
+        let scores: Vec<f32> = population
+            .species
+            .par_iter()
             // .map(|specimen| 100.0 * compute_specimen_score(specimen))
             .map(|specimen| {
                 let score: f32 = 100.0 * compute_specimen_score(specimen);
-                if score.is_finite() && score < 999.0 { score }
-                else { 999.0 }
-            } )
+                if score.is_finite() && score < 999.0 {
+                    score
+                } else {
+                    999.0
+                }
+            })
             .collect();
 
         // Update fitness of each specimen.
@@ -229,8 +233,6 @@ fn test_exploitation_correctness_on_basic_equation() {
         }
 
 
-
-
         let best_score = scores
             .iter()
             .min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
@@ -240,7 +242,6 @@ fn test_exploitation_correctness_on_basic_equation() {
             "[{:>5}], best RMSE = {:.6} , mean = {:.6}",
             generation_counter, best_score, mean_score
         );
-
     }
 
     if export {
@@ -251,7 +252,6 @@ fn test_exploitation_correctness_on_basic_equation() {
 
         population.render("tmp/basic/", false, false);
     }
-
 }
 
 

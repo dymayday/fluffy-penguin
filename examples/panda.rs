@@ -123,7 +123,12 @@ fn _test_exploitation() {
 
 
 /// Test all available mutation on the example ANN from the research papers.
-fn _test_specimen_mutation(pretty_print: bool, export: bool, print_jumper: bool, print_weights: bool) {
+fn _test_specimen_mutation(
+    pretty_print: bool,
+    export: bool,
+    print_jumper: bool,
+    print_weights: bool,
+) {
     println!(
         "\n{:^120}",
         "------------------------------------------------------------\n"
@@ -246,7 +251,12 @@ fn _test_crossover() {
 }
 
 
-fn _test_population_crossover(pretty_print: bool, export: bool, print_jumper: bool, print_weights: bool) {
+fn _test_population_crossover(
+    pretty_print: bool,
+    export: bool,
+    print_jumper: bool,
+    print_weights: bool,
+) {
     use fluffy_penguin::cge::Allele;
     println!();
 
@@ -308,7 +318,8 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_jumper: bo
                         } else {
                             None
                         }
-                    }).collect();
+                    })
+                    .collect();
                 neuron_list.sort();
                 println!("Neuron ids = {:?}", neuron_list);
 
@@ -332,8 +343,12 @@ fn _test_population_crossover(pretty_print: bool, export: bool, print_jumper: bo
 }
 
 
-fn _test_population_selection(pretty_print: bool, export: bool, print_jumper: bool, print_weights: bool) {
-
+fn _test_population_selection(
+    pretty_print: bool,
+    export: bool,
+    print_jumper: bool,
+    print_weights: bool,
+) {
     let population_size: usize = 8;
     let input_size: usize = 8;
     let output_size: usize = 9;
@@ -356,7 +371,8 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_jumper: bo
             input_size,
             output_size,
             mutation_probability,
-        ).with_s_rank(2.0);
+        )
+        .with_s_rank(2.0);
         // population = population.with_s_rank(2.0);
 
         for _smi in 0..mutation_size {
@@ -389,7 +405,6 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_jumper: bo
                 // || true {
                 population.exploration();
                 population.render("tmp/", print_jumper, print_weights);
-
             } else {
                 population.exploitation();
             }
@@ -410,7 +425,6 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_jumper: bo
             }
         }
     }
-
 }
 
 //
@@ -484,7 +498,8 @@ fn _test_population_selection(pretty_print: bool, export: bool, print_jumper: bo
 
 
 fn main() {
-    let (pretty_print, visualize, print_jumper, print_weights): (bool, bool, bool, bool) = (false, true, false, false);
+    let (pretty_print, visualize, print_jumper, print_weights): (bool, bool, bool, bool) =
+        (false, true, false, false);
     // _dev_population(pretty_print, visualize, print_weights);
 
     // _test_exploitation();

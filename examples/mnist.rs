@@ -3,18 +3,13 @@
 //! Some work are still needed to tests the model on the a test portion of the dataset.
 
 extern crate fluffy_penguin;
-extern crate reqwest;
-extern crate rayon;
 extern crate mnist;
+extern crate rayon;
+extern crate reqwest;
 extern crate rulinalg;
 
+use fluffy_penguin::genetic_algorithm::{individual::Specimen, Population};
 use rayon::prelude::*;
-use fluffy_penguin::{
-    genetic_algorithm::{
-        individual::Specimen,
-    Population,
-    },
-};
 
 const DATASET_ROOT_PATH: &str = "tmp/mnist/";
 const DATASET_FILES: [&str; 4] = [
@@ -30,19 +25,29 @@ const DATASET_SIZE: usize = 1_000;
 
 /// Download the MNIST dataset if needed.
 fn get_dataset() {
-    use std::{fs, path::{Path, PathBuf}};
     use std::process;
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+    };
 
     let root_path = Path::new(&DATASET_ROOT_PATH);
     if !root_path.exists() {
-        fs::create_dir_all(&DATASET_ROOT_PATH)
-            .unwrap_or_else(
-                |_| panic!("Fail to create MNIST dataset directory: '{}'.", &DATASET_ROOT_PATH));
+        fs::create_dir_all(&DATASET_ROOT_PATH).unwrap_or_else(|_| {
+            panic!(
+                "Fail to create MNIST dataset directory: '{}'.",
+                &DATASET_ROOT_PATH
+            )
+        });
     }
 
     for data_file in DATASET_FILES.iter() {
         let archived_file_name = PathBuf::from(&data_file).file_name().unwrap().to_owned();
-        let archived_file_path = root_path.join(archived_file_name).to_str().unwrap().to_owned();
+        let archived_file_path = root_path
+            .join(archived_file_name)
+            .to_str()
+            .unwrap()
+            .to_owned();
         let extracted_file_out = archived_file_path.to_string().replace(".gz", "");
 
 
@@ -52,7 +57,8 @@ fn get_dataset() {
             process::Command::new("gzip")
                 .arg("-d")
                 .arg(archived_file_path)
-                .output().unwrap();
+                .output()
+                .unwrap();
         }
     }
 }
@@ -60,11 +66,10 @@ fn get_dataset() {
 
 /// File downloader.
 fn download(url: &str, file_name: &str) {
-    use std::fs::File;
     use reqwest;
+    use std::fs::File;
 
-    let mut resp = reqwest::get(url)
-        .unwrap_or_else(|_| panic!("Fail to request file: '{}'.", url));
+    let mut resp = reqwest::get(url).unwrap_or_else(|_| panic!("Fail to request file: '{}'.", url));
     let mut stream = File::create(file_name)
         .unwrap_or_else(|_| panic!("Fail to create file: '{}'.", &file_name));
 
@@ -75,13 +80,14 @@ fn download(url: &str, file_name: &str) {
 
 /// Loads the dataset into Vector of f32 values.
 fn load_dataset() -> (Vec<f32>, Vec<f32>) {
-
     use mnist::{Mnist, MnistBuilder};
 
     let (trn_size, rows, cols) = (DATASET_SIZE, ROWS, COLS);
 
     // Deconstruct the returned Mnist struct.
-    let Mnist { trn_img, trn_lbl, .. } = MnistBuilder::new()
+    let Mnist {
+        trn_img, trn_lbl, ..
+    } = MnistBuilder::new()
         .base_path(DATASET_ROOT_PATH)
         // .label_format_digit()
         .label_format_one_hot()
@@ -100,11 +106,11 @@ fn load_dataset() -> (Vec<f32>, Vec<f32>) {
     for i in 0..10 {
         print!("{:>2}", trn_lbl[i])
     }
-    for i in 0..rows*cols {
-            if i % cols == 0 {
-                println!();
-            }
-            print!("{:>4}", trn_img[i]);
+    for i in 0..rows * cols {
+        if i % cols == 0 {
+            println!();
+        }
+        print!("{:>4}", trn_img[i]);
     }
     println!();
 
@@ -127,17 +133,16 @@ fn compute_specimen_score(specimen: &Specimen<f32>, trn_img: &[f32], trn_lbl: &[
 
     let mut i: usize = 0;
     while i < DATASET_SIZE {
-
-        let inputs = &trn_img[i..i+(ROWS*COLS)];
+        let inputs = &trn_img[i..i + (ROWS * COLS)];
         specimen.update_input(&inputs);
         let specimen_output = specimen.evaluate();
 
         // Gathering the right answer.
-        let model_output: Vec<f32> = trn_lbl[i*10..i*10+10].to_vec();
+        let model_output: Vec<f32> = trn_lbl[i * 10..i * 10 + 10].to_vec();
 
         // And compare it with the output computedd by our ANN.
         for e in 0..10 {
-            squared_errors.push( (model_output[e] - specimen_output[e]).powf(2.0) );
+            squared_errors.push((model_output[e] - specimen_output[e]).powf(2.0));
             // let resp: f32;
             // if specimen_output[e] > 1.0 {
             //     resp = 1.0;
@@ -173,7 +178,7 @@ fn train_model(trn_img: &[f32], trn_lbl: &[f32]) {
         input_size,
         output_size,
         mutation_probability,
-        );
+    );
 
     // 'S Rank' value should be between 1.5 and 2.0
     // Here we set it to 2.0, meaning a lower chance for the worst individuals in the population
@@ -185,15 +190,17 @@ fn train_model(trn_img: &[f32], trn_lbl: &[f32]) {
 
     // Prints the header of our scoring implementation
     println!(
-            "[{:>5}], \t{:>10}  , \t{:>10} , \t{:>10}",
-            "counter", "best", "mean", "worst",
-        );
+        "[{:>5}], \t{:>10}  , \t{:>10} , \t{:>10}",
+        "counter", "best", "mean", "worst",
+    );
 
 
     for _ in 0..cycle_stop {
         generation_counter += 1;
 
-        let scores: Vec<f32> = population.species.par_iter()
+        let scores: Vec<f32> = population
+            .species
+            .par_iter()
             .map(|specimen| compute_specimen_score(specimen, &trn_img, &trn_lbl))
             .collect();
 
@@ -229,7 +236,6 @@ fn train_model(trn_img: &[f32], trn_lbl: &[f32]) {
             generation_counter, best_score, mean_score, worst_score,
         );
     }
-
 }
 
 
@@ -238,4 +244,3 @@ fn main() {
     let (trn_img, trn_lbl): (Vec<f32>, Vec<f32>) = load_dataset();
     train_model(&trn_img, &trn_lbl);
 }
-

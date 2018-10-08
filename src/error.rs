@@ -1,8 +1,8 @@
 //! Customs error management for the entire crate.
 
 use std::error::Error as StdError;
-use std::{fmt, io};
 use std::result;
+use std::{fmt, io};
 
 use bincode::Error as BincodeError;
 

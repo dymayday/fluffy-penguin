@@ -4,11 +4,11 @@
 //! that are unnecessary. I find it very cool and powerful and I invit you to learn more about this
 //! beautiful peace of art =].
 
-extern crate rand;
-extern crate tokio_threadpool;
 extern crate futures;
+extern crate rand;
 extern crate rayon;
 extern crate serde;
+extern crate tokio_threadpool;
 #[macro_use]
 extern crate serde_derive;
 extern crate bincode;
@@ -16,9 +16,9 @@ extern crate fnv;
 
 pub mod activation;
 pub mod cge;
+pub mod error;
 pub mod genetic_algorithm;
 pub mod utils;
-pub mod error;
 
 
 #[cfg(test)]
@@ -59,13 +59,12 @@ mod population {
         let file_name = "/tmp/pop_test.bc";
         let population = Population::new(10, 2, 1, 0.10);
 
-        population.save_to_file(file_name)
+        population
+            .save_to_file(file_name)
             .expect("Fail to save population to file.");
-        Population::load_from_file(file_name)
-            .expect("Fail to load Population from file.");
+        Population::load_from_file(file_name).expect("Fail to load Population from file.");
 
-        fs::remove_file(file_name)
-            .expect("Failed to remove temporary test file.");
+        fs::remove_file(file_name).expect("Failed to remove temporary test file.");
     }
 }
 
@@ -95,10 +94,13 @@ mod specimen {
             gin = gin_tmp;
             nn_id = nn_id_tmp;
             specimen_mutated.update_input(&input_vector);
-            let nodes_str: Vec<String> = specimen_mutated.ann.genome.iter()
+            let nodes_str: Vec<String> = specimen_mutated
+                .ann
+                .genome
+                .iter()
                 .map(|n| format!("{}{:^2}", &n, &n.iota))
                 .collect();
-            println!("{}", nodes_str.join(" ")); 
+            println!("{}", nodes_str.join(" "));
             let iota_sum: i32 = specimen_mutated.ann.genome.iter().map(|n| n.iota).sum();
             println!("{}", iota_sum);
 
@@ -119,15 +121,9 @@ mod network {
     fn evaluation_ann_from_example() {
         let mut network = Network::build_from_example();
         // test first pass
-        assert_eq!(
-            network.evaluate(),
-            Some(vec![0.65400004_f32])
-        );
+        assert_eq!(network.evaluate(), Some(vec![0.65400004_f32]));
         // test second pass
-        assert_eq!(
-            network.evaluate(),
-            Some(vec![0.68016005])
-        );
+        assert_eq!(network.evaluate(), Some(vec![0.68016005]));
     }
 
     #[test]
@@ -137,18 +133,114 @@ mod network {
         use cge::{Allele::*, Node};
         use fnv::FnvHashMap;
         let genome: Vec<Node<f32>> = vec![
-            Node { allele: Neuron { id: 0 }, gin: 1, w: 0.6, sigma: 0.01, iota: -2, value: 0.0, depth: 0 },
-            Node { allele: JumpRecurrent { source_id: 2 }, gin: 23, w: 0.0, sigma: 0.01, iota: 1, value: 0.0, depth: 1 },
-            Node { allele: Neuron { id: 1 }, gin: 2, w: 0.8, sigma: 0.01, iota: -2, value: 0.0, depth: 1 },
-            Node { allele: JumpForward { source_id: 3 }, gin: 24, w: 0.0, sigma: 0.01, iota: 1, value: 0.0, depth: 2 },
-            Node { allele: Neuron { id: 3 }, gin: 3, w: 0.9, sigma: 0.01, iota: 0, value: 0.0, depth: 2 },
-            Node { allele: Input { label: 1 }, gin: 5, w: 0.4, sigma: 0.01, iota: 1, value: 0.0, depth: 999 },
-            Node { allele: Input { label: 1 }, gin: 6, w: 0.5, sigma: 0.01, iota: 1, value: 0.0, depth: 999 },
-            Node { allele: Neuron { id: 2 }, gin: 7, w: 0.2, sigma: 0.01, iota: -3, value: 0.0, depth: 1 },
-            Node { allele: JumpForward { source_id: 3 }, gin: 8, w: 0.3, sigma: 0.01, iota: 1, value: 0.0, depth: 2 },
-            Node { allele: Input { label: 0 }, gin: 9, w: 0.7, sigma: 0.01, iota: 1, value: 0.0, depth: 999 },
-            Node { allele: Input { label: 1 }, gin: 10, w: 0.8, sigma: 0.01, iota: 1, value: 0.0, depth: 999 },
-            Node { allele: JumpRecurrent { source_id: 0 }, gin: 11, w: 0.2, sigma: 0.01, iota: 1, value: 0.0, depth: 2 },
+            Node {
+                allele: Neuron { id: 0 },
+                gin: 1,
+                w: 0.6,
+                sigma: 0.01,
+                iota: -2,
+                value: 0.0,
+                depth: 0,
+            },
+            Node {
+                allele: JumpRecurrent { source_id: 2 },
+                gin: 23,
+                w: 0.0,
+                sigma: 0.01,
+                iota: 1,
+                value: 0.0,
+                depth: 1,
+            },
+            Node {
+                allele: Neuron { id: 1 },
+                gin: 2,
+                w: 0.8,
+                sigma: 0.01,
+                iota: -2,
+                value: 0.0,
+                depth: 1,
+            },
+            Node {
+                allele: JumpForward { source_id: 3 },
+                gin: 24,
+                w: 0.0,
+                sigma: 0.01,
+                iota: 1,
+                value: 0.0,
+                depth: 2,
+            },
+            Node {
+                allele: Neuron { id: 3 },
+                gin: 3,
+                w: 0.9,
+                sigma: 0.01,
+                iota: 0,
+                value: 0.0,
+                depth: 2,
+            },
+            Node {
+                allele: Input { label: 1 },
+                gin: 5,
+                w: 0.4,
+                sigma: 0.01,
+                iota: 1,
+                value: 0.0,
+                depth: 999,
+            },
+            Node {
+                allele: Input { label: 1 },
+                gin: 6,
+                w: 0.5,
+                sigma: 0.01,
+                iota: 1,
+                value: 0.0,
+                depth: 999,
+            },
+            Node {
+                allele: Neuron { id: 2 },
+                gin: 7,
+                w: 0.2,
+                sigma: 0.01,
+                iota: -3,
+                value: 0.0,
+                depth: 1,
+            },
+            Node {
+                allele: JumpForward { source_id: 3 },
+                gin: 8,
+                w: 0.3,
+                sigma: 0.01,
+                iota: 1,
+                value: 0.0,
+                depth: 2,
+            },
+            Node {
+                allele: Input { label: 0 },
+                gin: 9,
+                w: 0.7,
+                sigma: 0.01,
+                iota: 1,
+                value: 0.0,
+                depth: 999,
+            },
+            Node {
+                allele: Input { label: 1 },
+                gin: 10,
+                w: 0.8,
+                sigma: 0.01,
+                iota: 1,
+                value: 0.0,
+                depth: 999,
+            },
+            Node {
+                allele: JumpRecurrent { source_id: 0 },
+                gin: 11,
+                w: 0.2,
+                sigma: 0.01,
+                iota: 1,
+                value: 0.0,
+                depth: 2,
+            },
         ];
 
         let mut net = Network {
@@ -160,7 +252,7 @@ mod network {
             alpha: 1.0,
         };
         let output = net.evaluate().unwrap();
-        assert_eq!(output.len(), 1)        
+        assert_eq!(output.len(), 1)
     }
 }
 

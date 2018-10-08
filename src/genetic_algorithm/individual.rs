@@ -1,8 +1,8 @@
 use cge::{Allele, Network, Node};
+use fnv::FnvHashMap;
 use genetic_algorithm::mutation::StructuralMutation;
 use rand::distributions::StandardNormal;
 use rand::{self, thread_rng, Rng};
-use fnv::FnvHashMap;
 use std::process;
 
 pub const LEARNING_RATE_THRESHOLD: f32 = 0.0001;
@@ -104,7 +104,7 @@ impl Specimen<f32> {
             // Curtaining the weight and sigma values.
             // if sigma_p < -10.0 || w_p < -10.0 || sigma_p > 10.0 || w_p > 10.0 {
             if w_p < -10.0 || w_p > 10.0 {
-                // Do nothing. 
+                // Do nothing.
                 // if w_p > 10.0 { node.w = 10.0; }
                 // else { node.w = -10.0; }
                 // node.sigma = sigma_p;
@@ -346,12 +346,7 @@ impl Specimen<f32> {
         let mut specimen = father.clone();
 
         let (father, mother) = Specimen::sort_specimens_genome(&father, &mother);
-        specimen.ann = Network::crossover(
-            &father.ann,
-            &mother.ann,
-            father.fitness,
-            mother.fitness,
-        );
+        specimen.ann = Network::crossover(&father.ann, &mother.ann, father.fitness, mother.fitness);
 
         specimen.update();
 
@@ -386,7 +381,8 @@ impl Specimen<f32> {
                 } else {
                     None
                 }
-            }).collect();
+            })
+            .collect();
 
         let n2_gin_vector: Vec<usize> = genome_2
             .iter()
@@ -396,7 +392,8 @@ impl Specimen<f32> {
                 } else {
                     None
                 }
-            }).collect();
+            })
+            .collect();
 
 
         let ref_specimen;
@@ -441,7 +438,6 @@ impl Specimen<f32> {
 
 
         for ref_neuron_gin in ref_gin_v {
-
             let mut gin_already_sorted: Vec<usize> = genome_sorted
                 .iter()
                 .filter_map(|n| {
@@ -450,7 +446,8 @@ impl Specimen<f32> {
                     } else {
                         None
                     }
-                }).collect();
+                })
+                .collect();
 
             if other_gin_v.contains(&ref_neuron_gin)
                 && !gin_already_sorted.contains(&ref_neuron_gin)
@@ -471,7 +468,6 @@ impl Specimen<f32> {
                     genome_sorted = slice;
                 }
             }
-
         }
 
         other_specimen.ann.genome = genome_sorted;
@@ -482,8 +478,13 @@ impl Specimen<f32> {
 
 
     /// Render the Specimen artificial neural network to a dot and svg file.
-    pub fn render(&self, file_name: &str, graph_name: &str, print_jumper: bool, print_weights: bool) -> Option<process::Output> {
-
+    pub fn render(
+        &self,
+        file_name: &str,
+        graph_name: &str,
+        print_jumper: bool,
+        print_weights: bool,
+    ) -> Option<process::Output> {
         let file_name_svg: &str = &String::from(file_name).replace(".dot", ".svg");
         self.ann
             .render_to_dot(file_name, graph_name, print_jumper, print_weights)

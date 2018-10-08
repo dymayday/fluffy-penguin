@@ -7,10 +7,9 @@
 use activation::TransferFunctionTrait;
 use cge::node::Allele::*;
 use cge::node::{Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
-use rand::{thread_rng, Rng};
 use fnv::FnvHashMap;
+use rand::{thread_rng, Rng};
 use std::io::Write;
-
 
 
 /// The representation of an Artificial Neural Network (ANN) using the Common Genetic Encoding
@@ -553,7 +552,8 @@ impl Network<f32> {
                 } else {
                     None
                 }
-            }).collect::<Vec<usize>>()
+            })
+            .collect::<Vec<usize>>()
             .iter()
             .max()
             .unwrap();
@@ -569,7 +569,7 @@ impl Network<f32> {
 
     /// Evaluate a genome, using the values from `self.inputs`, and the current values of each
     /// `Allele::Neuron` of  `self.genome`.
-    /// 
+    ///
     /// # Return
     ///
     /// The values associated to each outputs, in a Vec, in the same order as the outputs.
@@ -581,7 +581,7 @@ impl Network<f32> {
         // unless it meets `JumpForward` allele, in this case the algorithm will
         // evalute the sub-genome needed to get the output of the source neuron of the `JumpForward` node,
         // and then will continue its execution.
-        
+
         // this stack represents the data-flow of the algorithm
         let mut neuron_input_stack: Vec<f32> = Vec::new();
         // map any neuron ID to its computed value.
@@ -607,10 +607,10 @@ impl Network<f32> {
         'node_eval: while let Some(node_idx) = nodes_indices_to_process.pop() {
             let node = &self.genome[node_idx];
             match &node.allele {
-                Input { label } => { 
+                Input { label } => {
                     let input_value = self.input_map[*label].isrlu(self.alpha) * node.w;
                     neuron_input_stack.push(input_value);
-                },
+                }
                 JumpRecurrent { source_id } => {
                     // fetch the output value of the neuron
                     // * If it's already been compute in this evaluation process, take that
@@ -623,7 +623,7 @@ impl Network<f32> {
                         .unwrap_or(&self.genome[source_node_idx].value);
                     let value = node.w * source_neuron_value;
                     neuron_input_stack.push(value);
-                },
+                }
                 JumpForward { source_id } => {
                     // fetch the ouput of the neuron source,
                     // if it's has already been evaluated, use it,
@@ -648,13 +648,13 @@ impl Network<f32> {
                             // keep track of the current forward process
                             forward_in_process.push(*source_id);
                             continue 'node_eval;
-                        },
+                        }
                         // If we already computed the value of this neuron in this evaluation call
                         Some(neuron_value) => {
                             // To get here, either:
                             // * the neuron was already evalutated way before this step,
                             // * or we just evaluated it for this node
-                            // If we did, we must pop out first stack value, as we are not interested 
+                            // If we did, we must pop out first stack value, as we are not interested
                             // in the sub-network output, by in the value of the root neuron of it.
                             let mut must_pop_stack = false;
                             if let Some(neuron_id) = forward_in_process.last() {
@@ -667,9 +667,9 @@ impl Network<f32> {
                             // now we can process it
                             let mut value = node.w * neuron_value.isrlu(self.alpha);
                             neuron_input_stack.push(value);
-                        },
+                        }
                     }
-                },
+                }
                 Neuron { id } => {
                     // Compute the output of this neuron, and update its value
                     let mut neuron_value: f32 = 0.;
@@ -682,8 +682,8 @@ impl Network<f32> {
                     neuron_id_to_value.insert(*id, neuron_value);
                     // store it as an input to the rest ro the genome
                     neuron_input_stack.push(neuron_value * node.w);
-                },
-                NaN => {},
+                }
+                NaN => {}
             }
         }
         // update the values of each neurons
@@ -823,7 +823,6 @@ impl Network<f32> {
 
     /// Find removable GIN from a Neuron.
     pub fn find_removable_gin_list(genome: &[Node<f32>]) -> Vec<usize> {
-
         let genome_len: usize = genome.len();
         let mut removable_gin: Vec<usize> = Vec::with_capacity(genome_len);
 
@@ -832,7 +831,6 @@ impl Network<f32> {
 
 
         while i < genome_len && iota != 1 {
-            
             let node: Node<f32> = genome[i].clone();
 
             match node.allele {
@@ -840,12 +838,14 @@ impl Network<f32> {
                     // let mut gin_list: Vec<usize> = Network::find_removable_gin_list(&genome[i..]);
                     // removable_gin.append(&mut gin_list);
                     break;
-                },
-                Input  { .. } | JumpForward { .. } | JumpRecurrent { .. } => {
+                }
+                Input { .. } | JumpForward { .. } | JumpRecurrent { .. } => {
                     removable_gin.push(node.gin);
                     iota += 1;
-                },
-                _ => { break; }
+                }
+                _ => {
+                    break;
+                }
             }
             i += 1;
         }
@@ -877,7 +877,6 @@ impl Network<f32> {
         // table (HashMap).
         let isn_merged_btm =
             Network::merge_and_update_subnetworks(&n1_order, &n2_order, &n1_isn_btm, &n2_isn_btm);
-
 
 
         // Now we need to recombine all those sub-networks into one linear genome.
@@ -933,7 +932,8 @@ impl Network<f32> {
                 } else {
                     None
                 }
-            }).collect();
+            })
+            .collect();
 
         let genome_len: usize = network.genome.len();
         let mut inputs_subnetwork_btm: FnvHashMap<usize, Vec<&Node<f32>>> = FnvHashMap::default();
@@ -953,7 +953,10 @@ impl Network<f32> {
     }
 
 
-    pub fn _pp_subnetworks_lookup_table(n_order: &[usize], hm: &FnvHashMap<usize, Vec<&Node<f32>>>) {
+    pub fn _pp_subnetworks_lookup_table(
+        n_order: &[usize],
+        hm: &FnvHashMap<usize, Vec<&Node<f32>>>,
+    ) {
         for i in n_order {
             let sub_net = hm.get(i).unwrap();
             println!("NGin ({:^3}) :", i);
@@ -969,7 +972,6 @@ impl Network<f32> {
         n1_subnet_btm: &FnvHashMap<usize, Vec<&'a Node<f32>>>,
         n2_subnet_btm: &FnvHashMap<usize, Vec<&'a Node<f32>>>,
     ) -> FnvHashMap<usize, Vec<&'a Node<f32>>> {
-
         let mut btm_merged: FnvHashMap<usize, Vec<&Node<f32>>> = FnvHashMap::default();
 
         let mut common_neuron_gin: Vec<usize> = Vec::with_capacity(n1_order.len() + n2_order.len());
@@ -1084,7 +1086,8 @@ impl Network<f32> {
                 } else {
                     Some(*n)
                 }
-            }).collect();
+            })
+            .collect();
 
         // And on the other side we gather only the Neuron ones.
         let neuron_nodes: Vec<&Node<f32>> = sub_net
@@ -1095,7 +1098,8 @@ impl Network<f32> {
                 } else {
                     None
                 }
-            }).collect();
+            })
+            .collect();
 
         (input_nodes, neuron_nodes)
     }
@@ -1114,7 +1118,8 @@ impl Network<f32> {
             let _output_neuron_ref: &Node<f32> = gin_neuron_map.get(&gin).unwrap();
             let mut output_neuron: Node<f32> = _output_neuron_ref.clone();
 
-            let _neurons_input_ref: Vec<&Node<f32>> = merged_sub_net_btm.get(&gin).unwrap().to_vec();
+            let _neurons_input_ref: Vec<&Node<f32>> =
+                merged_sub_net_btm.get(&gin).unwrap().to_vec();
             let mut neurons_inputs: Vec<Node<f32>> =
                 _neurons_input_ref.iter().map(|n| (*n).clone()).collect();
 
@@ -1298,9 +1303,9 @@ impl Network<f32> {
                     // Paint JF.
                     let msg: String = format!(
                         "\tsubgraph cluster_2 {{\n\
-                        \t\tcolor=white;\n\
-                        \t\tnode [style=solid, color=cornflowerblue, shape=circle];\n\
-                        \t"
+                         \t\tcolor=white;\n\
+                         \t\tnode [style=solid, color=cornflowerblue, shape=circle];\n\
+                         \t"
                     );
                     writer.write_all(msg.as_bytes())?;
 
@@ -1319,9 +1324,9 @@ impl Network<f32> {
                     // Paint JR.
                     let msg: String = format!(
                         "\tsubgraph cluster_3 {{\n\
-                        \t\tcolor=white;\n\
-                        \t\tnode [style=solid, color=yellowgreen, shape=circle];\n\
-                        \t"
+                         \t\tcolor=white;\n\
+                         \t\tnode [style=solid, color=yellowgreen, shape=circle];\n\
+                         \t"
                     );
                     writer.write_all(msg.as_bytes())?;
 
@@ -1337,7 +1342,6 @@ impl Network<f32> {
                         writer.write_all(";\n".as_bytes())?;
                     }
                     writer.write_all("\t}\n\n".as_bytes())?;
-
                 }
 
                 // Paint all Ouput Neuron Node on the same rank.
@@ -1355,7 +1359,6 @@ impl Network<f32> {
                     writer.write_all(msg.as_bytes())?;
                 }
                 writer.write_all("};\n".as_bytes())?;
-
             }
 
             let input_len: usize = self.genome.len();

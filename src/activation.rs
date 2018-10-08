@@ -12,7 +12,6 @@ pub trait TransferFunctionTrait<T: Copy> {
 }
 
 impl TransferFunctionTrait<f32> for f32 {
-
     /// With α = 1, ISRLU saturation approaches -1.
     /// With α = 3, the negative saturation is reduced, so a smaller portion of
     /// the back-propagated error signal will pass to the next layer.

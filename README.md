@@ -15,7 +15,7 @@ Implementation of the ENT2 genetic algorithm in Rust, because both are awesome =
 
 ## About
 
-This library use Evolutionary algorithm ([EA](https://en.wikipedia.org/wiki/Evolutionary_algorithm)) to automatically evolve the topology of the artificial neural networks of each individual in a population.
+This library use Evolutionary algorithms ([EA](https://en.wikipedia.org/wiki/Evolutionary_algorithm)) to automatically evolve the topology of the artificial neural networks of each individual in a population.
 
 ## Requirements
 
