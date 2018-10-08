@@ -21,7 +21,7 @@ This library use Evolutionary algorithms ([EA](https://en.wikipedia.org/wiki/Evo
 > Evolutionary Algorithms belong to the Evolutionary Computation field of study concerned with computational methods inspired by the process and mechanisms of biological evolution. The process of evolution by means of natural selection (descent with modification) was proposed by Darwin to account for the variety of life and its suitability (adaptive fit) for its environment. The mechanisms of evolution describe how evolution actually takes place through the modification and propagation of genetic material (proteins). Evolutionary Algorithms are concerned with investigating computational systems that resemble simplified versions of the processes and mechanisms of evolution toward achieving the effects of these processes and mechanisms, namely the development of adaptive systems. Additional subject areas that fall within the realm of Evolutionary Computation are algorithms that seek to exploit the properties from the related fields of Population Genetics, Population Ecology, Coevolutionary Biology, and Developmental Biology.
 > -- <cite>[cleveralgorithms.com](http://www.cleveralgorithms.com/nature-inspired/evolution.html)</cite>
 
-Artificial neural networks are characterised by their _structure_ (_topology_) and their parameters (which includes the weights of connections). When an ANN is to be developed for a given problem, two aspects need therefore to be considered:
+Artificial neural networks are characterized by their _structure_ (_topology_) and their parameters (which includes the weights of connections). When an ANN is to be developed for a given problem, two aspects need therefore to be considered:
 
 - What should be the structure (or, topology) of the network?
 - Given the structure of the neural network, what are the optimal values for its _parameters_?
@@ -68,7 +68,7 @@ loop {
         .map(|specimen| compute_specimen_score(specimen))
         .collect();
 
-    // The score/fitness fucntion is let to the user to impl, you only need to attribute the value to each individual when its computed.
+    // The score/fitness function is let to the user to implement, you only need to attribute the value to each individual when its computed.
     // Update fitness of each specimen.
     // High score needs to represent a better fitness.
     for (specimen, score) in population.species.iter_mut().zip(&scores) {
@@ -135,4 +135,4 @@ cargo run --example mnist --release
 - [ ] Implement the EANT2 pruning method of unnecessary connections during neuro-evolution.
 - [ ] Improve API documentation.
 - [ ] Limit the number of concurrent renderer process and put it in a non blocking thread.
-- [ ] Fix dependdencies versions when hitting first beta.
+- [ ] Fix dependencies versions when hitting first beta.
