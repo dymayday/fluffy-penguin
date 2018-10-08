@@ -41,35 +41,6 @@ mod activation_tests {
 
 
 #[cfg(test)]
-mod population {
-    use genetic_algorithm::Population;
-
-    #[test]
-    fn init_population() {
-        Population::new(10, 2, 1, 0.10)
-            .set_lambda(10)
-            .set_s_rank(1.5);
-    }
-
-
-    #[test]
-    fn save_load() {
-        use std::fs;
-
-        let file_name = "/tmp/pop_test.bc";
-        let population = Population::new(10, 2, 1, 0.10);
-
-        population
-            .save_to_file(file_name)
-            .expect("Fail to save population to file.");
-        Population::load_from_file(file_name).expect("Fail to load Population from file.");
-
-        fs::remove_file(file_name).expect("Failed to remove temporary test file.");
-    }
-}
-
-
-#[cfg(test)]
 mod specimen {
     use genetic_algorithm::individual::Specimen;
 
