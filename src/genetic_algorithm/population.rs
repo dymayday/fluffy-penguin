@@ -21,16 +21,16 @@ const S_RANK: f32 = 2.0;
 pub struct Population<T> {
     pub species: Vec<Specimen<T>>,
     pub generation_counter: usize,
-    // The structural mutation probability 'pm', which is usually set between 5 and 10%.
+    /// The structural mutation probability 'pm', which is usually set between 5 and 10%.
     pub pm: T,
-    // Global Innovation Number.
+    /// Global Innovation Number.
     gin: usize,
-    // The unique ID of the next new Neuron added to the linear genome by structural mutation.
+    /// The unique ID of the next new Neuron added to the linear genome by structural mutation.
     nn_id: usize,
-    // This determines how many individuals will take part in the mating pool.
+    /// This determines how many individuals will take part in the mating pool.
     lambda: usize,
-    // This parameter controls wether or not the worst Specimen should have a chance to be in
-    // the mating pool. s = 2 means a really low chance.
+    /// This parameter controls wether or not the worst Specimen should have a chance to be in
+    /// the mating pool. s = 2 means a really low chance.
     s_rank: f32,
 }
 
