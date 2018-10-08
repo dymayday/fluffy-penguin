@@ -111,6 +111,9 @@ let print_weights = false; // Can increase the rendering time to SVG by a lot
 population.render(viz_dir, print_jumper, print_weights);
 ```
 
+And this should give you the representation of each individual in the population close to something like this:
+![The representation of an individual artificial neural network](doc/Specimen_example.svg)
+
 ## Examples
 
 You can run a simple math equation fitting by running:
