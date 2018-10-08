@@ -1,5 +1,6 @@
-///! This example demonstrate how well the algorithm perform on the traditional deep learning MNIST
-/// problem.
+///! This example demonstrate how well the algorithm performs on the traditional deep learning MNIST
+//! problem.
+//! Some work are still needed to tests the model on the a test portion of the dataset.
 
 extern crate fluffy_penguin;
 extern crate reqwest;
