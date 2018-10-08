@@ -35,7 +35,8 @@ fn get_dataset() {
     let root_path = Path::new(&DATASET_ROOT_PATH);
     if !root_path.exists() {
         fs::create_dir_all(&DATASET_ROOT_PATH)
-            .expect(&format!("Fail to create MNIST dataset directory: '{}'.", &DATASET_ROOT_PATH));
+            .unwrap_or_else(
+                |_| panic!("Fail to create MNIST dataset directory: '{}'.", &DATASET_ROOT_PATH));
     }
 
     for data_file in DATASET_FILES.iter() {
@@ -62,15 +63,16 @@ fn download(url: &str, file_name: &str) {
     use reqwest;
 
     let mut resp = reqwest::get(url)
-        .expect(&format!("Fail to request file: '{}'.", url));
+        .unwrap_or_else(|_| panic!("Fail to request file: '{}'.", url));
     let mut stream = File::create(file_name)
-        .expect(&format!("Fail to create file: '{}'.", &file_name));
+        .unwrap_or_else(|_| panic!("Fail to create file: '{}'.", &file_name));
 
     std::io::copy(&mut resp, &mut stream)
-        .expect(&format!("Fail to download file: '{}'.", url));
+        .unwrap_or_else(|_| panic!("Fail to download file: '{}'.", url));
 }
 
 
+/// Loads the dataset into Vector of f32 values.
 fn load_dataset() -> (Vec<f32>, Vec<f32>) {
 
     use mnist::{Mnist, MnistBuilder};
@@ -88,6 +90,8 @@ fn load_dataset() -> (Vec<f32>, Vec<f32>) {
         .finalize();
 
 
+    // let's show the first values of the MNIST dataset to show how it's stored
+    // in memory.
     for i in 0..10 {
         print!("{:>2}", i)
     }
@@ -95,7 +99,6 @@ fn load_dataset() -> (Vec<f32>, Vec<f32>) {
     for i in 0..10 {
         print!("{:>2}", trn_lbl[i])
     }
-
     for i in 0..rows*cols {
             if i % cols == 0 {
                 println!();
@@ -104,8 +107,8 @@ fn load_dataset() -> (Vec<f32>, Vec<f32>) {
     }
     println!();
 
-    let trn_img: Vec<f32> = trn_img.iter().map(|x| *x as f32).collect();
-    let trn_lbl: Vec<f32> = trn_lbl.iter().map(|x| *x as f32).collect();
+    let trn_img: Vec<f32> = trn_img.iter().map(|x| f32::from(*x)).collect();
+    let trn_lbl: Vec<f32> = trn_lbl.iter().map(|x| f32::from(*x)).collect();
 
     (trn_img, trn_lbl)
 }
@@ -113,7 +116,7 @@ fn load_dataset() -> (Vec<f32>, Vec<f32>) {
 
 /// This score function is a first dumb implementation, and means pretty much nothing in its current state.
 /// It needs a lot of work in my opinion.
-fn compute_specimen_score(specimen: &Specimen<f32>, trn_img: &Vec<f32>, trn_lbl: &Vec<f32>) -> f32 {
+fn compute_specimen_score(specimen: &Specimen<f32>, trn_img: &[f32], trn_lbl: &[f32]) -> f32 {
     let mut specimen = specimen.clone();
 
     let dataset_size: usize = DATASET_SIZE;
@@ -128,8 +131,10 @@ fn compute_specimen_score(specimen: &Specimen<f32>, trn_img: &Vec<f32>, trn_lbl:
         specimen.update_input(&inputs);
         let specimen_output = specimen.evaluate();
 
-        let model_output: Vec<f32> = trn_lbl[i*10..i*10+10].iter().map(|x| *x).collect();
+        // Gathering the right answer.
+        let model_output: Vec<f32> = trn_lbl[i*10..i*10+10].to_vec();
 
+        // And compare it with the output computedd by our ANN.
         for e in 0..10 {
             squared_errors.push( (model_output[e] - specimen_output[e]).powf(2.0) );
             // let resp: f32;
@@ -150,16 +155,16 @@ fn compute_specimen_score(specimen: &Specimen<f32>, trn_img: &Vec<f32>, trn_lbl:
 
 
 /// This is where the magic takes place.
-fn train_model(trn_img: Vec<f32>, trn_lbl: Vec<f32>) {
+fn train_model(trn_img: &[f32], trn_lbl: &[f32]) {
     use std::cmp::Ordering;
 
-    let population_size: usize = 100;
+    let population_size: usize = 16;
     let input_size: usize = ROWS * COLS;
     let output_size: usize = 10;
     let mutation_probability: f32 = 0.05;
 
     let mut generation_counter: usize = 0;
-    let cycle_per_structure: usize = 25;
+    let cycle_per_structure: usize = 400;
     let cycle_stop: usize = 10000;
 
     let mut population: Population<f32> = Population::new(
@@ -169,7 +174,21 @@ fn train_model(trn_img: Vec<f32>, trn_lbl: Vec<f32>) {
         mutation_probability,
         );
 
+    // 'S Rank' value should be between 1.5 and 2.0
+    // Here we set it to 2.0, meaning a lower chance for the worst individuals in the population
+    // to get a chance to participate in the crossover (reprodiction) process.
+    population.set_s_rank(2.0);
+
+    // We trigger a first structural mutation for a better population mixing.
     population.exploration();
+
+    // Prints the header of our scoring implementation
+    println!(
+            "[{:>5}], \t{:>10}  , \t{:>10} , \t{:>10}",
+            "counter", "best", "mean", "worst",
+        );
+
+
     for _ in 0..cycle_stop {
         generation_counter += 1;
 
@@ -199,9 +218,14 @@ fn train_model(trn_img: Vec<f32>, trn_lbl: Vec<f32>) {
             .min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
             .unwrap();
         let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
+        let worst_score = scores
+            .iter()
+            .max_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
+            .unwrap();
+
         println!(
-            "[{:>5}], best RMSE = {:.6} , mean = {:.6}",
-            generation_counter, best_score, mean_score
+            "[{:>5}], \t{:.6} , \t{:.6}, \t{:.6}",
+            generation_counter, best_score, mean_score, worst_score,
         );
     }
 
@@ -211,6 +235,6 @@ fn train_model(trn_img: Vec<f32>, trn_lbl: Vec<f32>) {
 fn main() {
     get_dataset();
     let (trn_img, trn_lbl): (Vec<f32>, Vec<f32>) = load_dataset();
-    train_model(trn_img, trn_lbl);
+    train_model(&trn_img, &trn_lbl);
 }
 
