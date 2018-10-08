@@ -8,7 +8,7 @@ Implementation of the ENT2 genetic algorithm in Rust, because both are awesome =
     - [About](#about)
     - [Requirements](#requirements)
     - [Usage](#usage)
-        - [Test the library](#test-the-library)
+        - [Examples](#examples)
     - [TODO](#todo)
 
 
@@ -19,12 +19,19 @@ This library use Evolutionary algorithm ([EA](https://en.wikipedia.org/wiki/Evol
 
 ## Requirements
 
-- Rust compiler.
+- Rust compiler: See https://www.rust-lang.org or https://doc.rust-lang.org/book/second-edition/ch01-01-installation.html
 - [Graphviz](http://www.graphviz.org/): used to export to SVG the rendered artificial neural networks.
 
 ## Usage
 
-### Test the library
+Because this crate is still a work in progress, it's not yet published on [crates.io](https://crates.io/) so you need to add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+fluffy-penguin = { git = "https://github.com/dymayday/fluffy-penguin.git" }
+```
+
+### Examples
 
 You can run a simple math equation fitting by running:
 
@@ -32,7 +39,11 @@ You can run a simple math equation fitting by running:
 cargo run --example basic --release
 ```
 
-(The MNIST example is still a work in progress at the moment and need some serious work on the score/fitness algorithm)
+The MNIST example is still a work in progress at the moment and need some serious work on the score/fitness algorithm, but you can still run it with:
+
+```bash
+cargo run --example mnist --release
+```
 
 ## TODO
 
