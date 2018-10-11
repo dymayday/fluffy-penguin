@@ -36,32 +36,40 @@ mod population {
             .collect();
 
         // Compute the model's outputs.
-        let outputs: Vec<Vec<f32>> = population.species
+        let outputs: Vec<Vec<f32>> = population
+            .species
             .iter_mut()
             .zip(&inputs)
             .map(|(specimen, input)| {
                 specimen.update_input(input);
                 specimen.evaluate()
-            }).collect();
+            })
+            .collect();
 
         // Save and load the population.
         population
             .save_to_file(file_name)
             .expect("Fail to save population to file.");
-        let mut loaded_population = Population::load_from_file(file_name).expect("Fail to load Population from file.");
+        let mut loaded_population =
+            Population::load_from_file(file_name).expect("Fail to load Population from file.");
 
         // Checks if the loaded population compute the same results from before.
-        let new_outputs: Vec<Vec<f32>> = loaded_population.species
+        let new_outputs: Vec<Vec<f32>> = loaded_population
+            .species
             .iter_mut()
             .zip(&inputs)
             .map(|(specimen, input)| {
                 specimen.update_input(input);
                 specimen.evaluate()
-            }).collect();
+            })
+            .collect();
 
         // Clean up the mess we just did before exiting.
         fs::remove_file(file_name).expect("Failed to remove temporary test file.");
 
-        assert_eq!(outputs, new_outputs, "Computed outputs before and after save/load are not equal.")
+        assert_eq!(
+            outputs, new_outputs,
+            "Computed outputs before and after save/load are not equal."
+        )
     }
 }
