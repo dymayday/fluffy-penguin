@@ -3,145 +3,105 @@
 //! Some work are still needed to tests the model on the a test portion of the dataset.
 
 extern crate fluffy_penguin;
-extern crate mnist;
 extern crate rayon;
-extern crate reqwest;
-extern crate rulinalg;
+extern crate vision;
 
+use std::thread;
 use fluffy_penguin::genetic_algorithm::{individual::Specimen, Population};
 use rayon::prelude::*;
+use vision::mnist::{MNISTBuilder};
 
+const STACK_SIZE: usize = 1000 * 2048 * 2048;
 const DATASET_ROOT_PATH: &str = "tmp/mnist/";
-const DATASET_FILES: [&str; 4] = [
-    "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",
-    "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",
-    "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz",
-    "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz",
-];
+
 const ROWS: usize = 28;
 const COLS: usize = 28;
+const LABEL_SIZE: usize = 10;
 const DATASET_SIZE: usize = 1_000;
+const TEST_DATASET_SIZE: usize = 1_000;
 
 
-/// Download the MNIST dataset if needed.
-fn get_dataset() {
-    use std::process;
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-    };
-
-    let root_path = Path::new(&DATASET_ROOT_PATH);
-    if !root_path.exists() {
-        fs::create_dir_all(&DATASET_ROOT_PATH).unwrap_or_else(|_| {
-            panic!(
-                "Fail to create MNIST dataset directory: '{}'.",
-                &DATASET_ROOT_PATH
-            )
-        });
-    }
-
-    for data_file in DATASET_FILES.iter() {
-        let archived_file_name = PathBuf::from(&data_file).file_name().unwrap().to_owned();
-        let archived_file_path = root_path
-            .join(archived_file_name)
-            .to_str()
-            .unwrap()
-            .to_owned();
-        let extracted_file_out = archived_file_path.to_string().replace(".gz", "");
-
-
-        if !Path::new(&extracted_file_out).is_file() {
-            println!(">> {:?}", archived_file_path);
-            download(data_file, &archived_file_path);
-            process::Command::new("gzip")
-                .arg("-d")
-                .arg(archived_file_path)
-                .output()
-                .unwrap();
-        }
-    }
-}
-
-
-/// File downloader.
-fn download(url: &str, file_name: &str) {
-    use reqwest;
-    use std::fs::File;
-
-    let mut resp = reqwest::get(url).unwrap_or_else(|_| panic!("Fail to request file: '{}'.", url));
-    let mut stream = File::create(file_name)
-        .unwrap_or_else(|_| panic!("Fail to create file: '{}'.", &file_name));
-
-    std::io::copy(&mut resp, &mut stream)
-        .unwrap_or_else(|_| panic!("Fail to download file: '{}'.", url));
+struct MnistDataset {
+    train_imgs: [[f32; ROWS * COLS]; DATASET_SIZE],
+    train_labels: [[f32; LABEL_SIZE]; DATASET_SIZE],
+    test_imgs: [[f32; ROWS * COLS]; TEST_DATASET_SIZE],
+    test_labels: [[f32; LABEL_SIZE]; TEST_DATASET_SIZE],
 }
 
 
 /// Loads the dataset into Vector of f32 values.
-fn load_dataset() -> (Vec<f32>, Vec<f32>) {
-    use mnist::{Mnist, MnistBuilder};
+fn load_dataset() -> MnistDataset {
 
-    let (trn_size, rows, cols) = (DATASET_SIZE, ROWS, COLS);
+    let builder = MNISTBuilder::new();
+    let mnist = builder.data_home(DATASET_ROOT_PATH)
+                       .verbose()
+                       .get_data()
+                       .unwrap_or_else(|_| panic!("Fail to build MNIST Dataset."));
 
-    // Deconstruct the returned Mnist struct.
-    let Mnist {
-        trn_img, trn_lbl, ..
-    } = MnistBuilder::new()
-        .base_path(DATASET_ROOT_PATH)
-        // .label_format_digit()
-        .label_format_one_hot()
-        .training_set_length(trn_size as u32)
-        .validation_set_length(1000)
-        .test_set_length(1000)
-        .finalize();
+    println!("train_imgs len = {}", mnist.train_imgs.len());
+    println!("test_imgs len = {}", mnist.test_imgs.len());
+    println!("train_labels len = {}", mnist.train_labels.len());
+    println!("test_labels len = {}", mnist.test_labels.len());
 
 
-    // let's show the first values of the MNIST dataset to show how it's stored
-    // in memory.
-    for i in 0..10 {
-        print!("{:>2}", i)
-    }
-    println!();
-    for i in 0..10 {
-        print!("{:>2}", trn_lbl[i])
-    }
-    for i in 0..rows * cols {
-        if i % cols == 0 {
-            println!();
+    // Let's put everything on the stack for better performance.
+    let mut train_imgs: [[f32; ROWS * COLS]; DATASET_SIZE] = [[0_f32; ROWS * COLS]; DATASET_SIZE];
+    let mut train_labels: [[f32; LABEL_SIZE]; DATASET_SIZE] = [[0_f32; LABEL_SIZE]; DATASET_SIZE];
+
+    // Cast u8 to f32 and build dataset output vectors.
+    for image_idx in 0..DATASET_SIZE {
+        for i in 0..mnist.train_imgs[image_idx].len() {
+            train_imgs[image_idx][i] = f32::from(mnist.train_imgs[image_idx][i])
         }
-        print!("{:>4}", trn_img[i]);
+        train_labels[image_idx][mnist.train_labels[image_idx] as usize] = 1_f32; 
     }
-    println!();
 
-    let trn_img: Vec<f32> = trn_img.iter().map(|x| f32::from(*x)).collect();
-    let trn_lbl: Vec<f32> = trn_lbl.iter().map(|x| f32::from(*x)).collect();
 
-    (trn_img, trn_lbl)
+    // Let's put everything on the stack for better performance.
+    let mut test_imgs: [[f32; ROWS * COLS]; TEST_DATASET_SIZE] = [[0_f32; ROWS * COLS]; TEST_DATASET_SIZE];
+    let mut test_labels: [[f32; LABEL_SIZE]; TEST_DATASET_SIZE] = [[0_f32; LABEL_SIZE]; TEST_DATASET_SIZE];
+
+    // Cast u8 to f32 and build dataset output vectors.
+    for image_idx in 0..TEST_DATASET_SIZE {
+        for i in 0..mnist.test_imgs[image_idx].len() {
+            test_imgs[image_idx][i] = f32::from(mnist.test_imgs[image_idx][i])
+        }
+        test_labels[image_idx][mnist.test_labels[image_idx] as usize] = 1_f32; 
+    }
+
+    MnistDataset {
+        train_imgs,
+        train_labels,
+        test_imgs,
+        test_labels,
+    }
 }
 
 
 /// This score function is a first dumb implementation, and means pretty much nothing in its current state.
 /// It needs a lot of work in my opinion.
-fn compute_specimen_score(specimen: &Specimen<f32>, trn_img: &[f32], trn_lbl: &[f32]) -> f32 {
+fn compute_specimen_score(
+    specimen: &Specimen<f32>,
+    trn_img: &[[f32; ROWS*COLS]; DATASET_SIZE],
+    trn_lbl: &[[f32; LABEL_SIZE]; DATASET_SIZE])-> f32 {
+
     let mut specimen = specimen.clone();
 
     let dataset_size: usize = DATASET_SIZE;
     // compute the squared difference between the spcimen ANN output and the model to fit
     // for each data point
-    let mut squared_errors: Vec<f32> = Vec::with_capacity(dataset_size * 10);
+    let mut squared_errors: Vec<f32> = Vec::with_capacity(dataset_size * LABEL_SIZE);
 
-    let mut i: usize = 0;
-    while i < DATASET_SIZE {
-        let inputs = &trn_img[i..i + (ROWS * COLS)];
-        specimen.update_input(&inputs);
+    for (inputs, labels) in trn_img.iter().zip(trn_lbl.iter()) {
+
+        specimen.update_input(inputs);
         let specimen_output = specimen.evaluate();
 
         // Gathering the right answer.
-        let model_output: Vec<f32> = trn_lbl[i * 10..i * 10 + 10].to_vec();
+        let model_output: Vec<f32> = labels.to_vec();
 
         // And compare it with the output computedd by our ANN.
-        for e in 0..10 {
+        for e in 0..LABEL_SIZE {
             squared_errors.push((model_output[e] - specimen_output[e]).powf(2.0));
             // let resp: f32;
             // if specimen_output[e] > 1.0 {
@@ -151,8 +111,8 @@ fn compute_specimen_score(specimen: &Specimen<f32>, trn_img: &[f32], trn_lbl: &[
             // }
             // squared_errors.push( (model_output[e] - resp).powf(2.0) );
         }
-        i += ROWS * COLS;
     }
+
 
     // return the RMSE
     let error_sum = squared_errors.iter().fold(0., |sum, err| sum + err);
@@ -161,8 +121,11 @@ fn compute_specimen_score(specimen: &Specimen<f32>, trn_img: &[f32], trn_lbl: &[
 
 
 /// This is where the magic takes place.
-fn train_model(trn_img: &[f32], trn_lbl: &[f32]) {
+fn train_model(md: &MnistDataset) {
     use std::cmp::Ordering;
+
+    let trn_img = md.train_imgs;
+    let trn_lbl = md.train_labels;
 
     let population_size: usize = 16;
     let input_size: usize = ROWS * COLS;
@@ -171,7 +134,7 @@ fn train_model(trn_img: &[f32], trn_lbl: &[f32]) {
 
     let mut generation_counter: usize = 0;
     let cycle_per_structure: usize = 400;
-    let cycle_stop: usize = 10000;
+    let cycle_stop: usize = 1_000_000;
 
     let mut population: Population<f32> = Population::new(
         population_size,
@@ -235,12 +198,60 @@ fn train_model(trn_img: &[f32], trn_lbl: &[f32]) {
             "[{:>5}], \t{:.6} , \t{:.6}, \t{:.6}",
             generation_counter, best_score, mean_score, worst_score,
         );
+
+        if generation_counter % 500 == 0 {
+            population.save_to_file(&format!("tmp/mnist/mnist_population_save_{:04}.bc", generation_counter))
+                .unwrap_or_else(|_| panic!("Fail to save MNIST's Population."));
+        }
+        if *best_score < 0.20 {
+            println!("Saving Population and exitting...");
+            population.render("tmp/mnist/viz", false, false);
+            population.save_to_file("tmp/mnist/mnist_population_save.bc")
+                .unwrap_or_else(|_| panic!("Fail to save MNIST's Population."));
+            break;
+        }
     }
 }
 
 
+fn print_mnist_img(j: usize, mnist: &MnistDataset) {
+    // let's show the first values of the MNIST dataset to show how it's stored
+    // in memory.
+    let header: Vec<u8> = (0..10).map(|x| x as u8).collect();
+    println!(">> label = {:?}", header);
+    print!(">> label = {:?}", mnist.train_labels[j].iter().map(|x| *x as u8).collect::<Vec<u8>>());
+    for i in 0..ROWS * COLS {
+        if i % COLS == 0 {
+            println!();
+        }
+        print!("{:>4}", mnist.train_imgs[j][i]);
+    }
+    println!();
+}
+
+
+fn run() {
+    let mnist = load_dataset();
+
+    println!("Let's print the first 10 digits to check our dataset parsing.");
+    for j in 0..10 {
+        println!("[{:^3}]", j);
+        print_mnist_img(j, &mnist);
+        println!();
+    }
+
+    train_model(&mnist);
+}
+
+
 fn main() {
-    get_dataset();
-    let (trn_img, trn_lbl): (Vec<f32>, Vec<f32>) = load_dataset();
-    train_model(&trn_img, &trn_lbl);
+    // We want to allocate everything on the stack, so we need
+    // to spawn a new thread with explicit stack size.
+    let child = thread::Builder::new()
+        .stack_size(STACK_SIZE)
+        .spawn(run)
+        .unwrap();
+
+    // Wait for thread to join
+    child.join().unwrap();
 }
