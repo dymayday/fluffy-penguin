@@ -14,6 +14,7 @@ bincode = ""
 fnv = ""
 
 [dev-dependencies]
-reqwest = ""
-mnist = ""
-rulinalg = ""
+vision = ""
+
+# [profile.release]
+# debug = true
