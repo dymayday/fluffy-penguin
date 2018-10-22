@@ -5,11 +5,13 @@
 extern crate fluffy_penguin;
 extern crate rayon;
 extern crate vision;
+extern crate rulinalg;
 
 use std::thread;
 use fluffy_penguin::genetic_algorithm::{individual::Specimen, Population};
 use rayon::prelude::*;
 use vision::mnist::{MNISTBuilder};
+use rulinalg::utils;
 
 const STACK_SIZE: usize = 1000 * 2048 * 2048;
 const DATASET_ROOT_PATH: &str = "tmp/mnist/";
@@ -82,41 +84,55 @@ fn load_dataset() -> MnistDataset {
 /// It needs a lot of work in my opinion.
 fn compute_specimen_score(
     specimen: &Specimen<f32>,
-    trn_img: &[[f32; ROWS*COLS]; DATASET_SIZE],
-    trn_lbl: &[[f32; LABEL_SIZE]; DATASET_SIZE])-> f32 {
+    train_imgs: &[[f32; ROWS*COLS]; DATASET_SIZE],
+    train_labels: &[[f32; LABEL_SIZE]; DATASET_SIZE])-> f32 {
 
     let mut specimen = specimen.clone();
+    let mut fitness = 0_f32;
 
-    let dataset_size: usize = DATASET_SIZE;
     // compute the squared difference between the spcimen ANN output and the model to fit
     // for each data point
-    let mut squared_errors: Vec<f32> = Vec::with_capacity(dataset_size * LABEL_SIZE);
+    // let mut squared_errors: Vec<f32> = Vec::with_capacity(DATASET_SIZE * LABEL_SIZE);
 
-    for (inputs, labels) in trn_img.iter().zip(trn_lbl.iter()) {
+    for (inputs, labels) in train_imgs.iter().zip(train_labels.iter()) {
 
         specimen.update_input(inputs);
         let specimen_output = specimen.evaluate();
 
-        // Gathering the right answer.
-        let model_output: Vec<f32> = labels.to_vec();
+        let model_argmax = utils::argmax(labels);
+        let ann_argmax = utils::argmax(&specimen_output);
 
-        // And compare it with the output computedd by our ANN.
-        for e in 0..LABEL_SIZE {
-            squared_errors.push((model_output[e] - specimen_output[e]).powf(2.0));
-            // let resp: f32;
-            // if specimen_output[e] > 1.0 {
-            //     resp = 1.0;
-            // } else {
-            //     resp = 0.0;
-            // }
-            // squared_errors.push( (model_output[e] - resp).powf(2.0) );
+        // let resp: f32;
+        if model_argmax.0 == ann_argmax.0 {
+            // resp = 1.0;
+            fitness += 1.0;
         }
+        // } else {
+        //     resp = 0.0;
+        // }
+        // squared_errors.push(resp);
+
+        // // Gathering the right answer.
+        // let model_output: Vec<f32> = labels.to_vec();
+        //
+        // // And compare it with the output computedd by our ANN.
+        // for e in 0..LABEL_SIZE {
+        //     // squared_errors.push((model_output[e] * 250.0 - specimen_output[e]).powf(2.0));
+        //     let resp: f32;
+        //     if specimen_output[e] > 1.0 {
+        //         resp = 1.0;
+        //     } else {
+        //         resp = 0.0;
+        //     }
+        //     squared_errors.push( (model_output[e] - resp).powf(2.0) );
+        // }
     }
 
 
-    // return the RMSE
-    let error_sum = squared_errors.iter().fold(0., |sum, err| sum + err);
-    error_sum / (dataset_size as f32)
+    // // return the RMSE
+    // let error_sum = squared_errors.iter().fold(0., |sum, err| sum + err);
+    // error_sum / (dataset_size as f32)
+    fitness
 }
 
 
@@ -124,16 +140,16 @@ fn compute_specimen_score(
 fn train_model(md: &MnistDataset) {
     use std::cmp::Ordering;
 
-    let trn_img = md.train_imgs;
-    let trn_lbl = md.train_labels;
+    let train_imgs = md.train_imgs;
+    let train_labels = md.train_labels;
 
-    let population_size: usize = 16;
+    let population_size: usize = 32;
     let input_size: usize = ROWS * COLS;
     let output_size: usize = 10;
     let mutation_probability: f32 = 0.05;
 
     let mut generation_counter: usize = 0;
-    let cycle_per_structure: usize = 400;
+    let cycle_per_structure: usize = 250;
     let cycle_stop: usize = 1_000_000;
 
     let mut population: Population<f32> = Population::new(
@@ -164,13 +180,13 @@ fn train_model(md: &MnistDataset) {
         let scores: Vec<f32> = population
             .species
             .par_iter()
-            .map(|specimen| compute_specimen_score(specimen, &trn_img, &trn_lbl))
+            .map(|specimen| compute_specimen_score(specimen, &train_imgs, &train_labels))
             .collect();
 
         // Update fitness of each specimen.
         // High score needs to represent a better fitness.
         for i in 0..population_size {
-            population.species[i].fitness = -scores[i];
+            population.species[i].fitness = scores[i];
         }
 
         // Selection phase.
@@ -184,12 +200,12 @@ fn train_model(md: &MnistDataset) {
         }
 
 
-        let best_score = scores
+        let worst_score = scores
             .iter()
             .min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
             .unwrap();
         let mean_score: f32 = scores.iter().sum::<f32>() / population_size as f32;
-        let worst_score = scores
+        let best_score = scores
             .iter()
             .max_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
             .unwrap();
@@ -203,13 +219,14 @@ fn train_model(md: &MnistDataset) {
             population.save_to_file(&format!("tmp/mnist/mnist_population_save_{:04}.bc", generation_counter))
                 .unwrap_or_else(|_| panic!("Fail to save MNIST's Population."));
         }
-        if *best_score < 0.20 {
-            println!("Saving Population and exitting...");
-            population.render("tmp/mnist/viz", false, false);
-            population.save_to_file("tmp/mnist/mnist_population_save.bc")
-                .unwrap_or_else(|_| panic!("Fail to save MNIST's Population."));
-            break;
-        }
+        // if *best_score <= 0.0020 {
+        // // if *best_score <= 500.0 {
+        //     println!("Saving Population and exitting...");
+        //     population.render("tmp/mnist/viz", false, false);
+        //     population.save_to_file("tmp/mnist/mnist_population_save.bc")
+        //         .unwrap_or_else(|_| panic!("Fail to save MNIST's Population."));
+        //     break;
+        // }
     }
 }
 

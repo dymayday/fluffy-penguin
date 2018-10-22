@@ -15,6 +15,9 @@ fnv = ""
 
 [dev-dependencies]
 vision = ""
+rulinalg = ""
 
-# [profile.release]
+[profile.release]
+lto = true
+codegen-units = 1
 # debug = true
