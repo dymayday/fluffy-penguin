@@ -9,11 +9,11 @@ use rand::{
 /// This enum defines all implemented mutation.
 #[derive(Debug, Clone)]
 pub enum StructuralMutation {
-    // Add a randomly generated sub-network (or sub-genome) to network (or genome).
+    /// Add a randomly generated sub-network (or sub-genome) to network (or genome).
     SubNetworkAddition,
-    // Add a forward or recurrent jumper connection between two neurons in a linear genome.
+    /// Add a forward or recurrent jumper connection between two neurons in a linear genome.
     JumperAddition,
-    // Remove a connection between two neurons in a linear genome.
+    /// Remove a connection between two neurons in a linear genome.
     ConnectionRemoval,
 }
 
@@ -24,7 +24,7 @@ impl Distribution<StructuralMutation> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> StructuralMutation {
         let mut weighted_available_structural_mutation = vec![
             Weighted {
-                weight: 50,
+                weight: 25,
                 item: StructuralMutation::SubNetworkAddition,
             },
             Weighted {
