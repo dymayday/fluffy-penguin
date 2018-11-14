@@ -8,7 +8,7 @@ use activation::TransferFunctionTrait;
 use cge::node::Allele::*;
 use cge::node::{Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
 use fnv::FnvHashMap;
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, Rng, seq::SliceRandom};
 use std::io::Write;
 
 
@@ -333,7 +333,7 @@ impl Network<f32> {
 
         let mut input_node_vec: Vec<Node<f32>> =
             Network::gen_input_node_vector(gin + 1, &input_map);
-        thread_rng().shuffle(&mut input_node_vec);
+        input_node_vec.shuffle(&mut thread_rng());
 
         // New hidden neurons are only connected to a subset of inputs, approximately 50%,
         // which makes the search for new structures "more stochastic".
@@ -447,8 +447,7 @@ impl Network<f32> {
 
         // Still, we check if there is some possible solution.
         if potential_target_neuron_indices.len() > 0 {
-            let source_id: usize = *thread_rng()
-                .choose(&potential_target_neuron_indices)
+            let source_id: usize = *potential_target_neuron_indices.choose(&mut thread_rng())
                 .expect("Fail to draw a jumper connection id to link to an existing Neuron.");
             let jumper = if is_forward {
                 JumpForward { source_id }

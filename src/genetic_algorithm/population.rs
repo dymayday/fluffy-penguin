@@ -2,7 +2,7 @@
 
 use error::*;
 use genetic_algorithm::individual::Specimen;
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, Rng, seq::SliceRandom};
 use rayon::prelude::*;
 
 
@@ -304,8 +304,8 @@ impl Population<f32> {
                 }
             }
 
-            thread_rng().shuffle(&mut shuffled_mating_pool_index_1);
-            thread_rng().shuffle(&mut shuffled_mating_pool_index_2);
+            shuffled_mating_pool_index_1.shuffle(&mut thread_rng());
+            shuffled_mating_pool_index_2.shuffle(&mut thread_rng());
 
             for (i, j) in shuffled_mating_pool_index_1
                 .iter()
@@ -367,8 +367,8 @@ impl Population<f32> {
                 }
             }
 
-            thread_rng().shuffle(&mut shuffled_mating_pool_index_1);
-            thread_rng().shuffle(&mut shuffled_mating_pool_index_2);
+            shuffled_mating_pool_index_1.shuffle(&mut thread_rng());
+            shuffled_mating_pool_index_2.shuffle(&mut thread_rng());
 
             let mut offspring_vector_tmp: Vec<Specimen<f32>> = shuffled_mating_pool_index_1
                 .par_iter()
