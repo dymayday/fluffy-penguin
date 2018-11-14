@@ -4,7 +4,7 @@ version = "0.2.0"
 authors = ["meidhy <dymayday@gmail.com>"]
 
 [dependencies]
-rand = ""
+rand = "0.6.0"
 rayon = ""
 tokio-threadpool = ""
 futures = ""
