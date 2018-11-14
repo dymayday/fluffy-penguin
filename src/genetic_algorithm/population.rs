@@ -338,7 +338,7 @@ impl Population<f32> {
                         "father {} and mother {} failed to reproduce.",
                         father.fitness,
                         mother.fitness
-                    );
+                    ).expect("Fail to write to 'stderr'");
                 }
             }
         }
@@ -399,7 +399,7 @@ impl Population<f32> {
                                 "father {} and mother {} failed to reproduce.",
                                 father.fitness,
                                 mother.fitness
-                            );
+                            ).expect("Fail to write to 'stderr'");
                             return None;
                         }
                     }
