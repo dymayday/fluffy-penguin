@@ -27,14 +27,14 @@ mod activation_tests {
 
     #[test]
     fn activation_test_relu() {
-        assert_eq!(0.5703423, activation::relu(0.5703423_f32));
-        assert_eq!(0_f32, activation::relu(-10.5703423_f32));
+        assert_eq!(0.570_342_3f32, activation::relu(0.570_342_3f32));
+        assert_eq!(0.0f32, activation::relu(-10.570_342f32));
     }
 
 
     #[test]
     fn activation_test_sigmoids() {
-        assert_eq!(0.7310586_f32, activation::sigmoids(1_f32));
+        assert_eq!(0.731_058_6f32, activation::sigmoids(1.0f32));
     }
 
 }
@@ -92,9 +92,9 @@ mod network {
     fn evaluation_ann_from_example() {
         let mut network = Network::build_from_example();
         // test first pass
-        assert_eq!(network.evaluate(), Some(vec![0.65400004_f32]));
+        assert_eq!(network.evaluate(), Some(vec![0.654_000_04f32]));
         // test second pass
-        assert_eq!(network.evaluate(), Some(vec![0.68016005]));
+        assert_eq!(network.evaluate(), Some(vec![0.680_160_05f32]));
     }
 
     #[test]
