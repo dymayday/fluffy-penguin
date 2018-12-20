@@ -183,7 +183,7 @@ fn test_exploitation_correctness_on_basic_equation() {
         population_size, // size of population
         2,               // nb of input node in each ANN
         1,               // nb of output node in each ANN
-        0.02,            // mutation probability
+        0.15,            // mutation probability
     );
     population
         .set_s_rank(2.0)
@@ -191,7 +191,7 @@ fn test_exploitation_correctness_on_basic_equation() {
 
     /* EVOLUTION */
     let mut generation_counter: i64 = 0;
-    let cycle_per_structure = 100;
+    let cycle_per_structure = 250;
     let cycle_stop: usize = 2_000;
 
 
