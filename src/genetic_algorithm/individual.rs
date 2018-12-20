@@ -17,7 +17,6 @@ pub struct Specimen<T> {
     pub ann: Network<T>,
     /// Symbolizes how well an individual solves a problem.
     pub fitness: T,
-    // pub parents: Vec<Specimen<T>>,
 }
 
 impl Specimen<f32> {
@@ -27,7 +26,6 @@ impl Specimen<f32> {
             output_size,
             ann: Network::<f32>::new(input_size, output_size),
             fitness: 0.0,
-            // parents: vec![],
         }
     }
 
@@ -39,7 +37,17 @@ impl Specimen<f32> {
             output_size: 2_usize,
             ann: Network::<f32>::build_from_example(),
             fitness: 0.0,
-            // parents: vec![],
+        }
+    }
+
+    /// Build the 2nd Specimen from the example in our research papers.
+    /// This corresponds to an ANN with 2 inputs and 1 output aswell.
+    pub fn _new_from_example_2() -> Self {
+        Specimen {
+            input_size: 1_usize,
+            output_size: 2_usize,
+            ann: Network::<f32>::_build_parent2_from_example(),
+            fitness: 0.0,
         }
     }
 

@@ -151,61 +151,7 @@ impl Network<f32> {
 
     /// Builds and returns the genome from the research papers we use to implement EANT2.
     pub fn build_from_example() -> Self {
-        let input_map = vec![1_f32, 1_f32];
-        let neuron_map: Vec<f32> = vec![0.0; 4];
-        let genome: Vec<Node<f32>> = vec![
-            Node::new(Neuron { id: 0 }, 1, 0.6, -1, 0),
-            Node::new(Neuron { id: 1 }, 2, 0.8, -1, 1),
-            Node::new(Neuron { id: 3 }, 3, 0.9, -1, 2),
-            Node::new(
-                Input { label: 0 },
-                4,
-                0.1,
-                IOTA_INPUT_VALUE,
-                INPUT_NODE_DEPTH_VALUE,
-            ),
-            Node::new(
-                Input { label: 1 },
-                5,
-                0.4,
-                IOTA_INPUT_VALUE,
-                INPUT_NODE_DEPTH_VALUE,
-            ),
-            Node::new(
-                Input { label: 1 },
-                6,
-                0.5,
-                IOTA_INPUT_VALUE,
-                INPUT_NODE_DEPTH_VALUE,
-            ),
-            Node::new(Neuron { id: 2 }, 7, 0.2, -3, 1),
-            Node::new(JumpForward { source_id: 3 }, 8, 0.3, IOTA_INPUT_VALUE, 2),
-            Node::new(
-                Input { label: 0 },
-                9,
-                0.7,
-                IOTA_INPUT_VALUE,
-                INPUT_NODE_DEPTH_VALUE,
-            ),
-            Node::new(
-                Input { label: 1 },
-                10,
-                0.8,
-                IOTA_INPUT_VALUE,
-                INPUT_NODE_DEPTH_VALUE,
-            ),
-            Node::new(JumpRecurrent { source_id: 0 }, 11, 0.2, IOTA_INPUT_VALUE, 2),
-        ];
-        let neuron_indices_map: FnvHashMap<usize, usize> = Network::compute_neuron_indices(&genome);
-
-        Network {
-            genome,
-            input_map,
-            neuron_map,
-            neuron_indices_map,
-            output_size: 1,
-            alpha: f32::ALPHA,
-        }
+        Network::_build_parent1_from_example()
     }
 
 
