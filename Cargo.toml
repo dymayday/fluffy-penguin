@@ -1,6 +1,6 @@
 [package]
 name = "fluffy-penguin"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["meidhy <dymayday@gmail.com>"]
 
 [dependencies]
