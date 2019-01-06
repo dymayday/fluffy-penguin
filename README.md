@@ -1,6 +1,7 @@
 # fluffy-penguin
 
 Implementation of the ENT2 genetic algorithm in Rust, because both are awesome =]
+
 [Here](https://towardsdatascience.com/neat-an-awesome-approach-to-neuroevolution-3eca5cc7930f) you can find a nice article about the algorithm that inspired EANT2.
 
 [![Build status](https://travis-ci.com/dymayday/fluffy-penguin.svg?branch=master)](https://travis-ci.com/dymayday/fluffy-penguin)
