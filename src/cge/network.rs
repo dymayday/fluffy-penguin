@@ -106,10 +106,10 @@ impl Network<f32> {
     /// There is two important thing to notice here:
     /// * The order of the inputs is particularly important.
     /// * The weights of each input are randomly attributed.
-    pub fn new_grow(input_vec: &Vec<f32>, output_size: usize) -> Self {
+    pub fn new_grow(input_vec: &[f32], output_size: usize) -> Self {
         let genome: Vec<Node<f32>> = Vec::new();
-        let input_map: Vec<f32> = input_vec.clone();
-        let neuron_map: Vec<f32> = vec![];
+        let input_map: Vec<f32> = input_vec.to_vec();
+        let neuron_map: Vec<f32> = Vec::with_capacity(output_size * 2);
         let neuron_indices_map: FnvHashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
         Network {
@@ -132,7 +132,7 @@ impl Network<f32> {
     /// There is two important thing to notice here:
     /// * The order of the inputs is particularly important.
     /// * The weights of each input are randomly attributed.
-    pub fn new_full(input_vec: &Vec<f32>, output_size: usize) -> Self {
+    pub fn new_full(input_vec: &[f32], output_size: usize) -> Self {
         let genome: Vec<Node<f32>> = Vec::new();
         let input_map: Vec<f32> = input_vec.iter().map(|i| i.relu()).collect();
         let neuron_map: Vec<f32> = vec![];
@@ -272,7 +272,7 @@ impl Network<f32> {
         neuron_id: usize,
         new_neuron_gin: usize,
         depth: u16,
-        input_map: &Vec<f32>,
+        input_map: &[f32],
     ) -> Vec<Node<f32>> {
         let mut subgenome: Vec<Node<f32>> = Vec::with_capacity(1 + input_map.len());
         let gin: usize = new_neuron_gin;
