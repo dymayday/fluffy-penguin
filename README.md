@@ -116,7 +116,7 @@ population.render(viz_dir, print_jumper, print_weights);
 
 And this should give you the representation of each individual in the population close to something like this before any mutation/neuro-evolution:
 
-![The representation of an individual artificial neural network before any mutation or neuro-evolution](doc/Specimen_example_generation0.svg)
+![The representation of an individual artificial neural network before any mutation or neuro-evolution](doc/Specimen_example_at_initial_generation.svg)
 
 And something marvellous like this after quite a few generations:
 
