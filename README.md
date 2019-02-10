@@ -14,8 +14,6 @@ Implementation of the ENT2 genetic algorithm in Rust, because both are awesome =
   - [Examples](#examples)
   - [TODO](#todo)
 
-
-
 ## About
 
 This library use Evolutionary algorithms ([EA](https://en.wikipedia.org/wiki/Evolutionary_algorithm)) to automatically evolve the topology of the artificial neural networks of each individual in a population.
@@ -29,6 +27,7 @@ Artificial neural networks are characterized by their _structure_ (_topology_) a
 - Given the structure of the neural network, what are the optimal values for its _parameters_?
 
 *EANT2*, _Evolutionary Acquisition of Neural Topologies_, is an evolutionary reinforcement learning  system that is suitable for learning and adapting to the environment through interaction. It combines the principles of neural networks, reinforcement learning and evolutionary methods.
+
 ## Requirements
 
 - Rust compiler: See https://www.rust-lang.org or https://doc.rust-lang.org/book/second-edition/ch01-01-installation.html
@@ -93,7 +92,9 @@ loop {
 The *score/fitness* function is the representation of 'how well an _individual_ performs' in a population for the defined problem. A high value means a high fit.
 
 ## Visualisation
+
 You can visualize the structure and the parameters of the ANNs by calling the `render()` method on a Population/Individual instance:
+
 ```rust
 let population_size: usize = 8;
 let input_size: usize = 8;
@@ -114,8 +115,11 @@ population.render(viz_dir, print_jumper, print_weights);
 ```
 
 And this should give you the representation of each individual in the population close to something like this before any mutation/neuro-evolution:
+
 ![The representation of an individual artificial neural network before any mutation or neuro-evolution](doc/Specimen_example_generation0.svg)
+
 And something marvellous like this after quite a few generations:
+
 ![The representation of an individual artificial neural network after a few generations](doc/Specimen_example.svg)
 
 ## Examples
