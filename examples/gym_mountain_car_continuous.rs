@@ -1,3 +1,7 @@
+/*
+Train neural network on the mountain car environment
+with continuous action space
+*/
 extern crate gym_rs;
 extern crate fluffy_penguin;
 extern crate rayon;
@@ -30,13 +34,7 @@ impl MyEnv {
             specimen.update_input(&inputs);
             let output = specimen.evaluate();
 
-            let action: ActionType = if output[0] < 0.33 {
-                ActionType::Discrete(0)
-            } else if output[0] > 0.33 {
-                ActionType::Discrete(2)
-            } else {
-                ActionType::Discrete(1)
-            };
+            let action: ActionType = ActionType::Continuous(vec![output[0] as f64 * 10.0]);
 
             let (s, reward, done, _) = env.step(action);
             end = done;
@@ -72,13 +70,7 @@ fn render_champion(champion: &mut Specimen<f32>) {
         champion.update_input(&inputs);
         let output = champion.evaluate();
 
-        let action: ActionType = if output[0] < 0.33 {
-            ActionType::Discrete(0)
-        } else if output[0] > 0.33 {
-            ActionType::Discrete(2)
-        } else {
-            ActionType::Discrete(1)
-        };
+        let action: ActionType = ActionType::Continuous(vec![output[0] as f64 * 10.0]);
 
         let (s, _reward, done, _) = env.step(action);
         end = done;
@@ -125,15 +117,9 @@ fn main() {
             pop.evolve();
         }
 
-        // let best_score = scores.iter()
-        //     .max_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
-        //     .unwrap();
         println!("gen: {} || champion fitness: {}", i, champion.fitness);
     }
     println!("champion: {:?}", champion);
 
     render_champion(&mut champion);
-
-    // save champion to file
-    champion.save_to_file("./examples/gym_mountain_car_champion.cge");
 }
