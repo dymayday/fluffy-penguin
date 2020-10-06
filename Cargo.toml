@@ -13,9 +13,25 @@ serde_derive = ""
 bincode = ""
 fnv = ""
 
+gym-rs = { git = "https://github.com/MathisWellmann/gym-rs", optional = true }
+
 [dev-dependencies]
 vision = ""
 rulinalg = ""
+
+[[example]]
+name = "gym_cart_pole"
+required-features = ["gym-rs"]
+
+[[example]]
+name = "basic"
+
+[[example]]
+name = "mnist"
+
+[[example]]
+name = "playground"
+
 
 # [profile.release]
 # lto = true

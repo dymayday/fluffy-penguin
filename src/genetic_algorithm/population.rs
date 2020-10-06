@@ -420,39 +420,39 @@ impl Population<f32> {
     /// Visualisation of the artificial neural network of each specimen of our population with
     /// GraphViz.
     pub fn render(&self, root_path: &str, print_jumper: bool, print_weights: bool) {
-        use futures::future::{lazy, Future};
-        use tokio_threadpool::Builder;
-        // use std::time::Duration;
-        use std::path::Path;
-
-        let pool = Builder::new()
-            .pool_size(EXPORT_CPU_COUNT)
-            // .keep_alive(Some(Duration::from_secs(30))) // Time out handler. We don't currently need it.
-            .build();
-
-        // Specimen rendering are done in parallele using a thread pool.
-        for (i, specimen) in self.species.clone().into_iter().enumerate() {
-            let file_name: String =
-                format!("Specimen_{:03}_g{:0>4}.dot", i, self.generation_counter);
-            let file_path = Path::new(root_path).join(&file_name);
-            let file_path: String = file_path.to_string_lossy().to_string();
-
-            pool.spawn(lazy(move || {
-                match specimen.render(
-                    &file_path,
-                    &format!("Specimen_{:03}", i),
-                    print_jumper,
-                    print_weights,
-                ) {
-                    Some(_) => Ok(()),
-                    None => panic!(format!("Fail to render Specimen {}.", i)),
-                }
-            }));
-        }
-
-        pool.shutdown()
-            .wait()
-            .expect("Fail to shutdown the thread pool.");
+        // use futures::future::{lazy, Future};
+        // use tokio_threadpool::Builder;
+        // // use std::time::Duration;
+        // use std::path::Path;
+        //
+        // let pool = Builder::new()
+        //     .pool_size(EXPORT_CPU_COUNT)
+        //     // .keep_alive(Some(Duration::from_secs(30))) // Time out handler. We don't currently need it.
+        //     .build();
+        //
+        // // Specimen rendering are done in parallele using a thread pool.
+        // for (i, specimen) in self.species.clone().into_iter().enumerate() {
+        //     let file_name: String =
+        //         format!("Specimen_{:03}_g{:0>4}.dot", i, self.generation_counter);
+        //     let file_path = Path::new(root_path).join(&file_name);
+        //     let file_path: String = file_path.to_string_lossy().to_string();
+        //
+        //     pool.spawn(lazy(move || {
+        //         match specimen.render(
+        //             &file_path,
+        //             &format!("Specimen_{:03}", i),
+        //             print_jumper,
+        //             print_weights,
+        //         ) {
+        //             Some(_) => Ok(()),
+        //             None => panic!(format!("Fail to render Specimen {}.", i)),
+        //         }
+        //     }));
+        // }
+        //
+        // pool.shutdown()
+        //     .wait()
+        //     .expect("Fail to shutdown the thread pool.");
     }
 
 
