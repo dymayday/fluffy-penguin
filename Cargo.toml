@@ -1,7 +1,10 @@
 [package]
 name = "fluffy-penguin"
 version = "0.2.2"
-authors = ["meidhy <dymayday@gmail.com>"]
+authors = [
+    "meidhy <dymayday@gmail.com>",
+    "MathisWellmann <wellmannmathis@gmail.com>",
+]
 
 [dependencies]
 rand = "0.6.0"
@@ -29,6 +32,10 @@ required-features = ["gym-rs"]
 
 [[example]]
 name = "gym_mountain_car_continuous"
+required-features = ["gym-rs"]
+
+[[example]]
+name = "gym_pendulum"
 required-features = ["gym-rs"]
 
 [[example]]
