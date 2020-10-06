@@ -24,6 +24,10 @@ name = "gym_cart_pole"
 required-features = ["gym-rs"]
 
 [[example]]
+name = "gym_mountain_car"
+required-features = ["gym-rs"]
+
+[[example]]
 name = "basic"
 
 [[example]]
