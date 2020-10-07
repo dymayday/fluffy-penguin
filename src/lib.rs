@@ -8,7 +8,6 @@ extern crate futures;
 extern crate rand;
 extern crate rayon;
 extern crate serde;
-extern crate tokio_threadpool;
 #[macro_use]
 extern crate serde_derive;
 extern crate bincode;
