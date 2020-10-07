@@ -4,9 +4,9 @@
 //!
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use activation::TransferFunctionTrait;
-use cge::node::Allele::*;
-use cge::node::{Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
+use crate::activation::TransferFunctionTrait;
+use crate::cge::node::Allele::*;
+use crate::cge::node::{Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
 use fnv::FnvHashMap;
 use rand::{thread_rng, Rng, seq::SliceRandom};
 use std::io::Write;
@@ -610,7 +610,7 @@ impl Network<f32> {
                                 let _ = forward_in_process.pop()?;
                             }
                             // now we can process it
-                            let mut value = node.w * neuron_value.isrlu(self.alpha);
+                            let value = node.w * neuron_value.isrlu(self.alpha);
                             neuron_input_stack.push(value);
                         }
                     }
@@ -1065,7 +1065,7 @@ impl Network<f32> {
 
             let _neurons_input_ref: Vec<&Node<f32>> =
                 merged_sub_net_btm.get(&gin).unwrap().to_vec();
-            let mut neurons_inputs: Vec<Node<f32>> =
+            let neurons_inputs: Vec<Node<f32>> =
                 _neurons_input_ref.iter().map(|n| (*n).clone()).collect();
 
             // We update the iota of each output Neuron while passing by...
@@ -1075,7 +1075,7 @@ impl Network<f32> {
             for input_node in neurons_inputs {
                 // println!("\tInput_node {}", input_node.gin);
                 if let Neuron { .. } = input_node.allele {
-                    let mut input_neuron_node = input_node.clone();
+                    let input_neuron_node = input_node.clone();
 
                     let mut recombined_sub_genome = Network::recombine_subnetworks(
                         &[input_neuron_node.gin],
@@ -1110,7 +1110,7 @@ impl Network<f32> {
             let mut output_neuron: Node<f32> = _output_neuron_ref.clone();
 
             let _neurons_input_ref: Vec<&Node<f32>> = merged_sub_net_hm.get(&gin).unwrap().to_vec();
-            let mut neurons_inputs: Vec<Node<f32>> =
+            let neurons_inputs: Vec<Node<f32>> =
                 _neurons_input_ref.iter().map(|n| (*n).clone()).collect();
 
             // We update the iota of each output Neuron while passing by...
@@ -1120,7 +1120,7 @@ impl Network<f32> {
             for input_node in neurons_inputs {
                 // println!("\tInput_node {}", input_node.gin);
                 if let Neuron { .. } = input_node.allele {
-                    let mut input_neuron_node = input_node.clone();
+                    let input_neuron_node = input_node.clone();
 
                     let mut recombined_sub_genome = Network::_recombine_subnetworks_recursive(
                         &[input_neuron_node.gin],
@@ -1189,7 +1189,7 @@ impl Network<f32> {
     ) -> ::std::io::Result<()> {
         use std::fs::File;
         use std::io::BufWriter;
-        use utils::create_parent_directory;
+        use crate::utils::create_parent_directory;
 
 
         create_parent_directory(file_name)?;

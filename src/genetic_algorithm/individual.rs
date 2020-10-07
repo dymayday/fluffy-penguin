@@ -1,9 +1,11 @@
-use cge::{Allele, Network, Node};
 use fnv::FnvHashMap;
-use genetic_algorithm::mutation::StructuralMutation;
 use rand::distributions::StandardNormal;
 use rand::{self, thread_rng, Rng};
 use std::process;
+
+use crate::cge::{Allele, Network, Node};
+
+use crate::genetic_algorithm::mutation::StructuralMutation;
 
 pub const LEARNING_RATE_THRESHOLD: f32 = 0.0001;
 
@@ -102,7 +104,7 @@ impl Specimen<f32> {
             }
 
             // Compute a new mutated connection weight.
-            let mut w_p: f32 = node.w + sigma_p * nu_i;
+            let w_p: f32 = node.w + sigma_p * nu_i;
 
             // // Assign the new mutated learning rate value to the Node.
             // node.sigma = sigma_p;
@@ -370,7 +372,6 @@ impl Specimen<f32> {
         specimen_1: &Specimen<f32>,
         specimen_2: &Specimen<f32>,
     ) -> (Specimen<f32>, Specimen<f32>) {
-        use cge::Allele::Neuron;
 
         let genome_1 = &specimen_1.ann.genome;
         let genome_2 = &specimen_2.ann.genome;
@@ -384,7 +385,7 @@ impl Specimen<f32> {
         let n1_gin_vector: Vec<usize> = genome_1
             .iter()
             .filter_map(|n| {
-                if let Neuron { .. } = n.allele {
+                if let Allele::Neuron { .. } = n.allele {
                     Some(n.gin)
                 } else {
                     None
@@ -395,7 +396,7 @@ impl Specimen<f32> {
         let n2_gin_vector: Vec<usize> = genome_2
             .iter()
             .filter_map(|n| {
-                if let Neuron { .. } = n.allele {
+                if let Allele::Neuron { .. } = n.allele {
                     Some(n.gin)
                 } else {
                     None
@@ -446,10 +447,10 @@ impl Specimen<f32> {
 
 
         for ref_neuron_gin in ref_gin_v {
-            let mut gin_already_sorted: Vec<usize> = genome_sorted
+            let gin_already_sorted: Vec<usize> = genome_sorted
                 .iter()
                 .filter_map(|n| {
-                    if let Neuron { .. } = n.allele {
+                    if let Allele::Neuron { .. } = n.allele {
                         Some(n.gin)
                     } else {
                         None
@@ -519,8 +520,7 @@ impl Specimen<f32> {
         use bincode::serialize_into;
         use std::fs::File;
         use std::io::BufWriter;
-        use utils::create_parent_directory;
-
+        use crate::utils::create_parent_directory;
 
         create_parent_directory(file_name).expect(&format!(
             "Fail to create the directory tree of: '{:?}'",

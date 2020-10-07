@@ -1,9 +1,10 @@
 //! Population doc string.
 
-use error::*;
-use genetic_algorithm::individual::Specimen;
 use rand::{thread_rng, Rng, seq::SliceRandom};
 use rayon::prelude::*;
+
+use crate::genetic_algorithm::individual::Specimen;
+use crate::error::*;
 
 
 /// The number of concurrent process used during the visualisation export phase to SVG.
@@ -150,7 +151,7 @@ impl Population<f32> {
     /// neural network.
     pub fn exploitation(&mut self) {
         // Parametric exploitation of ever specimen in our population.
-        for mut specimen in &mut self.species {
+        for specimen in &mut self.species {
             specimen.parametric_mutation();
         }
     }
@@ -165,7 +166,7 @@ impl Population<f32> {
         let mut gin = self.gin;
         let mut nn_id = self.nn_id;
 
-        for mut specimen in &mut self.species {
+        for specimen in &mut self.species {
             let (gin_tmp, nn_id_tmp) = specimen
                 .structural_mutation(self.pm, gin, nn_id)
                 .unwrap_or((gin, nn_id));
@@ -419,7 +420,7 @@ impl Population<f32> {
 
     /// Visualisation of the artificial neural network of each specimen of our population with
     /// GraphViz.
-    pub fn render(&self, root_path: &str, print_jumper: bool, print_weights: bool) {
+    pub fn render(&self, _root_path: &str, _print_jumper: bool, _print_weights: bool) {
         // use futures::future::{lazy, Future};
         // use tokio_threadpool::Builder;
         // // use std::time::Duration;
@@ -430,14 +431,14 @@ impl Population<f32> {
         //     // .keep_alive(Some(Duration::from_secs(30))) // Time out handler. We don't currently need it.
         //     .build();
         //
-        // // Specimen rendering are done in parallele using a thread pool.
+        // // Specimen rendering are done in parallel using a thread pool.
         // for (i, specimen) in self.species.clone().into_iter().enumerate() {
         //     let file_name: String =
         //         format!("Specimen_{:03}_g{:0>4}.dot", i, self.generation_counter);
         //     let file_path = Path::new(root_path).join(&file_name);
         //     let file_path: String = file_path.to_string_lossy().to_string();
         //
-        //     pool.spawn(lazy(move || {
+        //     pool.spawn(move |_| {
         //         match specimen.render(
         //             &file_path,
         //             &format!("Specimen_{:03}", i),
@@ -447,7 +448,7 @@ impl Population<f32> {
         //             Some(_) => Ok(()),
         //             None => panic!(format!("Fail to render Specimen {}.", i)),
         //         }
-        //     }));
+        //     });
         // }
         //
         // pool.shutdown()
@@ -462,7 +463,7 @@ impl Population<f32> {
         use bincode::serialize_into;
         use std::fs::File;
         use std::io::BufWriter;
-        use utils::create_parent_directory;
+        use crate::utils::create_parent_directory;
 
 
         create_parent_directory(file_name)?;

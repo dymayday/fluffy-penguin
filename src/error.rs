@@ -1,4 +1,4 @@
-//! Customs error management for the entire crate.
+//! Custom error management for the entire crate.
 
 use std::error::Error as StdError;
 use std::result;
@@ -53,6 +53,7 @@ pub enum ErrorKind {
 impl StdError for GenError {
     fn description(&self) -> &str {
         match *self.0 {
+            // TODO: resolve deprecated function calls
             ErrorKind::Io(ref err) => err.description(),
             ErrorKind::SerDeserializeError(ref err) => err.description(),
             _ => unreachable!(),
@@ -60,7 +61,7 @@ impl StdError for GenError {
     }
 
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self.0 {
             ErrorKind::Io(ref err) => Some(err),
             ErrorKind::SerDeserializeError(ref err) => Some(err),

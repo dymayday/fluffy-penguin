@@ -1,8 +1,10 @@
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use activation::TransferFunctionTrait;
+use std::fmt;
 use rand::{thread_rng, Rng};
-// use serde_derive::Serialize;
+
+use crate::genetic_algorithm::LEARNING_RATE_THRESHOLD;
+use crate::activation::TransferFunctionTrait;
 
 
 /// This value is used to check the completeness of the linear genome and sub-linear genomes
@@ -77,7 +79,6 @@ pub struct Node<T> {
 
 impl Node<f32> {
     pub fn new(allele: Allele, gin: usize, w: f32, iota: i32, depth: u16) -> Self {
-        use genetic_algorithm::individual::LEARNING_RATE_THRESHOLD;
         Node {
             allele,
             gin,
@@ -118,8 +119,6 @@ impl Node<f32> {
     }
 }
 
-
-use std::fmt;
 impl fmt::Display for Node<f32> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg: String = match &self.allele {

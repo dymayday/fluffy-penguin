@@ -1,6 +1,6 @@
 # fluffy-penguin
 
-Implementation of the ENT2 genetic algorithm in Rust, because both are awesome =]
+Implementation of the EANT2 genetic algorithm in Rust, because both are awesome =]
 
 [Here](https://towardsdatascience.com/neat-an-awesome-approach-to-neuroevolution-3eca5cc7930f) you can find a good article about the algorithm that inspired EANT2.
 
