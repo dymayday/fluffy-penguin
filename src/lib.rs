@@ -19,6 +19,8 @@ pub mod error;
 pub mod genetic_algorithm;
 pub mod utils;
 
+pub use genetic_algorithm::individual::Specimen;
+pub use genetic_algorithm::Population;
 
 #[cfg(test)]
 mod activation_tests {
