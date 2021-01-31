@@ -1,18 +1,16 @@
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use std::fmt;
 use rand::{thread_rng, Rng};
+use std::fmt;
 
-use crate::genetic_algorithm::LEARNING_RATE_THRESHOLD;
 use crate::activation::TransferFunctionTrait;
-
+use crate::genetic_algorithm::LEARNING_RATE_THRESHOLD;
 
 /// This value is used to check the completeness of the linear genome and sub-linear genomes
 /// (sub-Networks).
 pub const IOTA_INPUT_VALUE: i32 = 1;
 /// Default value of an Input Node.
 pub const INPUT_NODE_DEPTH_VALUE: u16 = 999;
-
 
 /// This enum describes the forms that can be taken by a gene.
 ///
@@ -46,7 +44,6 @@ pub enum Allele {
     NaN,
 }
 
-
 /// A flexible encoding method enables one to design an efficient evolutionary method that can evolve both
 /// the structures and weights of neural networks. The genome in EANT is designed by taking this fact
 /// into consideration.
@@ -76,7 +73,6 @@ pub struct Node<T> {
     pub depth: u16,
 }
 
-
 impl Node<f32> {
     pub fn new(allele: Allele, gin: usize, w: f32, iota: i32, depth: u16) -> Self {
         Node {
@@ -89,7 +85,6 @@ impl Node<f32> {
             depth,
         }
     }
-
 
     /// Returns a special kind of allele: NaN (Not a Node).
     pub fn new_nan(gin: usize, iota: i32) -> Self {
@@ -131,7 +126,6 @@ impl fmt::Display for Node<f32> {
         write!(f, "{:^3}", &msg)
     }
 }
-
 
 impl TransferFunctionTrait<f32> for Node<f32> {
     const ALPHA: f32 = 1.0;

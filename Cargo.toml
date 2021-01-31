@@ -1,6 +1,6 @@
 [package]
 name = "fluffy-penguin"
-version = "0.2.2"
+version = "0.2.3"
 authors = [
     "meidhy <dymayday@gmail.com>",
     "MathisWellmann <wellmannmathis@gmail.com>",
@@ -8,6 +8,7 @@ authors = [
 edition = "2018"
 
 [dependencies]
+log = "0.4.14"
 rand = "0.6.0"
 rayon = "^1.4.1"
 threadpool = "^1.8.1"

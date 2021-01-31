@@ -9,7 +9,6 @@ use bincode::Error as BincodeError;
 /// A type alias for `Result<T, GenError>`.
 pub type GenResult<T> = result::Result<T, GenError>;
 
-
 /// An error that can occur when interacting with the algorithm.
 #[derive(Debug)]
 pub struct GenError(Box<ErrorKind>);
@@ -25,13 +24,11 @@ impl GenError {
         &self.0
     }
 
-
     /// Unwrap this error into its underlying type.
     pub fn into_kind(self) -> ErrorKind {
         *self.0
     }
 }
-
 
 /// The specific type of an error.
 #[derive(Debug)]
@@ -49,7 +46,6 @@ pub enum ErrorKind {
     __Nonexhaustive,
 }
 
-
 impl StdError for GenError {
     fn description(&self) -> &str {
         match *self.0 {
@@ -60,7 +56,6 @@ impl StdError for GenError {
         }
     }
 
-
     fn cause(&self) -> Option<&dyn StdError> {
         match *self.0 {
             ErrorKind::Io(ref err) => Some(err),
@@ -69,7 +64,6 @@ impl StdError for GenError {
         }
     }
 }
-
 
 impl fmt::Display for GenError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -81,20 +75,17 @@ impl fmt::Display for GenError {
     }
 }
 
-
 impl From<io::Error> for GenError {
     fn from(err: io::Error) -> Self {
         new_gen_error(ErrorKind::Io(err))
     }
 }
 
-
 impl From<GenError> for io::Error {
     fn from(err: GenError) -> Self {
         io::Error::new(io::ErrorKind::Other, err)
     }
 }
-
 
 impl From<BincodeError> for GenError {
     fn from(err: BincodeError) -> Self {

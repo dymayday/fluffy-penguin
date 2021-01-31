@@ -1,11 +1,10 @@
 //! Population doc string.
 
-use rand::{thread_rng, Rng, seq::SliceRandom};
+use rand::{seq::SliceRandom, thread_rng, Rng};
 use rayon::prelude::*;
 
-use crate::genetic_algorithm::individual::Specimen;
 use crate::error::*;
-
+use crate::genetic_algorithm::individual::Specimen;
 
 /// The number of concurrent process used during the visualisation export phase to SVG.
 const EXPORT_CPU_COUNT: usize = 4;
@@ -33,8 +32,8 @@ pub struct Population<T> {
     /// This parameter controls wether or not the worst Specimen should have a chance to be in
     /// the mating pool. s = 2 means a really low chance.
     s_rank: f32,
+    use_all_threads: bool,
 }
-
 
 impl Population<f32> {
     pub fn new(
@@ -42,6 +41,7 @@ impl Population<f32> {
         input_size: usize,
         output_size: usize,
         mutation_probability: f32,
+        use_all_threads: bool,
     ) -> Self {
         let species: Vec<Specimen<f32>> = (0..population_size)
             .map(|_| Specimen::new(input_size, output_size))
@@ -56,9 +56,9 @@ impl Population<f32> {
             nn_id: output_size,
             lambda: population_size,
             s_rank: S_RANK,
+            use_all_threads,
         }
     }
-
 
     /// New population of only specimen from the example.
     pub fn new_from_example(population_size: usize, mutation_probability: f32) -> Self {
@@ -74,9 +74,9 @@ impl Population<f32> {
             nn_id: 4,
             lambda: population_size,
             s_rank: S_RANK,
+            use_all_threads: true,
         }
     }
-
 
     /// Update the default 's rank' base selection parameter.
     /// The usual formula for calculating the selection probability for linear
@@ -88,13 +88,11 @@ impl Population<f32> {
         self
     }
 
-
     /// Updates the parameter which determines how many individuals will take part in the mating pool.
     pub fn with_lambda(mut self, lamba: usize) -> Self {
         self.lambda = lamba;
         self
     }
-
 
     /// Shrinks the population size to fit a desired value.
     /// Warning: shrinking the population after an evolution process has occured will result in a
@@ -120,7 +118,6 @@ impl Population<f32> {
         self
     }
 
-
     /// Modify the default Rank base selection parameter.
     /// The usual formula for calculating the selection probability for linear
     /// ranking schemes is parameterised by a value 1 < s ≤ 2.
@@ -132,7 +129,6 @@ impl Population<f32> {
         self.s_rank = s;
         self
     }
-
 
     /// Sets the default lamba value.
     /// This determines how many individuals will take part in the mating pool
@@ -146,7 +142,6 @@ impl Population<f32> {
         self
     }
 
-
     /// The exploitation phase researches the optimal weight of each Node in the current artificial
     /// neural network.
     pub fn exploitation(&mut self) {
@@ -155,7 +150,6 @@ impl Population<f32> {
             specimen.parametric_mutation();
         }
     }
-
 
     /// Exploration of structures is accomplished by structural mutation which is performed at
     /// larger timescale. It is used to create new species or introduce new structures. From each
@@ -177,9 +171,10 @@ impl Population<f32> {
         self.nn_id = nn_id;
     }
 
-
     /// Apply evolution to our population by selection and reproduction.
     pub fn evolve(&mut self) {
+        debug!("evolve...");
+
         self.generation_counter += 1;
         &self.clean_fitness();
         &self.sort_species_by_fitness();
@@ -187,15 +182,17 @@ impl Population<f32> {
         let mating_pool: Vec<Specimen<f32>> =
             Population::selection(&self.species, self.lambda, self.s_rank);
 
-        // self.crossover(&mating_pool);
-        self.par_crossover(&mating_pool);
+        if self.use_all_threads {
+            self.par_crossover(&mating_pool);
+        } else {
+            self.crossover(&mating_pool);
+        }
     }
 
     /// Selection process using Stochastic Universal Sampling by default.
     fn selection(species: &[Specimen<f32>], lambda: usize, s_rank: f32) -> Vec<Specimen<f32>> {
         Population::stochastic_universal_sampling_selection(species, lambda, s_rank)
     }
-
 
     /// Stochastic Universal Sampling is a simple, single phase, O(N) sampling algorithm. It is
     /// zero biased, has Minimum Spread and will achieve all N sanples in a single traversal.
@@ -234,11 +231,12 @@ impl Population<f32> {
         mating_pool
     }
 
-
     /// For good number of selection method in genetic algorithm, the fitness needs to be > 0, so
     /// we up each individual fitness in the population by the absolut value of the lowest fitness.
     fn clean_fitness(&mut self) {
         use std::cmp::Ordering;
+
+        debug!("clean_fitness...");
 
         let lowest_fitness: f32 = *self
             .species
@@ -262,12 +260,10 @@ impl Population<f32> {
         }
     }
 
-
     /// Sort Specimen by their fitness value.
     pub fn sort_species_by_fitness(&mut self) {
         &self.species.sort_by_key(|k| k.fitness as i32);
     }
-
 
     /// Ranking Selection.
     fn ranking_selection(species: &[Specimen<f32>], s: f32) -> Vec<f32> {
@@ -284,9 +280,10 @@ impl Population<f32> {
         ranking_vector
     }
 
-
     /// Crossover is the main method of reproduction of our genetic algorithm.
-    fn _crossover(&mut self, mating_pool: &[Specimen<f32>]) {
+    fn crossover(&mut self, mating_pool: &[Specimen<f32>]) {
+        debug!("crossover...");
+
         let offspring_size: usize = self.species.len();
         let mut offspring_vector: Vec<Specimen<f32>> = Vec::with_capacity(offspring_size);
 
@@ -327,7 +324,6 @@ impl Population<f32> {
                     mother = &mating_pool[*i];
                 }
 
-
                 let mut offspring: Specimen<f32> = Specimen::crossover(father, mother);
 
                 if offspring.ann.is_valid() {
@@ -339,7 +335,8 @@ impl Population<f32> {
                         "father {} and mother {} failed to reproduce.",
                         father.fitness,
                         mother.fitness
-                    ).expect("Fail to write to 'stderr'");
+                    )
+                    .expect("Fail to write to 'stderr'");
                 }
             }
         }
@@ -347,9 +344,10 @@ impl Population<f32> {
         self.species = offspring_vector;
     }
 
-
     /// Crossover is the main method of reproduction of our genetic algorithm.
     fn par_crossover(&mut self, mating_pool: &[Specimen<f32>]) {
+        debug!("par_crossover...");
+
         let offspring_size: usize = self.species.len();
         let mut offspring_vector: Vec<Specimen<f32>> = Vec::with_capacity(offspring_size);
 
@@ -400,7 +398,8 @@ impl Population<f32> {
                                 "father {} and mother {} failed to reproduce.",
                                 father.fitness,
                                 mother.fitness
-                            ).expect("Fail to write to 'stderr'");
+                            )
+                            .expect("Fail to write to 'stderr'");
                             return None;
                         }
                     }
@@ -417,18 +416,18 @@ impl Population<f32> {
         self.species = offspring_vector[..offspring_size].to_vec();
     }
 
-
     /// Visualisation of the artificial neural network of each specimen of our population with
     /// GraphViz.
     pub fn render(&self, root_path: &str, print_jumper: bool, print_weights: bool) {
         extern crate threadpool;
 
-        use threadpool::ThreadPool;
         use std::path::Path;
+        use threadpool::ThreadPool;
 
         let pool = ThreadPool::new(EXPORT_CPU_COUNT);
         for (i, specimen) in self.species.clone().into_iter().enumerate() {
-            let file_name: String = format!("Specimen_{:03}_g{:0>4}.dot", i, self.generation_counter);
+            let file_name: String =
+                format!("Specimen_{:03}_g{:0>4}.dot", i, self.generation_counter);
             let file_path = Path::new(root_path).join(&file_name);
             let file_path: String = file_path.to_string_lossy().to_string();
 
@@ -439,23 +438,20 @@ impl Population<f32> {
                     print_jumper,
                     print_weights,
                 ) {
-                    Some(_) => {},
+                    Some(_) => {}
                     None => panic!(format!("Fail to render Specimen {}.", i)),
                 };
             });
         }
-
     }
-
 
     /// Save a Population to a file using 'Bincode' serialization
     /// https://github.com/TyOverby/bincode
     pub fn save_to_file(&self, file_name: &str) -> GenResult<()> {
+        use crate::utils::create_parent_directory;
         use bincode::serialize_into;
         use std::fs::File;
         use std::io::BufWriter;
-        use crate::utils::create_parent_directory;
-
 
         create_parent_directory(file_name)?;
 
@@ -464,7 +460,6 @@ impl Population<f32> {
 
         Ok(())
     }
-
 
     /// Load a Specimen from a Bincode file.
     /// https://github.com/TyOverby/bincode

@@ -2,7 +2,6 @@
 //! namely: ISRLU, ISRU, ReLu, and Sigmoids.
 //! See https://en.wikipedia.org/wiki/Activation_function for more.
 
-
 pub trait TransferFunctionTrait<T: Copy> {
     const ALPHA: T;
     fn isrlu(&self, alpha: T) -> T;
@@ -75,7 +74,6 @@ impl TransferFunctionTrait<f32> for f32 {
     }
 }
 
-
 /// Advantage of ReLu:
 /// * No gradient vanishing problem, as Relu’s gradient is constant = 1
 /// * Sparsity. When W*x < 0, Relu gives 0, which means sparsity.
@@ -88,7 +86,6 @@ pub fn relu(x: f32) -> f32 {
     }
 }
 
-
 pub fn relu_f64(x: f64) -> f64 {
     if x < 0_f64 {
         0_f64
@@ -97,12 +94,10 @@ pub fn relu_f64(x: f64) -> f64 {
     }
 }
 
-
 /// A smooth approximation to ReLu.
 pub fn softplus(x: f32) -> f32 {
     (1_f32 + (x).exp()).ln()
 }
-
 
 /// ISRLU or "inverse square root linear unit" as better performance than ELU
 /// but has many of the same benefits. ISRLU and ELU have similar curves
@@ -123,7 +118,6 @@ pub fn isrlu(x: f32, alpha: f32) -> f32 {
     }
 }
 
-
 /// ISRU or "inverse square root unit" is a computationally efficient variant of ISRLU which can be
 /// used for RNNs. Many RNNs use either long short-term memory (LSTM) and gated recurrent units
 /// (GRU) which are implemented with tanh and sigmoid activation functions. ISRU has less com-
@@ -134,7 +128,6 @@ pub fn isrlu(x: f32, alpha: f32) -> f32 {
 pub fn isru(x: f32, alpha: f32) -> f32 {
     x / (1_f32 + alpha * (x * x)).sqrt()
 }
-
 
 /// Sigmoids activation function.
 /// it takes a real-valued number and “squashes” it into range between 0 and 1. In particular,

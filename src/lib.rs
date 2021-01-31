@@ -12,6 +12,8 @@ extern crate serde;
 extern crate serde_derive;
 extern crate bincode;
 extern crate fnv;
+#[macro_use]
+extern crate log;
 
 pub mod activation;
 pub mod cge;
@@ -32,14 +34,11 @@ mod activation_tests {
         assert_eq!(0.0f32, activation::relu(-10.570_342f32));
     }
 
-
     #[test]
     fn activation_test_sigmoids() {
         assert_eq!(0.731_058_6f32, activation::sigmoids(1.0f32));
     }
-
 }
-
 
 #[cfg(test)]
 mod specimen {
@@ -83,7 +82,6 @@ mod specimen {
         }
     }
 }
-
 
 #[cfg(test)]
 mod network {
@@ -228,7 +226,6 @@ mod network {
         assert_eq!(output.len(), 1)
     }
 }
-
 
 #[cfg(test)]
 mod node_tests {

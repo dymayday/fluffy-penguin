@@ -4,14 +4,14 @@
 
 extern crate fluffy_penguin;
 extern crate rayon;
-extern crate vision;
 extern crate rulinalg;
+extern crate vision;
 
-use std::thread;
 use fluffy_penguin::genetic_algorithm::{individual::Specimen, Population};
 use rayon::prelude::*;
-use vision::mnist::{MNISTBuilder};
 use rulinalg::utils;
+use std::thread;
+use vision::mnist::MNISTBuilder;
 
 const STACK_SIZE: usize = 1000 * 2048 * 2048;
 const DATASET_ROOT_PATH: &str = "tmp/mnist/";
@@ -22,7 +22,6 @@ const LABEL_SIZE: usize = 10;
 const DATASET_SIZE: usize = 1_000;
 const TEST_DATASET_SIZE: usize = 1_000;
 
-
 struct MnistDataset {
     train_imgs: [[f32; ROWS * COLS]; DATASET_SIZE],
     train_labels: [[f32; LABEL_SIZE]; DATASET_SIZE],
@@ -30,21 +29,19 @@ struct MnistDataset {
     test_labels: [[f32; LABEL_SIZE]; TEST_DATASET_SIZE],
 }
 
-
 /// Loads the dataset into Vector of f32 values.
 fn load_dataset() -> MnistDataset {
-
     let builder = MNISTBuilder::new();
-    let mnist = builder.data_home(DATASET_ROOT_PATH)
-                       .verbose()
-                       .get_data()
-                       .unwrap_or_else(|_| panic!("Fail to build MNIST Dataset."));
+    let mnist = builder
+        .data_home(DATASET_ROOT_PATH)
+        .verbose()
+        .get_data()
+        .unwrap_or_else(|_| panic!("Fail to build MNIST Dataset."));
 
     println!("train_imgs len = {}", mnist.train_imgs.len());
     println!("test_imgs len = {}", mnist.test_imgs.len());
     println!("train_labels len = {}", mnist.train_labels.len());
     println!("test_labels len = {}", mnist.test_labels.len());
-
 
     // Let's put everything on the stack for better performance.
     let mut train_imgs: [[f32; ROWS * COLS]; DATASET_SIZE] = [[0_f32; ROWS * COLS]; DATASET_SIZE];
@@ -55,20 +52,21 @@ fn load_dataset() -> MnistDataset {
         for i in 0..mnist.train_imgs[image_idx].len() {
             train_imgs[image_idx][i] = f32::from(mnist.train_imgs[image_idx][i])
         }
-        train_labels[image_idx][mnist.train_labels[image_idx] as usize] = 1_f32; 
+        train_labels[image_idx][mnist.train_labels[image_idx] as usize] = 1_f32;
     }
 
-
     // Let's put everything on the stack for better performance.
-    let mut test_imgs: [[f32; ROWS * COLS]; TEST_DATASET_SIZE] = [[0_f32; ROWS * COLS]; TEST_DATASET_SIZE];
-    let mut test_labels: [[f32; LABEL_SIZE]; TEST_DATASET_SIZE] = [[0_f32; LABEL_SIZE]; TEST_DATASET_SIZE];
+    let mut test_imgs: [[f32; ROWS * COLS]; TEST_DATASET_SIZE] =
+        [[0_f32; ROWS * COLS]; TEST_DATASET_SIZE];
+    let mut test_labels: [[f32; LABEL_SIZE]; TEST_DATASET_SIZE] =
+        [[0_f32; LABEL_SIZE]; TEST_DATASET_SIZE];
 
     // Cast u8 to f32 and build dataset output vectors.
     for image_idx in 0..TEST_DATASET_SIZE {
         for i in 0..mnist.test_imgs[image_idx].len() {
             test_imgs[image_idx][i] = f32::from(mnist.test_imgs[image_idx][i])
         }
-        test_labels[image_idx][mnist.test_labels[image_idx] as usize] = 1_f32; 
+        test_labels[image_idx][mnist.test_labels[image_idx] as usize] = 1_f32;
     }
 
     MnistDataset {
@@ -79,14 +77,13 @@ fn load_dataset() -> MnistDataset {
     }
 }
 
-
 /// This score function is a first dumb implementation, and means pretty much nothing in its current state.
 /// It needs a lot of work in my opinion.
 fn compute_specimen_score(
     specimen: &Specimen<f32>,
-    train_imgs: &[[f32; ROWS*COLS]; DATASET_SIZE],
-    train_labels: &[[f32; LABEL_SIZE]; DATASET_SIZE])-> f32 {
-
+    train_imgs: &[[f32; ROWS * COLS]; DATASET_SIZE],
+    train_labels: &[[f32; LABEL_SIZE]; DATASET_SIZE],
+) -> f32 {
     let mut specimen = specimen.clone();
     let mut fitness = 0_f32;
 
@@ -95,7 +92,6 @@ fn compute_specimen_score(
     // let mut squared_errors: Vec<f32> = Vec::with_capacity(DATASET_SIZE * LABEL_SIZE);
 
     for (inputs, labels) in train_imgs.iter().zip(train_labels.iter()) {
-
         specimen.update_input(inputs);
         let specimen_output = specimen.evaluate();
 
@@ -128,13 +124,11 @@ fn compute_specimen_score(
         // }
     }
 
-
     // // return the RMSE
     // let error_sum = squared_errors.iter().fold(0., |sum, err| sum + err);
     // error_sum / (dataset_size as f32)
     fitness
 }
-
 
 /// This is where the magic takes place.
 fn train_model(md: &MnistDataset) {
@@ -157,6 +151,7 @@ fn train_model(md: &MnistDataset) {
         input_size,
         output_size,
         mutation_probability,
+        true,
     );
 
     // 'S Rank' value should be between 1.5 and 2.0
@@ -172,7 +167,6 @@ fn train_model(md: &MnistDataset) {
         "[{:>5}], \t{:>10}  , \t{:>10} , \t{:>10}",
         "counter", "best", "mean", "worst",
     );
-
 
     for _ in 0..cycle_stop {
         generation_counter += 1;
@@ -199,7 +193,6 @@ fn train_model(md: &MnistDataset) {
             population.exploitation();
         }
 
-
         let worst_score = scores
             .iter()
             .min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
@@ -216,7 +209,11 @@ fn train_model(md: &MnistDataset) {
         );
 
         if generation_counter % 500 == 0 {
-            population.save_to_file(&format!("tmp/mnist/mnist_population_save_{:04}.bc", generation_counter))
+            population
+                .save_to_file(&format!(
+                    "tmp/mnist/mnist_population_save_{:04}.bc",
+                    generation_counter
+                ))
                 .unwrap_or_else(|_| panic!("Fail to save MNIST's Population."));
         }
         // if *best_score <= 0.0020 {
@@ -230,13 +227,18 @@ fn train_model(md: &MnistDataset) {
     }
 }
 
-
 fn print_mnist_img(j: usize, mnist: &MnistDataset) {
     // let's show the first values of the MNIST dataset to show how it's stored
     // in memory.
     let header: Vec<u8> = (0..10).map(|x| x as u8).collect();
     println!(">> label = {:?}", header);
-    print!(">> label = {:?}", mnist.train_labels[j].iter().map(|x| *x as u8).collect::<Vec<u8>>());
+    print!(
+        ">> label = {:?}",
+        mnist.train_labels[j]
+            .iter()
+            .map(|x| *x as u8)
+            .collect::<Vec<u8>>()
+    );
     for i in 0..ROWS * COLS {
         if i % COLS == 0 {
             println!();
@@ -245,7 +247,6 @@ fn print_mnist_img(j: usize, mnist: &MnistDataset) {
     }
     println!();
 }
-
 
 fn run() {
     let mnist = load_dataset();
@@ -259,7 +260,6 @@ fn run() {
 
     train_model(&mnist);
 }
-
 
 fn main() {
     // We want to allocate everything on the stack, so we need

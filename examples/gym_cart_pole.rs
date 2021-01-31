@@ -2,17 +2,17 @@
 Train neural network on cart pole environment
 with discrete actions
 */
-extern crate gym_rs;
 extern crate fluffy_penguin;
+extern crate gym_rs;
 extern crate rayon;
 
-use gym_rs::{CartPoleEnv, GymEnv, ActionType, Viewer};
-use fluffy_penguin::genetic_algorithm::Population;
 use fluffy_penguin::genetic_algorithm::individual::Specimen;
+use fluffy_penguin::genetic_algorithm::Population;
+use gym_rs::{ActionType, CartPoleEnv, GymEnv, Viewer};
 use rayon::prelude::*;
 use std::cmp::Ordering;
 
-pub struct MyEnv{}
+pub struct MyEnv {}
 
 impl MyEnv {
     fn get_fitness(&self, specimen: &mut Specimen<f32>) -> f32 {
@@ -23,7 +23,7 @@ impl MyEnv {
         let mut total_reward: f32 = 0.0;
         while !end {
             if total_reward > 200.0 {
-                break
+                break;
             }
 
             // TODO: normalize
@@ -53,7 +53,12 @@ impl MyEnv {
 
     fn evaluate(&self, specimen: &mut Specimen<f32>) -> f32 {
         // Get the avg score of 10 sample runs
-        (0..10).collect::<Vec<usize>>().iter().map(|_| self.get_fitness(specimen)).sum::<f32>() / 10.0
+        (0..10)
+            .collect::<Vec<usize>>()
+            .iter()
+            .map(|_| self.get_fitness(specimen))
+            .sum::<f32>()
+            / 10.0
     }
 }
 
@@ -97,10 +102,9 @@ fn render_champion(champion: &mut Specimen<f32>) {
 fn main() {
     let pop_size: usize = 100;
     let mut pop = Population::new(pop_size, 4, 1, 0.15);
-    pop.set_s_rank(2.0)
-        .set_lambda(pop_size / 2);
+    pop.set_s_rank(2.0).set_lambda(pop_size / 2);
 
-    let env = MyEnv{};
+    let env = MyEnv {};
     let cycle_stop: usize = 25;
     let cycle_per_structure = cycle_stop / 10;
     let mut champion: Specimen<f32> = pop.species[0].clone();
@@ -111,7 +115,8 @@ fn main() {
             pop.exploitation();
         }
 
-        let scores: Vec<f32> = pop.species
+        let scores: Vec<f32> = pop
+            .species
             .par_iter_mut()
             .map(|s| {
                 let fit = env.evaluate(s);
@@ -130,7 +135,8 @@ fn main() {
             pop.evolve();
         }
 
-        let best_score = scores.iter()
+        let best_score = scores
+            .iter()
             .max_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
             .unwrap();
         println!("gen: {} || best_score: {}", i, best_score);
