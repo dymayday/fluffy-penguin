@@ -173,8 +173,6 @@ impl Population<f32> {
 
     /// Apply evolution to our population by selection and reproduction.
     pub fn evolve(&mut self) {
-        debug!("evolve...");
-
         self.generation_counter += 1;
         &self.clean_fitness();
         &self.sort_species_by_fitness();
@@ -236,8 +234,6 @@ impl Population<f32> {
     fn clean_fitness(&mut self) {
         use std::cmp::Ordering;
 
-        debug!("clean_fitness...");
-
         let lowest_fitness: f32 = *self
             .species
             .iter()
@@ -282,8 +278,6 @@ impl Population<f32> {
 
     /// Crossover is the main method of reproduction of our genetic algorithm.
     fn crossover(&mut self, mating_pool: &[Specimen<f32>]) {
-        debug!("crossover...");
-
         let offspring_size: usize = self.species.len();
         let mut offspring_vector: Vec<Specimen<f32>> = Vec::with_capacity(offspring_size);
 
@@ -346,8 +340,6 @@ impl Population<f32> {
 
     /// Crossover is the main method of reproduction of our genetic algorithm.
     fn par_crossover(&mut self, mating_pool: &[Specimen<f32>]) {
-        debug!("par_crossover...");
-
         let offspring_size: usize = self.species.len();
         let mut offspring_vector: Vec<Specimen<f32>> = Vec::with_capacity(offspring_size);
 
@@ -363,6 +355,8 @@ impl Population<f32> {
                 if mating_pool[i].fitness.is_finite() {
                     shuffled_mating_pool_index_1.push(i);
                     shuffled_mating_pool_index_2.push(i);
+                } else {
+                    debug!("fitness is not finite");
                 }
             }
 
@@ -392,14 +386,10 @@ impl Population<f32> {
                         if offspring.ann.is_valid() {
                             return Some(offspring);
                         } else {
-                            use std::io::{stderr, Write};
-                            writeln!(
-                                stderr(),
-                                "father {} and mother {} failed to reproduce.",
-                                father.fitness,
-                                mother.fitness
-                            )
-                            .expect("Fail to write to 'stderr'");
+                            error!("father {} and mother {} failed to reproduce.",
+                                   father.fitness,
+                                   mother.fitness
+                            );
                             return None;
                         }
                     }
