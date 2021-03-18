@@ -5,8 +5,8 @@
 //     distributions::{Distribution, Standard, Weighted, WeightedChoice},
 //     Rng,
 // };
-use rand::prelude::*;
 use rand::distributions::{Standard, WeightedIndex};
+use rand::prelude::*;
 
 /// This enum defines all implemented mutation.
 #[derive(Debug, Clone)]
@@ -19,7 +19,6 @@ pub enum StructuralMutation {
     ConnectionRemoval,
 }
 
-
 impl Distribution<StructuralMutation> for Standard {
     /// Each StructuralMutation has an associated weight that influences how likely it is to be chosen: higher
     /// weight is more likely.
@@ -29,8 +28,14 @@ impl Distribution<StructuralMutation> for Standard {
             (100, StructuralMutation::JumperAddition),
             (100, StructuralMutation::ConnectionRemoval),
         ];
-        let distrib = WeightedIndex::new(weighted_available_structural_mutations.iter().map(|item| item.0))
-            .expect("Fail to draw a mutation from a weighted choice.");
-        weighted_available_structural_mutations[distrib.sample(rng)].1.to_owned()
+        let distrib = WeightedIndex::new(
+            weighted_available_structural_mutations
+                .iter()
+                .map(|item| item.0),
+        )
+        .expect("Fail to draw a mutation from a weighted choice.");
+        weighted_available_structural_mutations[distrib.sample(rng)]
+            .1
+            .to_owned()
     }
 }

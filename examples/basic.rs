@@ -15,6 +15,7 @@ fn init_population(
         input_size,
         output_size,
         mutation_probability,
+        true,
     )
 }
 
@@ -75,7 +76,6 @@ fn compute_specimen_score(specimen: &Specimen<f32>) -> f32 {
     error_sum / (dataset_size as f32)
 }
 
-
 ///
 /// Global algorythm:
 ///
@@ -110,7 +110,6 @@ fn compute_specimen_score(specimen: &Specimen<f32>) -> f32 {
 /// }
 ///
 ///
-
 
 fn _basic() {
     let population_size = 10;
@@ -168,11 +167,9 @@ fn _basic() {
     }
 }
 
-
 /// Test the algorithm on a simple math equation to prove the correctness of our algorithm.
 fn test_exploitation_correctness_on_basic_equation() {
     use std::cmp::Ordering;
-    use std::{fs, path::Path};
 
     let export: bool = true;
     // let export: bool = false;
@@ -193,7 +190,6 @@ fn test_exploitation_correctness_on_basic_equation() {
     let mut generation_counter: i64 = 0;
     let cycle_per_structure = 250;
     let cycle_stop: usize = 2_000;
-
 
     for cycle in 0..cycle_stop {
         // Lookup for some better weights.
@@ -232,7 +228,6 @@ fn test_exploitation_correctness_on_basic_equation() {
             population.evolve();
         }
 
-
         let best_score = scores
             .iter()
             .min_by(|x, y| x.partial_cmp(y).unwrap_or(Ordering::Greater))
@@ -253,7 +248,6 @@ fn test_exploitation_correctness_on_basic_equation() {
         population.render("tmp/basic/", false, false);
     }
 }
-
 
 fn main() {
     test_exploitation_correctness_on_basic_equation();

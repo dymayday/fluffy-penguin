@@ -11,7 +11,6 @@ use std::fs;
 use std::path::Path;
 // use std::process::Command;
 
-
 /// Dev purpose: this function test the different implementation of the available variation operators:
 /// * Structural Mutation
 /// * parametric Mutation
@@ -25,14 +24,10 @@ fn _dev_variation_operator() {
     panda_net.update_input(&rnd_vec);
 
     println!("Evaluated panda_net output = {:?}", panda_net.evaluate());
-    println!("");
 }
-
 
 /// Test learning rate and weight mutation.
 fn _dev_population(pretty_print: bool, visualize: bool, print_jumper: bool, print_weights: bool) {
-    use fluffy_penguin::genetic_algorithm::Population;
-
     println!("@_dev_population:");
 
     let population_size: usize = 10;
@@ -59,7 +54,7 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_jumper: bool, prin
     let mut gen: u32 = 0;
     for _ in 0..structural_mutation_size {
         for i in 0..pop.species.len() {
-            let mut specimen: &mut Specimen<f32> = &mut pop.species[i];
+            let specimen: &mut Specimen<f32> = &mut pop.species[i];
 
             // if visualize {
             //     // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);
@@ -73,7 +68,6 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_jumper: bool, prin
             }
             specimen.ann.update_input(&input_vector);
             println!("Out: {:?}", specimen.evaluate());
-            println!("");
         }
 
         if visualize {
@@ -89,7 +83,6 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_jumper: bool, prin
         gen += 1;
     }
 }
-
 
 fn _test_exploitation() {
     println!("Test Exploitation phase.");
@@ -114,13 +107,11 @@ fn _test_exploitation() {
                 "mutated: w = {:<15} , sigma = {:<30}",
                 mutated.w, mutated.sigma
             );
-            println!("");
         }
 
         println!("                       ####################################################################\n");
     }
 }
-
 
 /// Test all available mutation on the example ANN from the research papers.
 fn _test_specimen_mutation(
@@ -208,7 +199,6 @@ fn _test_specimen_mutation(
     }
 }
 
-
 /// Test crossover operation between specimens.
 fn _test_crossover() {
     println!();
@@ -250,7 +240,6 @@ fn _test_crossover() {
     println!("Output = {:?}\n", offspring.ann.evaluate());
 }
 
-
 fn _test_population_crossover(
     pretty_print: bool,
     export: bool,
@@ -271,6 +260,7 @@ fn _test_population_crossover(
             input_size,
             output_size,
             mutation_probability,
+            true,
         );
 
         println!("{:#^240}", "");
@@ -342,7 +332,6 @@ fn _test_population_crossover(
     }
 }
 
-
 fn _test_population_selection(
     pretty_print: bool,
     export: bool,
@@ -362,7 +351,6 @@ fn _test_population_selection(
     // Population::new(population_size, input_size, output_size, mutation_probability);
     // Population::new_from_example(population_size, mutation_probability);
 
-
     let mut loop_counter: usize = 0;
     for _ in 0..cycle_stop {
         let mut file_to_remove: Vec<String> = Vec::with_capacity(population_size);
@@ -371,6 +359,7 @@ fn _test_population_selection(
             input_size,
             output_size,
             mutation_probability,
+            true,
         )
         .with_s_rank(2.0);
         // population = population.with_s_rank(2.0);
@@ -495,7 +484,6 @@ fn _test_population_selection(
 //     // Network::pretty_print(&offspring.ann.genome);
 //     // println!("Offspring is valid ? {}", offspring.ann.is_valid());
 // }
-
 
 fn main() {
     let (pretty_print, visualize, print_jumper, print_weights): (bool, bool, bool, bool) =

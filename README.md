@@ -1,6 +1,6 @@
 # fluffy-penguin
 
-Implementation of the ENT2 genetic algorithm in Rust, because both are awesome =]
+Implementation of the EANT2 genetic algorithm in Rust, because both are awesome =]
 
 [Here](https://towardsdatascience.com/neat-an-awesome-approach-to-neuroevolution-3eca5cc7930f) you can find a good article about the algorithm that inspired EANT2.
 
@@ -123,6 +123,23 @@ And something marvellous like this after quite a few generations:
 ![The representation of an individual artificial neural network after a few generations](doc/Specimen_example.svg)
 
 ## Examples
+The examples folder contains experiments on OpenAi's gym environments using the 
+[gym-rs](https://www.github.com/MathisWellmann/gym-rs) crate.
+Run the cart pole environment using:
+```
+cargo run --release --example gym_cart_pole --features="gym-rs"
+```
+Run the mountain car environment either with discrete or continuous action:
+```
+cargo run --release --example gym_mountain_car_discrete --features="gym-rs"
+cargo run --release --example gym_mountain_car_continuous --features="gym-rs"
+```
+Or run the pendulum environment using:
+```
+cargo run --release --example gym_pendulum --features="gym-rs"
+```
+All of these example will provide a render of the final champion and you will be able 
+to see how well it solves the given task.
 
 You can run a simple math equation fitting by running:
 

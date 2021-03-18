@@ -4,13 +4,11 @@
 //!
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use activation::TransferFunctionTrait;
-use cge::node::Allele::*;
-use cge::node::{Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
+use crate::cge::node::Allele::*;
+use crate::cge::node::{Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
 use fnv::FnvHashMap;
-use rand::{thread_rng, Rng, seq::SliceRandom};
+use rand::{seq::SliceRandom, thread_rng, Rng};
 use std::io::Write;
-
 
 /// The representation of an Artificial Neural Network (ANN) using the Common Genetic Encoding
 /// (CGE) (http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.70.8729).
@@ -27,26 +25,13 @@ pub struct Network<T> {
     pub neuron_indices_map: FnvHashMap<usize, usize>,
     // The number of Output in this Network. It's a constant value as well.
     pub output_size: usize,
-    // The ISRLU hyperparameter `α` (alpha) controls the value to which an ISRLU
-    // saturates for negative inputs.
-    pub alpha: T,
 }
-
 
 impl Network<f32> {
     /// Generating the initial linear genome use the grow method by default.
     pub fn new(input_size: usize, output_size: usize) -> Self {
         Network::new_simple(input_size, output_size)
     }
-
-
-    /// Set the default ISRLU hyperparameter `α` (alpha) that controls the value to which an ISRLU
-    /// saturates for negative inputs.
-    /// See [TransferFunctionTrait] for more information on the subject.
-    pub fn set_alpha(&mut self, alpha: f32) {
-        self.alpha = alpha;
-    }
-
 
     /// Starting from simple initial structures is the way it is done by nature and most of the
     /// other evolutionary methods.
@@ -86,10 +71,8 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size,
-            alpha: f32::ALPHA,
         }
     }
-
 
     /// Builds and returns a Network from a list of input value using the `grow` method.
     /// For a given maximum depth, the grow method produces linear genomes encoding neural networks
@@ -118,7 +101,6 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size,
-            alpha: f32::ALPHA,
         }
     }
 
@@ -134,7 +116,7 @@ impl Network<f32> {
     /// * The weights of each input are randomly attributed.
     pub fn new_full(input_vec: &[f32], output_size: usize) -> Self {
         let genome: Vec<Node<f32>> = Vec::new();
-        let input_map: Vec<f32> = input_vec.iter().map(|i| i.relu()).collect();
+        let input_map: Vec<f32> = input_vec.iter().map(|i| i.tanh()).collect();
         let neuron_map: Vec<f32> = vec![];
         let neuron_indices_map: FnvHashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
@@ -144,16 +126,13 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size,
-            alpha: f32::ALPHA,
         }
     }
-
 
     /// Builds and returns the genome from the research papers we use to implement EANT2.
     pub fn build_from_example() -> Self {
         Network::_build_parent1_from_example()
     }
-
 
     /// Builds and returns the parent 1's genome from the research papers we use to implement EANT2.
     pub fn _build_parent1_from_example() -> Self {
@@ -210,10 +189,8 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size: 1,
-            alpha: f32::ALPHA,
         }
     }
-
 
     /// Builds and returns the parent 2's genome from the research papers we use to implement EANT2.
     pub fn _build_parent2_from_example() -> Self {
@@ -261,10 +238,8 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size: 1,
-            alpha: f32::ALPHA,
         }
     }
-
 
     /// Returns a sub-network composed of one Neuron Node followed by randomly selected
     /// input Node from a vector of input.
@@ -313,7 +288,6 @@ impl Network<f32> {
         subgenome
     }
 
-
     /// Returns a vector of Input Node generated from a vector of value.
     fn gen_input_node_vector(neuron_gin: usize, input_vec: &[f32]) -> Vec<Node<f32>> {
         let mut input_node_vector: Vec<Node<f32>> = Vec::with_capacity(input_vec.len());
@@ -334,7 +308,6 @@ impl Network<f32> {
         }
         input_node_vector
     }
-
 
     /// Find the potential Neuron Node with the right depth.
     /// Dsource > Djf and Dtarget =< Djf.
@@ -359,7 +332,6 @@ impl Network<f32> {
         indices_v.shrink_to_fit();
         indices_v
     }
-
 
     /// Compute the proper jumper connection Node from a set of rules to not break everything.
     pub fn gen_random_jumper_connection(
@@ -393,7 +365,8 @@ impl Network<f32> {
 
         // Still, we check if there is some possible solution.
         if potential_target_neuron_indices.len() > 0 {
-            let source_id: usize = *potential_target_neuron_indices.choose(&mut thread_rng())
+            let source_id: usize = *potential_target_neuron_indices
+                .choose(&mut thread_rng())
                 .expect("Fail to draw a jumper connection id to link to an existing Neuron.");
             let jumper = if is_forward {
                 JumpForward { source_id }
@@ -415,7 +388,6 @@ impl Network<f32> {
         }
     }
 
-
     /// Returns the maximum depth of an artificial neural network.
     pub fn get_max_depth(genome: &[Node<f32>]) -> u16 {
         genome
@@ -426,7 +398,6 @@ impl Network<f32> {
             .max()
             .unwrap_or(0_u16)
     }
-
 
     /// Compute the indexes of the Neuron in the linear genome so we can find them easily during
     /// the evaluation process. This function is meant to be call only once at init time.
@@ -440,7 +411,6 @@ impl Network<f32> {
         neuron_indices_btmap
     }
 
-
     /// Compute the indices of each Neuron gin into a FnvHashMap lookup table.
     pub fn compute_neurons_gin_indices_map(genome: &[Node<f32>]) -> FnvHashMap<usize, usize> {
         let mut neurons_gin_indices_btmap: FnvHashMap<usize, usize> = FnvHashMap::default();
@@ -452,7 +422,6 @@ impl Network<f32> {
         }
         neurons_gin_indices_btmap
     }
-
 
     /// Build a FnvHashMap of reference to Neuron Node. FnvHashMap <gin, &Node>.
     fn build_gin_neuron_map<'a>(genome: &'a [Node<f32>]) -> FnvHashMap<usize, &Node<f32>> {
@@ -466,7 +435,6 @@ impl Network<f32> {
         neurons_gin_indices_btmap
     }
 
-
     /// Helper function to return the sorted Neuron's gin values of a Network.
     fn get_neuron_gin_vector(genome: &[Node<f32>]) -> Vec<usize> {
         let mut v: Vec<usize> = Network::compute_neurons_gin_indices_map(genome)
@@ -477,12 +445,10 @@ impl Network<f32> {
         v
     }
 
-
     /// Update a Network.
     pub fn update(&mut self) {
         self.update_network_attributes();
     }
-
 
     /// Update the attributes of the network.
     pub fn update_network_attributes(&mut self) {
@@ -504,7 +470,6 @@ impl Network<f32> {
             .unwrap();
         self.neuron_map = vec![0.0_f32; neuron_id_max + 1];
     }
-
 
     /// Update the input vector.
     pub fn update_input(&mut self, input: &[f32]) {
@@ -553,7 +518,7 @@ impl Network<f32> {
             let node = &self.genome[node_idx];
             match &node.allele {
                 Input { label } => {
-                    let input_value = self.input_map[*label].isrlu(self.alpha) * node.w;
+                    let input_value = self.input_map[*label].tanh() * node.w;
                     neuron_input_stack.push(input_value);
                 }
                 JumpRecurrent { source_id } => {
@@ -610,7 +575,7 @@ impl Network<f32> {
                                 let _ = forward_in_process.pop()?;
                             }
                             // now we can process it
-                            let mut value = node.w * neuron_value.isrlu(self.alpha);
+                            let value = node.w * neuron_value.tanh();
                             neuron_input_stack.push(value);
                         }
                     }
@@ -622,7 +587,7 @@ impl Network<f32> {
                     for _ in 0..input_len {
                         neuron_value += neuron_input_stack.pop()?;
                     }
-                    neuron_value = neuron_value.isrlu(self.alpha);
+                    neuron_value = neuron_value.tanh();
                     // stores it for jumping connection
                     neuron_id_to_value.insert(*id, neuron_value);
                     // store it as an input to the rest ro the genome
@@ -640,7 +605,6 @@ impl Network<f32> {
         }
         Some(neuron_input_stack)
     }
-
 
     /// Returns if a Network is considered valid.
     pub fn is_valid(&mut self) -> bool {
@@ -682,7 +646,6 @@ impl Network<f32> {
 
         true
     }
-
 
     /// Returns the sub-network corresponding to JumpForward Node to be evaluated as slice of a
     /// Network.
@@ -726,7 +689,6 @@ impl Network<f32> {
         output_vec
     }
 
-
     /// Build a vector of GIN value from a slice.
     pub fn build_ref_input_subnetwork<'a>(genome: &[&'a Node<f32>]) -> Vec<&'a Node<f32>> {
         let genome_len: usize = genome.len();
@@ -734,7 +696,6 @@ impl Network<f32> {
 
         let mut iota: i32 = genome[0].iota;
         let mut i: usize = 1;
-
 
         while iota != 1 && i < genome_len {
             let node: &Node<f32> = &genome[i];
@@ -765,7 +726,6 @@ impl Network<f32> {
         inputs
     }
 
-
     /// Find removable GIN from a Neuron.
     pub fn find_removable_gin_list(genome: &[Node<f32>]) -> Vec<usize> {
         let genome_len: usize = genome.len();
@@ -773,7 +733,6 @@ impl Network<f32> {
 
         let mut iota: i32 = genome[0].iota;
         let mut i: usize = 1;
-
 
         while i < genome_len && iota != 1 {
             let node: Node<f32> = genome[i].clone();
@@ -798,7 +757,6 @@ impl Network<f32> {
         removable_gin
     }
 
-
     /// Third and last refactoring of the crossover operator !
     pub fn crossover(
         network_1: &Network<f32>,
@@ -822,7 +780,6 @@ impl Network<f32> {
         // table (HashMap).
         let isn_merged_btm =
             Network::merge_and_update_subnetworks(&n1_order, &n2_order, &n1_isn_btm, &n2_isn_btm);
-
 
         // Now we need to recombine all those sub-networks into one linear genome.
         // To do so, we will start from the output Nodes and unravel their inputs.
@@ -851,7 +808,6 @@ impl Network<f32> {
             gin_neuron_map.insert(*k, v);
         }
 
-
         // At last we can recombine them.
         offspring.genome =
             Network::recombine_subnetworks(&n1_output_gin_vector, &gin_neuron_map, &isn_merged_btm);
@@ -862,7 +818,6 @@ impl Network<f32> {
         offspring.update();
         offspring
     }
-
 
     /// Build a sub-network of inputs in a lookup table (HashMap) and store the order in a Vector.
     pub fn build_subnetworks_lookup_table(
@@ -897,7 +852,6 @@ impl Network<f32> {
         (neuron_order, inputs_subnetwork_btm)
     }
 
-
     pub fn _pp_subnetworks_lookup_table(
         n_order: &[usize],
         hm: &FnvHashMap<usize, Vec<&Node<f32>>>,
@@ -908,7 +862,6 @@ impl Network<f32> {
             Network::_pretty_print_refs(&sub_net);
         }
     }
-
 
     /// Build new subnetwork.
     fn merge_and_update_subnetworks<'a>(
@@ -939,7 +892,6 @@ impl Network<f32> {
                 }
             }
         }
-
 
         // Next we focus on each vertex.
         {
@@ -983,7 +935,6 @@ impl Network<f32> {
         btm_merged
     }
 
-
     fn merge_input_subnetworks<'a>(
         sub_net_1: &[&'a Node<f32>],
         sub_net_2: &[&'a Node<f32>],
@@ -1017,7 +968,6 @@ impl Network<f32> {
         merged_sub_net
     }
 
-
     /// Separate input Node (I, JF and JR) and Neuron Node in two Vectors.
     fn separate_input_and_neuron_from_a_subnetwork<'a>(
         sub_net: &[&'a Node<f32>],
@@ -1049,7 +999,6 @@ impl Network<f32> {
         (input_nodes, neuron_nodes)
     }
 
-
     /// Recombine the sub-networks into a linear genome.
     fn recombine_subnetworks<'a>(
         output_node_gin_vector: &[usize],
@@ -1065,7 +1014,7 @@ impl Network<f32> {
 
             let _neurons_input_ref: Vec<&Node<f32>> =
                 merged_sub_net_btm.get(&gin).unwrap().to_vec();
-            let mut neurons_inputs: Vec<Node<f32>> =
+            let neurons_inputs: Vec<Node<f32>> =
                 _neurons_input_ref.iter().map(|n| (*n).clone()).collect();
 
             // We update the iota of each output Neuron while passing by...
@@ -1075,7 +1024,7 @@ impl Network<f32> {
             for input_node in neurons_inputs {
                 // println!("\tInput_node {}", input_node.gin);
                 if let Neuron { .. } = input_node.allele {
-                    let mut input_neuron_node = input_node.clone();
+                    let input_neuron_node = input_node.clone();
 
                     let mut recombined_sub_genome = Network::recombine_subnetworks(
                         &[input_neuron_node.gin],
@@ -1095,7 +1044,6 @@ impl Network<f32> {
         recombined_genome
     }
 
-
     /// Recombine the sub-networks into a linear genome.
     fn _recombine_subnetworks_recursive<'a>(
         output_node_gin_vector: &[usize],
@@ -1110,7 +1058,7 @@ impl Network<f32> {
             let mut output_neuron: Node<f32> = _output_neuron_ref.clone();
 
             let _neurons_input_ref: Vec<&Node<f32>> = merged_sub_net_hm.get(&gin).unwrap().to_vec();
-            let mut neurons_inputs: Vec<Node<f32>> =
+            let neurons_inputs: Vec<Node<f32>> =
                 _neurons_input_ref.iter().map(|n| (*n).clone()).collect();
 
             // We update the iota of each output Neuron while passing by...
@@ -1120,7 +1068,7 @@ impl Network<f32> {
             for input_node in neurons_inputs {
                 // println!("\tInput_node {}", input_node.gin);
                 if let Neuron { .. } = input_node.allele {
-                    let mut input_neuron_node = input_node.clone();
+                    let input_neuron_node = input_node.clone();
 
                     let mut recombined_sub_genome = Network::_recombine_subnetworks_recursive(
                         &[input_neuron_node.gin],
@@ -1137,7 +1085,6 @@ impl Network<f32> {
 
         recombined_genome
     }
-
 
     /// Update the weights of each Node of the linear genome by choosing the fitest ones from their
     /// parents.
@@ -1177,7 +1124,6 @@ impl Network<f32> {
         }
     }
 
-
     /// Render an articial neural network to a dot file for a better visualization purpose.
     /// cf.: https://www.graphviz.org/documentation/.
     pub fn render_to_dot(
@@ -1187,10 +1133,9 @@ impl Network<f32> {
         print_jumper: bool,
         print_weight: bool,
     ) -> ::std::io::Result<()> {
+        use crate::utils::create_parent_directory;
         use std::fs::File;
         use std::io::BufWriter;
-        use utils::create_parent_directory;
-
 
         create_parent_directory(file_name)?;
         let f = File::create(file_name)?;
@@ -1390,7 +1335,6 @@ impl Network<f32> {
 
         Ok(())
     }
-
 
     /// Pretty print the liear genome on a line.
     pub fn pretty_print(genome: &[Node<f32>]) {

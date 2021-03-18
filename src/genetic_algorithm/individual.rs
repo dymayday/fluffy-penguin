@@ -1,12 +1,13 @@
-use cge::{Allele, Network, Node};
 use fnv::FnvHashMap;
-use genetic_algorithm::mutation::StructuralMutation;
 use rand::distributions::StandardNormal;
 use rand::{self, thread_rng, Rng};
 use std::process;
 
-pub const LEARNING_RATE_THRESHOLD: f32 = 0.0001;
+use crate::cge::{Allele, Network, Node};
 
+use crate::genetic_algorithm::mutation::StructuralMutation;
+
+pub const LEARNING_RATE_THRESHOLD: f32 = 0.0001;
 
 /// A Specimen regroups all the attributes needed by the genetic algorithm of an individual.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -83,7 +84,6 @@ impl Specimen<f32> {
         // Denotes a draw from the standard normal distribution.
         let nu: f32 = thread_rng().sample(StandardNormal) as f32;
 
-
         for mut node in &mut self.ann.genome {
             // Learning rate value of the current chromosome.
             let sigma: f32 = node.sigma;
@@ -102,7 +102,7 @@ impl Specimen<f32> {
             }
 
             // Compute a new mutated connection weight.
-            let mut w_p: f32 = node.w + sigma_p * nu_i;
+            let w_p: f32 = node.w + sigma_p * nu_i;
 
             // // Assign the new mutated learning rate value to the Node.
             // node.sigma = sigma_p;
@@ -124,7 +124,6 @@ impl Specimen<f32> {
             }
         }
     }
-
 
     /// Exploration of structures is accomplished by structural mutation which is performed at
     /// larger timescale. It is used to create new species or introduce new structures. From each
@@ -278,7 +277,8 @@ impl Specimen<f32> {
                                     Network::find_removable_gin_list(&sub_network_slice);
 
                                 if removable_gin_list.len() > 1 {
-                                    let removable_gin_index: usize = thread_rng().gen_range(0, removable_gin_list.len());
+                                    let removable_gin_index: usize =
+                                        thread_rng().gen_range(0, removable_gin_list.len());
                                     let removable_gin: usize =
                                         removable_gin_list[removable_gin_index];
 
@@ -341,13 +341,11 @@ impl Specimen<f32> {
         }
     }
 
-
     /// Returns if a Neuron Node should be mutated or not by drawing a random number from a uniform
     /// distribution [0, 1) and comparing it with the mutation probability `pm`.
     fn roll_the_mutation_wheel(pm: f32) -> bool {
         thread_rng().gen::<f32>() <= pm
     }
-
 
     /// Returns the offspring of two Specimens.
     pub fn crossover(father: &Specimen<f32>, mother: &Specimen<f32>) -> Specimen<f32> {
@@ -364,14 +362,11 @@ impl Specimen<f32> {
         specimen
     }
 
-
     /// Sort the second genome according to the order of the first one.
     pub fn sort_specimens_genome(
         specimen_1: &Specimen<f32>,
         specimen_2: &Specimen<f32>,
     ) -> (Specimen<f32>, Specimen<f32>) {
-        use cge::Allele::Neuron;
-
         let genome_1 = &specimen_1.ann.genome;
         let genome_2 = &specimen_2.ann.genome;
 
@@ -384,7 +379,7 @@ impl Specimen<f32> {
         let n1_gin_vector: Vec<usize> = genome_1
             .iter()
             .filter_map(|n| {
-                if let Neuron { .. } = n.allele {
+                if let Allele::Neuron { .. } = n.allele {
                     Some(n.gin)
                 } else {
                     None
@@ -395,14 +390,13 @@ impl Specimen<f32> {
         let n2_gin_vector: Vec<usize> = genome_2
             .iter()
             .filter_map(|n| {
-                if let Neuron { .. } = n.allele {
+                if let Allele::Neuron { .. } = n.allele {
                     Some(n.gin)
                 } else {
                     None
                 }
             })
             .collect();
-
 
         let ref_specimen;
         let mut other_specimen;
@@ -441,15 +435,13 @@ impl Specimen<f32> {
         ref_gin_v.reverse();
         // other_gin_v.reverse();
 
-
         let mut slice: Vec<Node<f32>>;
 
-
         for ref_neuron_gin in ref_gin_v {
-            let mut gin_already_sorted: Vec<usize> = genome_sorted
+            let gin_already_sorted: Vec<usize> = genome_sorted
                 .iter()
                 .filter_map(|n| {
-                    if let Neuron { .. } = n.allele {
+                    if let Allele::Neuron { .. } = n.allele {
                         Some(n.gin)
                     } else {
                         None
@@ -484,7 +476,6 @@ impl Specimen<f32> {
         (ref_specimen.clone(), other_specimen)
     }
 
-
     /// Render the Specimen artificial neural network to a dot and svg file.
     pub fn render(
         &self,
@@ -512,15 +503,13 @@ impl Specimen<f32> {
         Some(cmd_output)
     }
 
-
     /// Dump a Specimen into a file using 'Bincode' serialization.
     /// https://github.com/TyOverby/bincode
     pub fn save_to_file(&self, file_name: &str) {
+        use crate::utils::create_parent_directory;
         use bincode::serialize_into;
         use std::fs::File;
         use std::io::BufWriter;
-        use utils::create_parent_directory;
-
 
         create_parent_directory(file_name).expect(&format!(
             "Fail to create the directory tree of: '{:?}'",
@@ -530,10 +519,8 @@ impl Specimen<f32> {
             File::create(file_name).expect(&format!("Fail to create file: '{:?}'", file_name)),
         );
 
-
         serialize_into(stream, &self).expect("Fail to serialize a Specimen into Bincode file.");
     }
-
 
     /// Load a Specimen from a Bincode file.
     /// https://github.com/TyOverby/bincode

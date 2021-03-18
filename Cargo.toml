@@ -1,23 +1,48 @@
 [package]
 name = "fluffy-penguin"
-version = "0.2.2"
-authors = ["meidhy <dymayday@gmail.com>"]
+version = "0.2.4"
+authors = [
+    "meidhy <dymayday@gmail.com>",
+    "MathisWellmann <wellmannmathis@gmail.com>",
+]
+edition = "2018"
 
 [dependencies]
+log = "0.4.14"
 rand = "0.6.0"
-rayon = ""
-tokio-threadpool = ""
-futures = ""
-serde = ""
-serde_derive = ""
-bincode = ""
-fnv = ""
+rayon = "^1.4.1"
+threadpool = "^1.8.1"
+futures = "0.3.6"
+serde = "^1.0.116"
+serde_derive = "^1.0.116"
+bincode = "^1.3.1"
+fnv = "^1.0.7"
+failure = "0.1.8"
+
+gym-rs = { git = "https://github.com/MathisWellmann/gym-rs", optional = true }
 
 [dev-dependencies]
 vision = ""
 rulinalg = ""
 
-# [profile.release]
-# lto = true
-# codegen-units = 1
-# debug = true
+[[example]]
+name = "gym_cart_pole"
+required-features = ["gym-rs"]
+
+[[example]]
+name = "gym_mountain_car_discrete"
+required-features = ["gym-rs"]
+
+[[example]]
+name = "gym_mountain_car_continuous"
+required-features = ["gym-rs"]
+
+[[example]]
+name = "gym_pendulum"
+required-features = ["gym-rs"]
+
+[[example]]
+name = "basic"
+
+[[example]]
+name = "playground"

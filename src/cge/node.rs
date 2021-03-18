@@ -1,16 +1,16 @@
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use activation::TransferFunctionTrait;
 use rand::{thread_rng, Rng};
-// use serde_derive::Serialize;
+use std::fmt;
 
+use crate::activation::TransferFunctionTrait;
+use crate::genetic_algorithm::LEARNING_RATE_THRESHOLD;
 
 /// This value is used to check the completeness of the linear genome and sub-linear genomes
 /// (sub-Networks).
 pub const IOTA_INPUT_VALUE: i32 = 1;
 /// Default value of an Input Node.
 pub const INPUT_NODE_DEPTH_VALUE: u16 = 999;
-
 
 /// This enum describes the forms that can be taken by a gene.
 ///
@@ -44,7 +44,6 @@ pub enum Allele {
     NaN,
 }
 
-
 /// A flexible encoding method enables one to design an efficient evolutionary method that can evolve both
 /// the structures and weights of neural networks. The genome in EANT is designed by taking this fact
 /// into consideration.
@@ -74,10 +73,8 @@ pub struct Node<T> {
     pub depth: u16,
 }
 
-
 impl Node<f32> {
     pub fn new(allele: Allele, gin: usize, w: f32, iota: i32, depth: u16) -> Self {
-        use genetic_algorithm::individual::LEARNING_RATE_THRESHOLD;
         Node {
             allele,
             gin,
@@ -88,7 +85,6 @@ impl Node<f32> {
             depth,
         }
     }
-
 
     /// Returns a special kind of allele: NaN (Not a Node).
     pub fn new_nan(gin: usize, iota: i32) -> Self {
@@ -118,8 +114,6 @@ impl Node<f32> {
     }
 }
 
-
-use std::fmt;
 impl fmt::Display for Node<f32> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg: String = match &self.allele {
@@ -133,23 +127,12 @@ impl fmt::Display for Node<f32> {
     }
 }
 
-
 impl TransferFunctionTrait<f32> for Node<f32> {
-    const ALPHA: f32 = 1.0;
-
-    fn isrlu(&self, alpha: f32) -> f32 {
-        self.value.isrlu(alpha)
+    fn tan_h(&self) -> f32 {
+        self.value.tanh()
     }
 
-    fn isru(&self, alpha: f32) -> f32 {
-        self.value.isru(alpha)
-    }
-
-    fn relu(&self) -> f32 {
-        self.value.relu()
-    }
-
-    fn sigmoids(&self) -> f32 {
-        self.value.sigmoids()
+    fn soft_sign(&self) -> f32 {
+        self.value.soft_sign()
     }
 }

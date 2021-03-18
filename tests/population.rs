@@ -15,7 +15,7 @@ mod population {
 
         // Create a new population with 10 individuals with 2 inputs, 1 output and a mutation
         // probability of 10%.
-        let mut population = Population::new(population_size, 2, 1, 0.10);
+        let mut population = Population::new(population_size, 2, 1, 0.10, true);
         // Next we set the 'lambda' attribute to a proper value, usually between half the
         // population size and half of it.
         population.set_lambda(10);
@@ -31,16 +31,14 @@ mod population {
         }
     }
 
-
     #[test]
     fn save_load() {
         use rand::{thread_rng, Rng};
         use std::fs;
 
-
         let file_name = "/tmp/pop_test.bc";
         let population_size: usize = 10;
-        let mut population = Population::new(population_size, 2, 1, 0.10);
+        let mut population = Population::new(population_size, 2, 1, 0.10, true);
 
         // Build some random inputs to feed the model with.
         let inputs: Vec<[f32; 2]> = (0..population_size)

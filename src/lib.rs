@@ -8,41 +8,24 @@ extern crate futures;
 extern crate rand;
 extern crate rayon;
 extern crate serde;
-extern crate tokio_threadpool;
 #[macro_use]
 extern crate serde_derive;
 extern crate bincode;
 extern crate fnv;
+#[macro_use]
+extern crate log;
 
 pub mod activation;
 pub mod cge;
-pub mod error;
 pub mod genetic_algorithm;
 pub mod utils;
 
-
-#[cfg(test)]
-mod activation_tests {
-    use activation;
-
-    #[test]
-    fn activation_test_relu() {
-        assert_eq!(0.570_342_3f32, activation::relu(0.570_342_3f32));
-        assert_eq!(0.0f32, activation::relu(-10.570_342f32));
-    }
-
-
-    #[test]
-    fn activation_test_sigmoids() {
-        assert_eq!(0.731_058_6f32, activation::sigmoids(1.0f32));
-    }
-
-}
-
+pub use genetic_algorithm::individual::Specimen;
+pub use genetic_algorithm::Population;
 
 #[cfg(test)]
 mod specimen {
-    use genetic_algorithm::individual::Specimen;
+    use crate::genetic_algorithm::individual::Specimen;
 
     #[test]
     fn structural_mutation() {
@@ -83,26 +66,26 @@ mod specimen {
     }
 }
 
-
 #[cfg(test)]
 mod network {
-    use cge::Network;
+    use crate::cge::Network;
 
     #[test]
     fn evaluation_ann_from_example() {
         let mut network = Network::build_from_example();
         // test first pass
-        assert_eq!(network.evaluate(), Some(vec![0.654_000_04f32]));
+        assert_eq!(network.evaluate(), Some(vec![0.34579587_f32]));
         // test second pass
-        assert_eq!(network.evaluate(), Some(vec![0.680_160_05f32]));
+        assert_eq!(network.evaluate(), Some(vec![0.34815085_f32]));
     }
 
     #[test]
     /// This tests the evaluation of a network which contains
     /// A JF node right after the its source Neuron.
     fn evaluation_jump_forward_after_neuron() {
-        use cge::{Allele::*, Node};
+        use crate::cge::{Allele::*, Node};
         use fnv::FnvHashMap;
+
         let genome: Vec<Node<f32>> = vec![
             Node {
                 allele: Neuron { id: 0 },
@@ -215,22 +198,20 @@ mod network {
         ];
 
         let mut net = Network {
-            genome: genome,
+            genome,
             input_map: vec![1., 1.],
             neuron_map: vec![0., 0., 0., 0.],
             neuron_indices_map: FnvHashMap::default(),
             output_size: 1,
-            alpha: 1.0,
         };
         let output = net.evaluate().unwrap();
         assert_eq!(output.len(), 1)
     }
 }
 
-
 #[cfg(test)]
 mod node_tests {
-    use cge::{Allele, Node};
+    use crate::cge::{Allele, Node};
 
     #[test]
     fn neuron() {
