@@ -39,7 +39,7 @@ impl Population<f32> {
         population_size: usize,
         input_size: usize,
         output_size: usize,
-        mutation_probability: f32,
+        initial_mutation_probability: f32,
         use_all_threads: bool,
     ) -> Self {
         let species: Vec<Specimen<f32>> = (0..population_size)
@@ -50,7 +50,7 @@ impl Population<f32> {
         Population {
             species,
             generation_counter: 0,
-            pm: mutation_probability,
+            pm: initial_mutation_probability,
             gin,
             nn_id: output_size,
             lambda: population_size,
@@ -75,6 +75,12 @@ impl Population<f32> {
             s_rank: S_RANK,
             use_all_threads: true,
         }
+    }
+
+    pub fn set_mutation_probability(&mut self, pm: f32) {
+        assert!(pm >= 0.0);
+        assert!(pm <= 1.0);
+        self.pm = pm;
     }
 
     /// Update the default 's rank' base selection parameter.
