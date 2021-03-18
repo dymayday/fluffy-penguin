@@ -128,21 +128,11 @@ impl fmt::Display for Node<f32> {
 }
 
 impl TransferFunctionTrait<f32> for Node<f32> {
-    const ALPHA: f32 = 1.0;
-
-    fn isrlu(&self, alpha: f32) -> f32 {
-        self.value.isrlu(alpha)
+    fn tan_h(&self) -> f32 {
+        self.value.tanh()
     }
 
-    fn isru(&self, alpha: f32) -> f32 {
-        self.value.isru(alpha)
-    }
-
-    fn relu(&self) -> f32 {
-        self.value.relu()
-    }
-
-    fn sigmoids(&self) -> f32 {
-        self.value.sigmoids()
+    fn soft_sign(&self) -> f32 {
+        self.value.soft_sign()
     }
 }

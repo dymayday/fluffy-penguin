@@ -2,8 +2,8 @@
 
 use rand::{seq::SliceRandom, thread_rng, Rng};
 use rayon::prelude::*;
+use failure::Error;
 
-use crate::error::*;
 use crate::genetic_algorithm::individual::Specimen;
 
 /// The number of concurrent process used during the visualisation export phase to SVG.
@@ -15,7 +15,6 @@ const EXPORT_CPU_COUNT: usize = 4;
 /// This parameter controls wether or not the worst Specimen should have a chance to be in
 /// the mating pool. s = 2 means a really low chance.
 const S_RANK: f32 = 2.0;
-// const S_RANK: f32 = 1.5;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Population<T> {
@@ -91,30 +90,6 @@ impl Population<f32> {
     /// Updates the parameter which determines how many individuals will take part in the mating pool.
     pub fn with_lambda(mut self, lamba: usize) -> Self {
         self.lambda = lamba;
-        self
-    }
-
-    /// Shrinks the population size to fit a desired value.
-    /// Warning: shrinking the population after an evolution process has occured will result in a
-    /// duplication of some specimen if the new population size is smaller than the previous one.
-    pub fn shrink_to(mut self, population_size: usize) -> Self {
-        // If there is enought blood to feed our needs, we just cut through some species from the population.
-        if population_size <= self.species.len() {
-            self.species = self.species[..population_size].to_vec();
-        } else {
-            // But if there is not enough individual to satisfy our appetite, we need to cycle through
-            // the ones we have in stock.
-
-            let mut species_iter_cycle = self.species.into_iter().cycle();
-            self.species = (0..population_size)
-                .map(|_| {
-                    species_iter_cycle
-                        .next()
-                        .expect("Fail to cycle through the vector of Panda.")
-                        .to_owned()
-                })
-                .collect();
-        }
         self
     }
 
@@ -386,9 +361,9 @@ impl Population<f32> {
                         if offspring.ann.is_valid() {
                             return Some(offspring);
                         } else {
-                            error!("father {} and mother {} failed to reproduce.",
-                                   father.fitness,
-                                   mother.fitness
+                            error!(
+                                "father {} and mother {} failed to reproduce.",
+                                father.fitness, mother.fitness
                             );
                             return None;
                         }
@@ -437,7 +412,7 @@ impl Population<f32> {
 
     /// Save a Population to a file using 'Bincode' serialization
     /// https://github.com/TyOverby/bincode
-    pub fn save_to_file(&self, file_name: &str) -> GenResult<()> {
+    pub fn save_to_file(&self, file_name: &str) -> Result<(), Error> {
         use crate::utils::create_parent_directory;
         use bincode::serialize_into;
         use std::fs::File;
@@ -453,7 +428,7 @@ impl Population<f32> {
 
     /// Load a Specimen from a Bincode file.
     /// https://github.com/TyOverby/bincode
-    pub fn load_from_file(file_name: &str) -> GenResult<Self> {
+    pub fn load_from_file(file_name: &str) -> Result<Self, Error> {
         use bincode::deserialize_from;
         use std::fs::File;
         use std::io::BufReader;

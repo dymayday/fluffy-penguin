@@ -17,28 +17,11 @@ extern crate log;
 
 pub mod activation;
 pub mod cge;
-pub mod error;
 pub mod genetic_algorithm;
 pub mod utils;
 
 pub use genetic_algorithm::individual::Specimen;
 pub use genetic_algorithm::Population;
-
-#[cfg(test)]
-mod activation_tests {
-    use crate::activation;
-
-    #[test]
-    fn activation_test_relu() {
-        assert_eq!(0.570_342_3f32, activation::relu(0.570_342_3f32));
-        assert_eq!(0.0f32, activation::relu(-10.570_342f32));
-    }
-
-    #[test]
-    fn activation_test_sigmoids() {
-        assert_eq!(0.731_058_6f32, activation::sigmoids(1.0f32));
-    }
-}
 
 #[cfg(test)]
 mod specimen {
@@ -91,9 +74,9 @@ mod network {
     fn evaluation_ann_from_example() {
         let mut network = Network::build_from_example();
         // test first pass
-        assert_eq!(network.evaluate(), Some(vec![0.654_000_04f32]));
+        assert_eq!(network.evaluate(), Some(vec![0.34579587_f32]));
         // test second pass
-        assert_eq!(network.evaluate(), Some(vec![0.680_160_05f32]));
+        assert_eq!(network.evaluate(), Some(vec![0.34815085_f32]));
     }
 
     #[test]
@@ -215,12 +198,11 @@ mod network {
         ];
 
         let mut net = Network {
-            genome: genome,
+            genome,
             input_map: vec![1., 1.],
             neuron_map: vec![0., 0., 0., 0.],
             neuron_indices_map: FnvHashMap::default(),
             output_size: 1,
-            alpha: 1.0,
         };
         let output = net.evaluate().unwrap();
         assert_eq!(output.len(), 1)

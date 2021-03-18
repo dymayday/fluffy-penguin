@@ -4,7 +4,6 @@
 //!
 //! A genome in EANT2 is a linear genome consisting of genes (nodes) that can take different forms (alleles).
 
-use crate::activation::TransferFunctionTrait;
 use crate::cge::node::Allele::*;
 use crate::cge::node::{Node, INPUT_NODE_DEPTH_VALUE, IOTA_INPUT_VALUE};
 use fnv::FnvHashMap;
@@ -26,22 +25,12 @@ pub struct Network<T> {
     pub neuron_indices_map: FnvHashMap<usize, usize>,
     // The number of Output in this Network. It's a constant value as well.
     pub output_size: usize,
-    // The ISRLU hyperparameter `α` (alpha) controls the value to which an ISRLU
-    // saturates for negative inputs.
-    pub alpha: T,
 }
 
 impl Network<f32> {
     /// Generating the initial linear genome use the grow method by default.
     pub fn new(input_size: usize, output_size: usize) -> Self {
         Network::new_simple(input_size, output_size)
-    }
-
-    /// Set the default ISRLU hyperparameter `α` (alpha) that controls the value to which an ISRLU
-    /// saturates for negative inputs.
-    /// See [TransferFunctionTrait] for more information on the subject.
-    pub fn set_alpha(&mut self, alpha: f32) {
-        self.alpha = alpha;
     }
 
     /// Starting from simple initial structures is the way it is done by nature and most of the
@@ -82,7 +71,6 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size,
-            alpha: f32::ALPHA,
         }
     }
 
@@ -113,7 +101,6 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size,
-            alpha: f32::ALPHA,
         }
     }
 
@@ -129,7 +116,7 @@ impl Network<f32> {
     /// * The weights of each input are randomly attributed.
     pub fn new_full(input_vec: &[f32], output_size: usize) -> Self {
         let genome: Vec<Node<f32>> = Vec::new();
-        let input_map: Vec<f32> = input_vec.iter().map(|i| i.relu()).collect();
+        let input_map: Vec<f32> = input_vec.iter().map(|i| i.tanh()).collect();
         let neuron_map: Vec<f32> = vec![];
         let neuron_indices_map: FnvHashMap<usize, usize> = Network::compute_neuron_indices(&genome);
 
@@ -139,7 +126,6 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size,
-            alpha: f32::ALPHA,
         }
     }
 
@@ -203,7 +189,6 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size: 1,
-            alpha: f32::ALPHA,
         }
     }
 
@@ -253,7 +238,6 @@ impl Network<f32> {
             neuron_map,
             neuron_indices_map,
             output_size: 1,
-            alpha: f32::ALPHA,
         }
     }
 
@@ -534,7 +518,7 @@ impl Network<f32> {
             let node = &self.genome[node_idx];
             match &node.allele {
                 Input { label } => {
-                    let input_value = self.input_map[*label].isrlu(self.alpha) * node.w;
+                    let input_value = self.input_map[*label].tanh() * node.w;
                     neuron_input_stack.push(input_value);
                 }
                 JumpRecurrent { source_id } => {
@@ -591,7 +575,7 @@ impl Network<f32> {
                                 let _ = forward_in_process.pop()?;
                             }
                             // now we can process it
-                            let value = node.w * neuron_value.isrlu(self.alpha);
+                            let value = node.w * neuron_value.tanh();
                             neuron_input_stack.push(value);
                         }
                     }
@@ -603,7 +587,7 @@ impl Network<f32> {
                     for _ in 0..input_len {
                         neuron_value += neuron_input_stack.pop()?;
                     }
-                    neuron_value = neuron_value.isrlu(self.alpha);
+                    neuron_value = neuron_value.tanh();
                     // stores it for jumping connection
                     neuron_id_to_value.insert(*id, neuron_value);
                     // store it as an input to the rest ro the genome
