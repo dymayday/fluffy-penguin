@@ -2,20 +2,21 @@
 name = "fluffy-penguin"
 version = "0.2.2"
 authors = ["meidhy <dymayday@gmail.com>"]
+edition = "2018"
 
 [dependencies]
 rand = "0.6.0"
-rayon = ""
-tokio-threadpool = ""
-futures = ""
-serde = ""
-serde_derive = ""
-bincode = ""
-fnv = ""
+rayon = "1.0.3"
+tokio-threadpool = "0.1.13"
+futures = "0.1.16"
+serde = "1.0.90"
+serde_derive = "1.0.90"
+bincode = "1.1.3"
+fnv = "1.0.6"
 
 [dev-dependencies]
-vision = ""
-rulinalg = ""
+vision = "0.0.2"
+rulinalg = "0.4.2"
 
 # [profile.release]
 # lto = true
