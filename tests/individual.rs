@@ -4,12 +4,12 @@ extern crate fluffy_penguin;
 
 #[cfg(test)]
 mod individual {
-    use fluffy_penguin::genetic_algorithm::Specimen;
     use fluffy_penguin::cge::Network;
+    use fluffy_penguin::genetic_algorithm::Specimen;
 
     #[test]
     fn crossover() {
-        // Let's build the 2 Specimen from 
+        // Let's build the 2 Specimen from
         let spe1 = Specimen {
             input_size: 1_usize,
             output_size: 2_usize,
@@ -24,7 +24,6 @@ mod individual {
             fitness: 0.0,
         };
 
-        let child = Specimen::crossover(&spe1, &spe2);
-
+        let _child = Specimen::crossover(&spe1, &spe2);
     }
 }

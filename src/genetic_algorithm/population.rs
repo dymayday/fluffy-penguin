@@ -1,8 +1,8 @@
 //! Population doc string.
 
-use error::*;
-use genetic_algorithm::individual::Specimen;
-use rand::{thread_rng, Rng, seq::SliceRandom};
+use crate::error::*;
+use crate::genetic_algorithm::individual::Specimen;
+use rand::{seq::SliceRandom, thread_rng, Rng};
 use rayon::prelude::*;
 
 
@@ -112,7 +112,6 @@ impl Population<f32> {
                     species_iter_cycle
                         .next()
                         .expect("Fail to cycle through the vector of Panda.")
-                        .to_owned()
                 })
                 .collect();
         }
@@ -150,7 +149,7 @@ impl Population<f32> {
     /// neural network.
     pub fn exploitation(&mut self) {
         // Parametric exploitation of ever specimen in our population.
-        for mut specimen in &mut self.species {
+        for specimen in &mut self.species {
             specimen.parametric_mutation();
         }
     }
@@ -165,7 +164,7 @@ impl Population<f32> {
         let mut gin = self.gin;
         let mut nn_id = self.nn_id;
 
-        for mut specimen in &mut self.species {
+        for specimen in &mut self.species {
             let (gin_tmp, nn_id_tmp) = specimen
                 .structural_mutation(self.pm, gin, nn_id)
                 .unwrap_or((gin, nn_id));
@@ -180,8 +179,8 @@ impl Population<f32> {
     /// Apply evolution to our population by selection and reproduction.
     pub fn evolve(&mut self) {
         self.generation_counter += 1;
-        &self.clean_fitness();
-        &self.sort_species_by_fitness();
+        let _ = &self.clean_fitness();
+        let _ = &self.sort_species_by_fitness();
 
         let mating_pool: Vec<Specimen<f32>> =
             Population::selection(&self.species, self.lambda, self.s_rank);
@@ -204,7 +203,7 @@ impl Population<f32> {
         lambda: usize,
         s_rank: f32,
     ) -> Vec<Specimen<f32>> {
-        let ranking_vector: Vec<f32> = Population::ranking_selection(&species, s_rank);
+        let ranking_vector: Vec<f32> = Population::ranking_selection(species, s_rank);
 
         let mut cumulative_probability_distribution: Vec<f32> =
             Vec::with_capacity(ranking_vector.len());
@@ -264,7 +263,7 @@ impl Population<f32> {
 
     /// Sort Specimen by their fitness value.
     pub fn sort_species_by_fitness(&mut self) {
-        &self.species.sort_by_key(|k| k.fitness as i32);
+        let _ = &self.species.sort_by_key(|k| k.fitness as i32);
     }
 
 
@@ -338,7 +337,8 @@ impl Population<f32> {
                         "father {} and mother {} failed to reproduce.",
                         father.fitness,
                         mother.fitness
-                    ).expect("Fail to write to 'stderr'");
+                    )
+                    .expect("Fail to write to 'stderr'");
                 }
             }
         }
@@ -375,7 +375,7 @@ impl Population<f32> {
                 .zip(shuffled_mating_pool_index_2.par_iter())
                 .map(|(i, j)| {
                     if offspring_vector.len() == offspring_size {
-                        return None;
+                        None
                     } else {
                         let father: &Specimen<f32>;
                         let mother: &Specimen<f32>;
@@ -391,7 +391,7 @@ impl Population<f32> {
                         let mut offspring: Specimen<f32> = Specimen::crossover(father, mother);
 
                         if offspring.ann.is_valid() {
-                            return Some(offspring);
+                            Some(offspring)
                         } else {
                             use std::io::{stderr, Write};
                             writeln!(
@@ -399,8 +399,9 @@ impl Population<f32> {
                                 "father {} and mother {} failed to reproduce.",
                                 father.fitness,
                                 mother.fitness
-                            ).expect("Fail to write to 'stderr'");
-                            return None;
+                            )
+                            .expect("Fail to write to 'stderr'");
+                            None
                         }
                     }
                 })
@@ -445,7 +446,7 @@ impl Population<f32> {
                     print_weights,
                 ) {
                     Some(_) => Ok(()),
-                    None => panic!(format!("Fail to render Specimen {}.", i)),
+                    None => panic!("Fail to render Specimen {}.", i),
                 }
             }));
         }
@@ -459,10 +460,10 @@ impl Population<f32> {
     /// Save a Population to a file using 'Bincode' serialization
     /// https://github.com/TyOverby/bincode
     pub fn save_to_file(&self, file_name: &str) -> GenResult<()> {
+        use crate::utils::create_parent_directory;
         use bincode::serialize_into;
         use std::fs::File;
         use std::io::BufWriter;
-        use utils::create_parent_directory;
 
 
         create_parent_directory(file_name)?;

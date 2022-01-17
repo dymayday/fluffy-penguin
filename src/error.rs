@@ -34,37 +34,26 @@ impl GenError {
 
 
 /// The specific type of an error.
+/// Hints that destructuring should not be exhaustive.
+///
+/// This enum may grow additional variants, so this makes sure clients
+/// don't count on exhaustive matching. (Otherwise, adding a new variant
+/// could break existing code.)
+#[non_exhaustive]
 #[derive(Debug)]
 pub enum ErrorKind {
     /// An I/O error that occurred while processing a data stream.
     Io(io::Error),
     /// An error of this kind occurs only when using the Bincode (ser)deserializer.
     SerDeserializeError(BincodeError),
-    /// Hints that destructuring should not be exhaustive.
-    ///
-    /// This enum may grow additional variants, so this makes sure clients
-    /// don't count on exhaustive matching. (Otherwise, adding a new variant
-    /// could break existing code.)
-    #[doc(hidden)]
-    __Nonexhaustive,
 }
 
 
 impl StdError for GenError {
-    fn description(&self) -> &str {
-        match *self.0 {
-            ErrorKind::Io(ref err) => err.description(),
-            ErrorKind::SerDeserializeError(ref err) => err.description(),
-            _ => unreachable!(),
-        }
-    }
-
-
-    fn cause(&self) -> Option<&StdError> {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match *self.0 {
             ErrorKind::Io(ref err) => Some(err),
             ErrorKind::SerDeserializeError(ref err) => Some(err),
-            _ => unreachable!(),
         }
     }
 }
@@ -75,7 +64,6 @@ impl fmt::Display for GenError {
         match *self.0 {
             ErrorKind::Io(ref err) => err.fmt(f),
             ErrorKind::SerDeserializeError(ref err) => err.fmt(f),
-            _ => unreachable!(),
         }
     }
 }

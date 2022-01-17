@@ -23,7 +23,7 @@ pub mod utils;
 
 #[cfg(test)]
 mod activation_tests {
-    use activation;
+    use crate::activation;
 
     #[test]
     fn activation_test_relu() {
@@ -36,13 +36,12 @@ mod activation_tests {
     fn activation_test_sigmoids() {
         assert_eq!(0.731_058_6f32, activation::sigmoids(1.0f32));
     }
-
 }
 
 
 #[cfg(test)]
 mod specimen {
-    use genetic_algorithm::individual::Specimen;
+    use crate::genetic_algorithm::individual::Specimen;
 
     #[test]
     fn structural_mutation() {
@@ -86,7 +85,9 @@ mod specimen {
 
 #[cfg(test)]
 mod network {
-    use cge::Network;
+    use crate::cge::Network;
+    use crate::cge::{Allele::*, Node};
+    use fnv::FnvHashMap;
 
     #[test]
     fn evaluation_ann_from_example() {
@@ -101,8 +102,6 @@ mod network {
     /// This tests the evaluation of a network which contains
     /// A JF node right after the its source Neuron.
     fn evaluation_jump_forward_after_neuron() {
-        use cge::{Allele::*, Node};
-        use fnv::FnvHashMap;
         let genome: Vec<Node<f32>> = vec![
             Node {
                 allele: Neuron { id: 0 },
@@ -230,7 +229,7 @@ mod network {
 
 #[cfg(test)]
 mod node_tests {
-    use cge::{Allele, Node};
+    use crate::cge::{Allele, Node};
 
     #[test]
     fn neuron() {

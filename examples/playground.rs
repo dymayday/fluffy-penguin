@@ -31,8 +31,6 @@ fn _dev_variation_operator() {
 
 /// Test learning rate and weight mutation.
 fn _dev_population(pretty_print: bool, visualize: bool, print_jumper: bool, print_weights: bool) {
-    use fluffy_penguin::genetic_algorithm::Population;
-
     println!("@_dev_population:");
 
     let population_size: usize = 10;
@@ -59,7 +57,7 @@ fn _dev_population(pretty_print: bool, visualize: bool, print_jumper: bool, prin
     let mut gen: u32 = 0;
     for _ in 0..structural_mutation_size {
         for i in 0..pop.species.len() {
-            let mut specimen: &mut Specimen<f32> = &mut pop.species[i];
+            let specimen: &mut Specimen<f32> = &mut pop.species[i];
 
             // if visualize {
             //     // let file_name: &str = &format!("examples/Gen{:03}_speciment{:02}.dot", gen, i);

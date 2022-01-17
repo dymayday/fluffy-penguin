@@ -1,6 +1,7 @@
-use cge::{Allele, Network, Node};
+use crate::cge::Allele::Neuron;
+use crate::cge::{Allele, Network, Node};
+use crate::genetic_algorithm::mutation::StructuralMutation;
 use fnv::FnvHashMap;
-use genetic_algorithm::mutation::StructuralMutation;
 use rand::distributions::StandardNormal;
 use rand::{self, thread_rng, Rng};
 use std::process;
@@ -102,7 +103,7 @@ impl Specimen<f32> {
             }
 
             // Compute a new mutated connection weight.
-            let mut w_p: f32 = node.w + sigma_p * nu_i;
+            let w_p: f32 = node.w + sigma_p * nu_i;
 
             // // Assign the new mutated learning rate value to the Node.
             // node.sigma = sigma_p;
@@ -111,7 +112,7 @@ impl Specimen<f32> {
 
             // Curtaining the weight and sigma values.
             // if sigma_p < -10.0 || w_p < -10.0 || sigma_p > 10.0 || w_p > 10.0 {
-            if w_p < -10.0 || w_p > 10.0 {
+            if !(-10.0..=10.0).contains(&w_p) {
                 // Do nothing.
                 // if w_p > 10.0 { node.w = 10.0; }
                 // else { node.w = -10.0; }
@@ -275,10 +276,11 @@ impl Specimen<f32> {
                                 let sub_network_slice = &self.ann.genome[node_index..genome_len];
 
                                 let removable_gin_list: Vec<usize> =
-                                    Network::find_removable_gin_list(&sub_network_slice);
+                                    Network::find_removable_gin_list(sub_network_slice);
 
                                 if removable_gin_list.len() > 1 {
-                                    let removable_gin_index: usize = thread_rng().gen_range(0, removable_gin_list.len());
+                                    let removable_gin_index: usize =
+                                        thread_rng().gen_range(0, removable_gin_list.len());
                                     let removable_gin: usize =
                                         removable_gin_list[removable_gin_index];
 
@@ -353,7 +355,7 @@ impl Specimen<f32> {
     pub fn crossover(father: &Specimen<f32>, mother: &Specimen<f32>) -> Specimen<f32> {
         let mut specimen = father.clone();
 
-        let (father, mother) = Specimen::sort_specimens_genome(&father, &mother);
+        let (father, mother) = Specimen::sort_specimens_genome(father, mother);
         specimen.ann = Network::crossover(&father.ann, &mother.ann, father.fitness, mother.fitness);
 
         specimen.update();
@@ -370,8 +372,6 @@ impl Specimen<f32> {
         specimen_1: &Specimen<f32>,
         specimen_2: &Specimen<f32>,
     ) -> (Specimen<f32>, Specimen<f32>) {
-        use cge::Allele::Neuron;
-
         let genome_1 = &specimen_1.ann.genome;
         let genome_2 = &specimen_2.ann.genome;
 
@@ -424,7 +424,7 @@ impl Specimen<f32> {
             other_gin_v = n2_gin_vector;
 
             // ref_neuron_gin_map = Network::compute_neurons_gin_indices_map(&genome_1);
-            other_neuron_gin_map = Network::compute_neurons_gin_indices_map(&genome_2);
+            other_neuron_gin_map = Network::compute_neurons_gin_indices_map(genome_2);
         } else {
             ref_specimen = specimen_2;
             other_specimen = specimen_1.clone();
@@ -435,7 +435,7 @@ impl Specimen<f32> {
             other_gin_v = n1_gin_vector;
 
             // ref_neuron_gin_map = Network::compute_neurons_gin_indices_map(&genome_2);
-            other_neuron_gin_map = Network::compute_neurons_gin_indices_map(&genome_1);
+            other_neuron_gin_map = Network::compute_neurons_gin_indices_map(genome_1);
         }
 
         ref_gin_v.reverse();
@@ -446,7 +446,7 @@ impl Specimen<f32> {
 
 
         for ref_neuron_gin in ref_gin_v {
-            let mut gin_already_sorted: Vec<usize> = genome_sorted
+            let gin_already_sorted: Vec<usize> = genome_sorted
                 .iter()
                 .filter_map(|n| {
                     if let Neuron { .. } = n.allele {
@@ -464,7 +464,7 @@ impl Specimen<f32> {
                     .get(&ref_neuron_gin)
                     .expect("\n@sort_genome:\n\t>> Fail to lookup ref_neuron_gin.");
 
-                if gin_already_sorted.len() == 0 {
+                if gin_already_sorted.is_empty() {
                     slice = other_genome[neuron_idx..].to_vec();
                     genome_sorted.append(&mut slice);
                 } else {
@@ -504,10 +504,7 @@ impl Specimen<f32> {
             .arg("-o")
             .arg(file_name_svg)
             .output()
-            .expect(&format!(
-                "Fail to render Specimen to dot/svg file: {}",
-                file_name
-            ));
+            .unwrap_or_else(|_| panic!("Fail to render Specimen to dot/svg file: {}", file_name));
         // .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
         Some(cmd_output)
     }
@@ -516,18 +513,17 @@ impl Specimen<f32> {
     /// Dump a Specimen into a file using 'Bincode' serialization.
     /// https://github.com/TyOverby/bincode
     pub fn save_to_file(&self, file_name: &str) {
+        use crate::utils::create_parent_directory;
         use bincode::serialize_into;
         use std::fs::File;
         use std::io::BufWriter;
-        use utils::create_parent_directory;
 
 
-        create_parent_directory(file_name).expect(&format!(
-            "Fail to create the directory tree of: '{:?}'",
-            file_name
-        ));
+        create_parent_directory(file_name)
+            .unwrap_or_else(|_| panic!("Fail to create the directory tree of: '{:?}'", file_name));
         let stream = BufWriter::new(
-            File::create(file_name).expect(&format!("Fail to create file: '{:?}'", file_name)),
+            File::create(file_name)
+                .unwrap_or_else(|_| panic!("Fail to create file: '{:?}'", file_name)),
         );
 
 
@@ -543,7 +539,8 @@ impl Specimen<f32> {
         use std::io::BufReader;
 
         let stream = BufReader::new(
-            File::open(file_name).expect(&format!("Fail to open file: '{:?}'", file_name)),
+            File::open(file_name)
+                .unwrap_or_else(|_| panic!("Fail to open file: '{:?}'", file_name)),
         );
 
         let specimen: Specimen<f32> =
